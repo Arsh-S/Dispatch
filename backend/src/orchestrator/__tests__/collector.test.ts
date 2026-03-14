@@ -1,6 +1,18 @@
-import { describe, it, expect } from 'vitest';
-import { mergeReports, MergedReport } from '../collector';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { mergeReports, forwardToDatadog, MergedReport } from '../collector';
 import { FindingReport, Finding } from '../../schemas/finding-report';
+
+const { mockIsEnabled, mockSendEvent, mockSendMetrics } = vi.hoisted(() => ({
+  mockIsEnabled: vi.fn(),
+  mockSendEvent: vi.fn(),
+  mockSendMetrics: vi.fn(),
+}));
+
+vi.mock('../../integrations/datadog/client.js', () => ({
+  isEnabled: () => mockIsEnabled(),
+  sendEvent: (...args: unknown[]) => mockSendEvent(...args),
+  sendMetrics: (...args: unknown[]) => mockSendMetrics(...args),
+}));
 
 function makeFinding(overrides: Partial<Finding> = {}): Finding {
   return {
@@ -167,5 +179,137 @@ describe('mergeReports', () => {
 
     const merged = mergeReports(reports);
     expect(merged.clean_endpoints.length).toBe(2);
+  });
+});
+
+describe('forwardToDatadog', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSendEvent.mockResolvedValue(undefined);
+    mockSendMetrics.mockResolvedValue(undefined);
+  });
+
+  function makeMergedReport(overrides: Partial<MergedReport> = {}): MergedReport {
+    return {
+      dispatch_run_id: 'run-abc123',
+      completed_at: '2026-03-14T12:00:00.000Z',
+      duration_seconds: 45,
+      total_workers: 2,
+      findings: [],
+      clean_endpoints: [],
+      worker_errors: [],
+      summary: {
+        critical: 0,
+        high: 0,
+        medium: 2,
+        low: 1,
+        total_endpoints: 10,
+        vulnerable_endpoints: 3,
+        clean_endpoints: 7,
+      },
+      ...overrides,
+    };
+  }
+
+  it('should be a no-op when isEnabled returns false', async () => {
+    mockIsEnabled.mockReturnValue(false);
+    const report = makeMergedReport();
+
+    await forwardToDatadog(report);
+
+    expect(mockSendEvent).not.toHaveBeenCalled();
+    expect(mockSendMetrics).not.toHaveBeenCalled();
+  });
+
+  it('should send event with alert_type error when critical findings exist', async () => {
+    mockIsEnabled.mockReturnValue(true);
+    const report = makeMergedReport({ summary: { ...makeMergedReport().summary, critical: 1 } });
+
+    await forwardToDatadog(report);
+
+    expect(mockSendEvent).toHaveBeenCalledTimes(1);
+    expect(mockSendEvent.mock.calls[0][0]).toMatchObject({
+      alert_type: 'error',
+      title: expect.stringContaining('run-abc123'),
+    });
+  });
+
+  it('should send event with alert_type warning when only high findings', async () => {
+    mockIsEnabled.mockReturnValue(true);
+    const report = makeMergedReport({ summary: { ...makeMergedReport().summary, high: 2, critical: 0 } });
+
+    await forwardToDatadog(report);
+
+    expect(mockSendEvent).toHaveBeenCalledTimes(1);
+    expect(mockSendEvent.mock.calls[0][0].alert_type).toBe('warning');
+  });
+
+  it('should send event with alert_type info when only medium/low findings', async () => {
+    mockIsEnabled.mockReturnValue(true);
+    const report = makeMergedReport({ summary: { ...makeMergedReport().summary, medium: 1, low: 2 } });
+
+    await forwardToDatadog(report);
+
+    expect(mockSendEvent).toHaveBeenCalledTimes(1);
+    expect(mockSendEvent.mock.calls[0][0].alert_type).toBe('info');
+  });
+
+  it('should include finding counts in event text', async () => {
+    mockIsEnabled.mockReturnValue(true);
+    const report = makeMergedReport({
+      summary: { critical: 1, high: 2, medium: 3, low: 4, total_endpoints: 10, vulnerable_endpoints: 5, clean_endpoints: 5 },
+    });
+
+    await forwardToDatadog(report);
+
+    const event = mockSendEvent.mock.calls[0][0];
+    expect(event.text).toContain('Critical: 1');
+    expect(event.text).toContain('High: 2');
+    expect(event.text).toContain('Medium: 3');
+    expect(event.text).toContain('Low: 4');
+  });
+
+  it('should send 6 metric series with correct values', async () => {
+    mockIsEnabled.mockReturnValue(true);
+    const report = makeMergedReport({
+      summary: { critical: 1, high: 2, medium: 3, low: 4, total_endpoints: 10, vulnerable_endpoints: 5, clean_endpoints: 5 },
+      duration_seconds: 90,
+      total_workers: 3,
+    });
+
+    await forwardToDatadog(report);
+
+    expect(mockSendMetrics).toHaveBeenCalledTimes(1);
+    const { series } = mockSendMetrics.mock.calls[0][0];
+    expect(series).toHaveLength(6);
+
+    const byMetric = Object.fromEntries(series.map((s: { metric: string; points: { value: number }[] }) => [s.metric, s.points[0].value]));
+    expect(byMetric['dispatch.findings.critical']).toBe(1);
+    expect(byMetric['dispatch.findings.high']).toBe(2);
+    expect(byMetric['dispatch.findings.medium']).toBe(3);
+    expect(byMetric['dispatch.findings.low']).toBe(4);
+    expect(byMetric['dispatch.scan.duration_seconds']).toBe(90);
+    expect(byMetric['dispatch.scan.workers']).toBe(3);
+  });
+
+  it('should tag event and metrics with dispatch_run_id', async () => {
+    mockIsEnabled.mockReturnValue(true);
+    const report = makeMergedReport({ dispatch_run_id: 'run-xyz789' });
+
+    await forwardToDatadog(report);
+
+    expect(mockSendEvent.mock.calls[0][0].tags).toContain('dispatch_run_id:run-xyz789');
+    const { series } = mockSendMetrics.mock.calls[0][0];
+    expect(series[0].tags).toContain('dispatch_run_id:run-xyz789');
+  });
+
+  it('should call sendEvent and sendMetrics in parallel', async () => {
+    mockIsEnabled.mockReturnValue(true);
+    const report = makeMergedReport();
+
+    await forwardToDatadog(report);
+
+    expect(mockSendEvent).toHaveBeenCalled();
+    expect(mockSendMetrics).toHaveBeenCalled();
   });
 });
