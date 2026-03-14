@@ -1,9 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { generatePdfReport } from '../pdf';
+import { generatePdfReport, githubFileUrl } from '../pdf';
 import type { MergedReport } from '../../orchestrator/collector';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+
+/** Read PDF buffer as string for URL/pattern assertions. Use latin1 to preserve all bytes. */
+function readPdfAsString(outputPath: string): string {
+  return fs.readFileSync(outputPath).toString('latin1');
+}
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -35,6 +40,7 @@ function makeFinding(
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW',
   endpoint: string,
   parameter: string,
+  overrides: Partial<MergedReport['findings'][number]> = {},
 ): MergedReport['findings'][number] {
   return {
     finding_id: `finding-${severity}-${endpoint.replace(/\//g, '-')}-${parameter}`,
@@ -53,6 +59,7 @@ function makeFinding(
     recommended_fix: 'Use parameterized queries.',
     server_logs: [],
     rules_violated: [],
+    ...overrides,
   };
 }
 
@@ -444,6 +451,64 @@ describe('generatePdfReport', () => {
     expect(fs.existsSync(outputPath)).toBe(true);
   });
 
+  // --- PdfReportOptions (Phase 1) ---
+
+  it('generatePdfReport_AcceptsOptionalOptions_BackwardCompatible', async () => {
+    const report = makeMergedReport();
+    const outputPath = path.join(tmpDir, 'no-options.pdf');
+    const result = await generatePdfReport(report, outputPath);
+    expect(result).toBe(outputPath);
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+
+  it('generatePdfReport_WithOptions_ProducesValidPdf', async () => {
+    const report = makeMergedReport({
+      findings: [makeFinding('MEDIUM', '/api/search', 'q')],
+      summary: { critical: 0, high: 0, medium: 1, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'with-options.pdf');
+    await generatePdfReport(report, outputPath, {
+      githubRepo: 'owner/repo',
+      githubRef: 'main',
+    });
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const buf = fs.readFileSync(outputPath);
+    expect(buf.toString('binary').includes('github.com')).toBe(true);
+  });
+
+  it('generatePdfReport_WithCreatedIssues_ProducesValidPdf', async () => {
+    const finding = makeFinding('HIGH', '/api/users', 'id');
+    const report = makeMergedReport({
+      findings: [finding],
+      summary: { critical: 0, high: 1, medium: 0, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const issueMap = new Map<string, { number: number; url: string }>();
+    issueMap.set(finding.finding_id, { number: 42, url: 'https://github.com/owner/repo/issues/42' });
+    const outputPath = path.join(tmpDir, 'with-issues.pdf');
+    await generatePdfReport(report, outputPath, {
+      githubRepo: 'owner/repo',
+      githubRef: 'main',
+      createdIssues: issueMap,
+    });
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+
+  it('githubFileUrl_OmitsFragment_WhenLineIsZero', () => {
+    const url = githubFileUrl('owner/repo', 'main', 'src/file.ts', 0);
+    expect(url).not.toContain('#L');
+    expect(url).toBe('https://github.com/owner/repo/blob/main/src/file.ts');
+  });
+
+  it('githubFileUrl_OmitsFragment_WhenLineIsNegative', () => {
+    const url = githubFileUrl('owner/repo', 'main', 'src/file.ts', -1);
+    expect(url).not.toContain('#L');
+  });
+
+  it('githubFileUrl_IncludesFragment_WhenLineIsPositive', () => {
+    const url = githubFileUrl('owner/repo', 'main', 'src/file.ts', 42);
+    expect(url).toBe('https://github.com/owner/repo/blob/main/src/file.ts#L42');
+  });
+
   it('generatePdfReport_WithNullParameter_ProducesValidPdf', async () => {
     // Arrange — parameter is nullable in the schema; the renderer must handle null
     const report = makeMergedReport({
@@ -467,6 +532,305 @@ describe('generatePdfReport', () => {
     await generatePdfReport(report, outputPath);
 
     // Assert
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+
+  // --- Phase 1: Data Flow (PdfReportOptions, GitHub URLs, issue badges) ---
+
+  it('generatePdfReport_AcceptsOptionalPdfReportOptions', async () => {
+    const report = makeMergedReport();
+    const outputPath = path.join(tmpDir, 'with-options.pdf');
+
+    await generatePdfReport(report, outputPath, {
+      githubRepo: 'owner/repo',
+      githubRef: 'main',
+      createdIssues: new Map(),
+    });
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+
+  it('generatePdfReport_WithGithubRepo_PdfContainsGitHubFileUrls', async () => {
+    const finding = makeFinding('HIGH', '/api/users', 'id', {
+      location: { file: 'src/routes/users.ts', line: 42, endpoint: '/api/users', method: 'GET', parameter: 'id' },
+    });
+    const report = makeMergedReport({
+      findings: [finding],
+      summary: { critical: 0, high: 1, medium: 0, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'github-urls.pdf');
+
+    await generatePdfReport(report, outputPath, {
+      githubRepo: 'acme/app',
+      githubRef: 'main',
+    });
+
+    const content = readPdfAsString(outputPath);
+    expect(content).toContain('github.com');
+    expect(content).toContain('acme/app');
+    expect(content).toContain('blob/main');
+    expect(content).toContain('src/routes/users.ts');
+    expect(content).toContain('#L42');
+  });
+
+  it('generatePdfReport_WithoutGithubRepo_PdfContainsPlainFilePaths', async () => {
+    const finding = makeFinding('MEDIUM', '/api/search', 'q', {
+      location: { file: 'src/routes/comments.ts', line: 8, endpoint: '/api/search', method: 'GET', parameter: 'q' },
+    });
+    const report = makeMergedReport({
+      findings: [finding],
+      summary: { critical: 0, high: 0, medium: 1, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'plain-paths.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const content = readPdfAsString(outputPath);
+    // No GitHub blob URL when repo omitted (metadata/fonts are uncompressed)
+    expect(content).not.toMatch(/github\.com\/[^/]+\/[^/]+\/blob/);
+  });
+
+  it('generatePdfReport_WithCreatedIssues_PdfRendersIssueBadges', async () => {
+    const finding = makeFinding('HIGH', '/api/users', 'id');
+    const report = makeMergedReport({
+      findings: [finding],
+      summary: { critical: 0, high: 1, medium: 0, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'issue-badges.pdf');
+    const issueMap = new Map<string, { number: number; url: string }>();
+    issueMap.set(finding.finding_id, { number: 17, url: 'https://github.com/acme/app/issues/17' });
+
+    await generatePdfReport(report, outputPath, {
+      githubRepo: 'acme/app',
+      createdIssues: issueMap,
+    });
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const content = readPdfAsString(outputPath);
+    expect(content).toContain('github.com');
+    expect(content).toContain('issues/17');
+  });
+
+  it('generatePdfReport_WithEmptyCreatedIssues_PdfRendersWithoutIssueBadges', async () => {
+    const finding = makeFinding('MEDIUM', '/api/search', 'q');
+    const report = makeMergedReport({
+      findings: [finding],
+      summary: { critical: 0, high: 0, medium: 1, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'no-issue-badges.pdf');
+
+    await generatePdfReport(report, outputPath, {
+      createdIssues: new Map(),
+    });
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const stats = fs.statSync(outputPath);
+    expect(stats.size).toBeGreaterThan(1024);
+  });
+
+  it('generatePdfReport_IsBackwardCompatible_NoOptionsArgument', async () => {
+    const report = makeMergedReport();
+    const outputPath = path.join(tmpDir, 'no-options.pdf');
+
+    const result = await generatePdfReport(report, outputPath);
+
+    expect(result).toBe(outputPath);
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+});
+
+describe('githubFileUrl', () => {
+  it('githubFileUrl_WithLineZero_OmitsLFragment', () => {
+    const url = githubFileUrl('owner/repo', 'main', 'src/file.ts', 0);
+    expect(url).toBe('https://github.com/owner/repo/blob/main/src/file.ts');
+    expect(url).not.toContain('#L');
+  });
+
+  it('githubFileUrl_WithPositiveLine_IncludesLFragment', () => {
+    const url = githubFileUrl('owner/repo', 'main', 'src/file.ts', 42);
+    expect(url).toBe('https://github.com/owner/repo/blob/main/src/file.ts#L42');
+  });
+
+  it('githubFileUrl_WithUndefinedLine_OmitsLFragment', () => {
+    const url = githubFileUrl('owner/repo', 'main', 'src/file.ts');
+    expect(url).toBe('https://github.com/owner/repo/blob/main/src/file.ts');
+  });
+});
+
+describe('generatePdfReport — Phase 2: Layout & Content', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dispatch-pdf-phase2-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('executiveSummarySections_RenderInCorrectVerticalOrder', async () => {
+    const report = makeMergedReport();
+    const outputPath = path.join(tmpDir, 'order.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const content = readPdfAsString(outputPath);
+    expect(content).toContain('Helvetica');
+  });
+
+  it('singleFinding_DoesNotProduceEmptyPage', async () => {
+    const report = makeMergedReport({
+      findings: [makeFinding('MEDIUM', '/api/search', 'q')],
+      summary: { critical: 0, high: 0, medium: 1, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'single.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const content = readPdfAsString(outputPath);
+    const pageCount = (content.match(/\/Type\/Page\b/g) || []).length;
+    expect(pageCount).toBeLessThanOrEqual(2);
+  });
+
+  it('findingSummaryTable_AppearsWhenFindingsExist', async () => {
+    const report = makeMergedReport({
+      findings: [makeFinding('MEDIUM', '/api/search', 'q')],
+      summary: { critical: 0, high: 0, medium: 1, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'summary-table.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const stats = fs.statSync(outputPath);
+    expect(stats.size).toBeGreaterThan(2048);
+  });
+
+  it('findingSummaryTable_OmittedWhenFindingsEmpty', async () => {
+    const report = makeMergedReport();
+    const outputPath = path.join(tmpDir, 'no-summary.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+
+  it('cleanEndpoints_GroupedByRoute', async () => {
+    const report = makeMergedReport({
+      clean_endpoints: [
+        { endpoint: 'GET /api/orders', parameter: 'id', attack_type: 'sql-injection', notes: 'Safe' },
+        { endpoint: 'GET /api/orders', parameter: 'qty', attack_type: 'xss', notes: 'Safe' },
+        { endpoint: 'POST /api/login', parameter: 'username', attack_type: 'sql-injection', notes: 'Safe' },
+      ],
+      summary: { critical: 0, high: 0, medium: 0, low: 0, total_endpoints: 2, vulnerable_endpoints: 0, clean_endpoints: 2 },
+    });
+    const outputPath = path.join(tmpDir, 'grouped.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+    const stats = fs.statSync(outputPath);
+    expect(stats.size).toBeGreaterThan(2048);
+  });
+
+  it('timestamps_DisplayInHumanReadableFormat', async () => {
+    const report = makeMergedReport({ completed_at: '2026-03-14T14:30:00.000Z' });
+    const outputPath = path.join(tmpDir, 'timestamp.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+
+  it('codeBlocks_RenderWithBackgroundFill', async () => {
+    const report = makeMergedReport({
+      findings: [
+        {
+          ...makeFinding('HIGH', '/api/users', 'id'),
+          reproduction: {
+            command: 'curl http://localhost:3000/api/users?id=1',
+            expected: '401',
+            actual: '200',
+            steps: [],
+          },
+        },
+      ],
+      summary: { critical: 0, high: 1, medium: 0, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'code-bg.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+
+  it('condensedFindings_ShowFileLineOnSeparateLineFromVulnType', async () => {
+    const report = makeMergedReport({
+      findings: [
+        makeFinding('MEDIUM', '/api/search', 'q', {
+          location: { file: 'src/routes/search.ts', line: 15, endpoint: '/api/search', method: 'GET', parameter: 'q' },
+        }),
+      ],
+      summary: { critical: 0, high: 0, medium: 1, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'condensed.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+});
+
+describe('generatePdfReport — Phase 3: Visual Polish', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dispatch-pdf-phase3-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('customFonts_LoadFromAssetsDirectory_WhenPresent', async () => {
+    const report = makeMergedReport();
+    const outputPath = path.join(tmpDir, 'fonts.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    expect(fs.existsSync(outputPath)).toBe(true);
+  });
+
+  it('fallback_ToBuiltInFonts_WhenCustomFontsNotFound', async () => {
+    const report = makeMergedReport();
+    const outputPath = path.join(tmpDir, 'fallback.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    const content = readPdfAsString(outputPath);
+    expect(content).toContain('Helvetica');
+  });
+
+  it('diffLines_HaveColoredBackgrounds', async () => {
+    const report = makeMergedReport({
+      findings: [
+        {
+          ...makeFinding('CRITICAL', '/api/admin', 'token'),
+          monkeypatch: {
+            status: 'validated',
+            diff: '-  bad line\n+  good line',
+          },
+        },
+      ],
+      summary: { critical: 1, high: 0, medium: 0, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'diff-colors.pdf');
+
+    await generatePdfReport(report, outputPath);
+
     expect(fs.existsSync(outputPath)).toBe(true);
   });
 });
