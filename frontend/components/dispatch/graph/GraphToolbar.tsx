@@ -25,15 +25,15 @@ export function GraphToolbar({
   onResetLayout,
 }: GraphToolbarProps) {
   return (
-    <div className="flex items-center gap-2 border-b border-border bg-card/30 px-3 py-2">
+    <div className="flex items-center gap-2 bg-card/30 px-3 py-2">
       <CommandSearch
         value={searchQuery}
         onChange={onSearchChange}
         className="w-64"
       />
-      <Separator orientation="vertical" className="h-6" />
+      <Separator orientation="vertical" className="h-6 opacity-0" />
       <FilterBar filters={filters} onFilterChange={onFilterChange} className="flex-1" />
-      <Separator orientation="vertical" className="h-6" />
+      <Separator orientation="vertical" className="h-6 opacity-0" />
       <div className="flex gap-1">
         <Button
           variant="outline"
@@ -41,7 +41,7 @@ export function GraphToolbar({
           onClick={onFitToScreen}
           title="Fit to screen"
         >
-          <Maximize className="size-3" />
+          <Maximize className="size-3.5" />
         </Button>
         <Button
           variant="outline"
@@ -49,7 +49,7 @@ export function GraphToolbar({
           onClick={onResetLayout}
           title="Reset view"
         >
-          <RotateCcw className="size-3" />
+          <RotateCcw className="size-3.5" />
         </Button>
       </div>
     </div>

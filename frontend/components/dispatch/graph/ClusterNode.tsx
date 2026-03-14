@@ -13,10 +13,10 @@ export interface ClusterNodeProps {
 }
 
 const statusFill: Record<string, string> = {
-  idle: "fill-muted/80",
-  running: "fill-status-running/30",
+  idle: "fill-muted",
+  running: "fill-primary/20",
   success: "fill-primary/30",
-  failed: "fill-status-error/30",
+  failed: "fill-destructive/20",
 };
 
 export function ClusterNode({
@@ -28,8 +28,7 @@ export function ClusterNode({
   onClick,
   size = 28,
 }: ClusterNodeProps) {
-  const fill =
-    statusFill[status] ?? "fill-muted/80";
+  const fill = statusFill[status] ?? "fill-muted";
   return (
     <g
       className={cn(

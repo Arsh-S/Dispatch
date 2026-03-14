@@ -15,7 +15,7 @@ export interface OrchestratorNodeProps {
 const statusRing = {
   idle: "stroke-muted-foreground",
   planning: "stroke-primary animate-pulse",
-  executing: "stroke-status-running",
+  executing: "stroke-primary",
   completed: "stroke-primary",
 };
 

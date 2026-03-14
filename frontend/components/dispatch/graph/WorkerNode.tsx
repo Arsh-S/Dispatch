@@ -17,12 +17,12 @@ const statusColors: Record<NodeStatus, string> = {
   idle: "fill-muted-foreground/60",
   queued: "fill-primary/50",
   planning: "fill-primary/60",
-  running: "fill-status-running",
-  warning: "fill-status-warning",
-  failed: "fill-status-error",
+  running: "fill-primary",
+  warning: "fill-destructive/80",
+  failed: "fill-destructive",
   success: "fill-primary",
-  fixer: "fill-status-fixer",
-  retestVerified: "fill-status-retest",
+  fixer: "fill-primary/80",
+  retestVerified: "fill-primary",
 };
 
 export function WorkerNode({
