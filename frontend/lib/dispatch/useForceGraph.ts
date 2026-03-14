@@ -34,6 +34,8 @@ export interface UseForceGraphOptions {
   graphData: GraphData;
   selectedNodeId: NodeId | null;
   onNodeSelect: (id: NodeId | null) => void;
+  /** Optional ref to receive a resetView() function (pan/zoom to initial). */
+  resetViewRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -66,7 +68,7 @@ function nodeColor(type: NodeType, status: NodeStatus): string {
 
 export function useForceGraph(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
-  { graphData, selectedNodeId, onNodeSelect }: UseForceGraphOptions
+  { graphData, selectedNodeId, onNodeSelect, resetViewRef }: UseForceGraphOptions
 ) {
   const simRef = useRef<ReturnType<typeof forceSimulation<SimNode>> | null>(null);
   const nodesRef = useRef<SimNode[]>([]);
@@ -209,16 +211,20 @@ export function useForceGraph(
     ctx.translate(tx, ty);
     ctx.scale(k, k);
 
-    /* --- dotted grid (world space) --- */
+    /* --- dotted grid in world space (pans/zooms with graph) --- */
     const gridSpacing = 24;
     const dotRadius = 0.6;
     ctx.fillStyle = "rgba(255,255,255,0.12)";
-    const left = (-tx / k) | 0;
-    const top = (-ty / k) | 0;
-    const right = Math.ceil((w - tx) / k) + gridSpacing;
-    const bottom = Math.ceil((h - ty) / k) + gridSpacing;
-    for (let gx = (left / gridSpacing) * gridSpacing; gx <= right; gx += gridSpacing) {
-      for (let gy = (top / gridSpacing) * gridSpacing; gy <= bottom; gy += gridSpacing) {
+    const worldLeft = -tx / k;
+    const worldTop = -ty / k;
+    const worldRight = (w - tx) / k;
+    const worldBottom = (h - ty) / k;
+    const startX = Math.floor(worldLeft / gridSpacing) * gridSpacing;
+    const startY = Math.floor(worldTop / gridSpacing) * gridSpacing;
+    const endX = Math.ceil(worldRight / gridSpacing) * gridSpacing + gridSpacing;
+    const endY = Math.ceil(worldBottom / gridSpacing) * gridSpacing + gridSpacing;
+    for (let gx = startX; gx <= endX; gx += gridSpacing) {
+      for (let gy = startY; gy <= endY; gy += gridSpacing) {
         ctx.beginPath();
         ctx.arc(gx, gy, dotRadius, 0, Math.PI * 2);
         ctx.fill();
@@ -455,9 +461,15 @@ export function useForceGraph(
     [canvasRef]
   );
 
+  const resetView = useCallback(() => {
+    transformRef.current = { x: 0, y: 0, k: 1 };
+  }, []);
+
   /* ---------- lifecycle ---------- */
 
   useEffect(() => {
+    if (resetViewRef) resetViewRef.current = resetView;
+
     buildSim();
     rafRef.current = requestAnimationFrame(draw);
 
@@ -471,6 +483,7 @@ export function useForceGraph(
     }
 
     return () => {
+      if (resetViewRef) resetViewRef.current = null;
       cancelAnimationFrame(rafRef.current);
       simRef.current?.stop();
       if (canvas) {
@@ -481,5 +494,5 @@ export function useForceGraph(
         canvas.removeEventListener("wheel", handleWheel);
       }
     };
-  }, [buildSim, draw, handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, canvasRef]);
+  }, [buildSim, draw, handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, canvasRef, resetView, resetViewRef]);
 }

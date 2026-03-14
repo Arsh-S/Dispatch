@@ -1,10 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import { useDispatchWorkspace } from "@/lib/dispatch/state";
 import { GraphToolbar } from "./GraphToolbar";
 import { GraphCanvas } from "./GraphCanvas";
 import { GraphLegend } from "./GraphLegend";
-import { MiniMap } from "./MiniMap";
 
 export function GraphWorkspace() {
   const {
@@ -18,8 +18,10 @@ export function GraphWorkspace() {
     runStatus,
   } = useDispatchWorkspace();
 
+  const resetViewRef = useRef<(() => void) | null>(null);
+
   const handleFit = () => {};
-  const handleReset = () => {};
+  const handleReset = () => resetViewRef.current?.();
 
   return (
     <div className="relative flex h-full flex-col bg-background">
@@ -37,13 +39,11 @@ export function GraphWorkspace() {
           selectedNodeId={selectedNodeId}
           onNodeSelect={selectNode}
           runStatus={runStatus}
+          resetViewRef={resetViewRef}
         />
         <div className="pointer-events-none absolute inset-0 z-10">
           <div className="pointer-events-auto absolute bottom-3 left-3">
             <GraphLegend />
-          </div>
-          <div className="pointer-events-auto absolute bottom-3 right-3">
-            <MiniMap />
           </div>
         </div>
       </div>

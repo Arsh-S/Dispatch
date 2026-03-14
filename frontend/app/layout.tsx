@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { GeistSans } from "geist/font/sans";
+import { Outfit } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Dispatch",
@@ -15,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("dark", GeistSans.variable)}>
-      <body className="min-h-screen font-sans antialiased">
+    <html lang="en" className={cn("dark", outfit.variable)}>
+      <body className={cn(outfit.className, "min-h-screen font-sans antialiased")}>
         <TooltipProvider delay={300}>{children}</TooltipProvider>
       </body>
     </html>

@@ -47,7 +47,7 @@ export function GraphToolbar({
           variant="outline"
           size="icon-xs"
           onClick={onResetLayout}
-          title="Reset layout"
+          title="Reset view"
         >
           <RotateCcw className="size-3" />
         </Button>

@@ -10,6 +10,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", "sans-serif"],
+      },
       colors: {
         dispatch: {
           charcoal: "#1a1d21",
@@ -51,6 +54,7 @@ const config: Config = {
         },
         destructive: {
           DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
         },
         border: "var(--border)",
         input: "var(--input)",

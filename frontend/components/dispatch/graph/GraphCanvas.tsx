@@ -9,16 +9,23 @@ export interface GraphCanvasProps {
   selectedNodeId: NodeId | null;
   onNodeSelect: (id: NodeId | null) => void;
   runStatus: string;
+  resetViewRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 export function GraphCanvas({
   graphData,
   selectedNodeId,
   onNodeSelect,
+  resetViewRef,
 }: GraphCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  useForceGraph(canvasRef, { graphData, selectedNodeId, onNodeSelect });
+  useForceGraph(canvasRef, {
+    graphData,
+    selectedNodeId,
+    onNodeSelect,
+    resetViewRef,
+  });
 
   return (
     <canvas
