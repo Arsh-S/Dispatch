@@ -1,6 +1,6 @@
 # Dispatch — Agent Primer
 
-> **Generated:** 2026-03-14_15-30-30
+> **Generated:** 2026-03-14_16-02-20
 
 ## Tech Stack
 
@@ -54,6 +54,8 @@ CLI (backend/src/cli.ts)
 | Schema 2 | Finding Report | `backend/src/schemas/finding-report.ts` |
 
 ## Entry Points
+
+> **Working directory:** All commands run from `backend/` (where `package.json` lives).
 
 | Command | Script | Description |
 |---|---|---|
