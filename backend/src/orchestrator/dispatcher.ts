@@ -17,32 +17,38 @@ export interface WorkerResult {
   error?: string;
 }
 
+export interface DispatchCallbacks {
+  onWorkerDispatched?: (assignment: TaskAssignment) => void;
+  onWorkerComplete?: (result: WorkerResult) => void;
+}
+
 export async function dispatchWorkers(
   assignments: TaskAssignment[],
   options: DispatcherOptions,
+  callbacks?: DispatchCallbacks,
 ): Promise<WorkerResult[]> {
   console.log(`[Dispatcher] Dispatching ${assignments.length} workers in ${options.mode} mode`);
 
   if (options.mode === 'local') {
-    return dispatchLocal(assignments, options);
+    return dispatchLocal(assignments, options, callbacks);
   }
 
-  return dispatchBlaxel(assignments, options);
+  return dispatchBlaxel(assignments, options, callbacks);
 }
 
 async function dispatchLocal(
   assignments: TaskAssignment[],
   options: DispatcherOptions,
+  callbacks?: DispatchCallbacks,
 ): Promise<WorkerResult[]> {
   const results: WorkerResult[] = [];
-  // In local mode, run workers sequentially to avoid port conflicts
-  // and pnpm lockfile contention from running in the same target directory
   for (let i = 0; i < assignments.length; i++) {
     const assignment = assignments[i];
     console.log(`[Dispatcher] Worker ${i + 1}/${assignments.length}`);
+    callbacks?.onWorkerDispatched?.(assignment);
     const result = await runLocalWorker(assignment, options.targetDir);
+    callbacks?.onWorkerComplete?.(result);
     results.push(result);
-    // Wait for port release between sequential workers
     if (i < assignments.length - 1) {
       await new Promise(r => setTimeout(r, 2000));
     }
@@ -88,26 +94,31 @@ async function runLocalWorker(
 async function dispatchBlaxel(
   assignments: TaskAssignment[],
   options: DispatcherOptions,
+  callbacks?: DispatchCallbacks,
 ): Promise<WorkerResult[]> {
   const maxConcurrent = options.maxConcurrent || 3;
   console.log(`[Dispatcher] Blaxel mode: ${assignments.length} workers, max ${maxConcurrent} concurrent`);
 
-  // Run workers with concurrency limit
   const results: WorkerResult[] = [];
   for (let i = 0; i < assignments.length; i += maxConcurrent) {
     const batch = assignments.slice(i, i + maxConcurrent);
+    batch.forEach(a => callbacks?.onWorkerDispatched?.(a));
     const batchResults = await Promise.allSettled(
       batch.map(a => runBlaxelWorker(a, options.targetDir))
     );
-    for (const result of batchResults) {
-      if (result.status === 'fulfilled') {
-        results.push(result.value);
+    for (let j = 0; j < batchResults.length; j++) {
+      const settled = batchResults[j];
+      if (settled.status === 'fulfilled') {
+        callbacks?.onWorkerComplete?.(settled.value);
+        results.push(settled.value);
       } else {
-        results.push({
-          workerId: 'unknown',
+        const failedResult: WorkerResult = {
+          workerId: batch[j]?.worker_id ?? 'unknown',
           report: null,
-          error: result.reason?.message || String(result.reason),
-        });
+          error: settled.reason?.message || String(settled.reason),
+        };
+        callbacks?.onWorkerComplete?.(failedResult);
+        results.push(failedResult);
       }
     }
   }
