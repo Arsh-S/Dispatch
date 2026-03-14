@@ -10,7 +10,7 @@ export function DispatchWorkspace() {
   return (
     <DispatchWorkspaceProvider>
       <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
-        <aside className="flex w-[320px] shrink-0 flex-col border-r border-border bg-card/50">
+        <aside className="flex w-[360px] shrink-0 flex-col bg-card/50">
           <ScrollArea className="flex-1 overflow-y-auto">
             <LeftPanel />
           </ScrollArea>
