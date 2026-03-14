@@ -1,6 +1,13 @@
 "use client";
 
 import { StatusBadge, type StatusVariant } from "@/components/dispatch/common/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+} from "lucide-react";
 
 export interface RunHeaderProps {
   runName: string;
@@ -18,19 +25,19 @@ const statusToVariant: Record<string, StatusVariant> = {
   completed: "completed",
 };
 
-function primaryButtonLabel(status: string): string {
+function primaryButtonConfig(status: string): { label: string; Icon: React.ElementType } {
   switch (status) {
     case "idle":
-      return "Launch Dispatch";
+      return { label: "Launch Dispatch", Icon: Play };
     case "planning":
     case "executing":
     case "patching":
     case "retesting":
-      return "Pause Run";
+      return { label: "Pause Run", Icon: Pause };
     case "completed":
-      return "Redeploy + Retest";
+      return { label: "Redeploy + Retest", Icon: RotateCcw };
     default:
-      return "Launch Dispatch";
+      return { label: "Launch Dispatch", Icon: Play };
   }
 }
 
@@ -41,23 +48,27 @@ export function RunHeader({
   onPrimaryAction,
 }: RunHeaderProps) {
   const variant = statusToVariant[status] ?? "idle";
+  const { label, Icon } = primaryButtonConfig(status);
+
   return (
-    <div className="space-y-3 border-b border-dispatch-muted pb-4">
+    <div className="space-y-3">
       <div>
-        <h1 className="text-lg font-semibold text-slate-100">Dispatch</h1>
-        <p className="text-sm text-slate-400">{runName}</p>
+        <h1 className="text-base font-semibold tracking-tight text-foreground">Dispatch</h1>
+        <p className="text-xs text-muted-foreground">{runName}</p>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         <StatusBadge variant="idle">{environment}</StatusBadge>
         <StatusBadge variant={variant}>{status}</StatusBadge>
       </div>
-      <button
-        type="button"
+      <Button
         onClick={onPrimaryAction}
-        className="w-full rounded-lg bg-dispatch-blue px-4 py-2.5 text-sm font-medium text-white hover:bg-dispatch-blue/90 focus:outline-none focus:ring-2 focus:ring-dispatch-blue/50"
+        className="w-full gap-2"
+        size="sm"
       >
-        {primaryButtonLabel(status)}
-      </button>
+        <Icon className="size-3.5" />
+        {label}
+      </Button>
+      <Separator />
     </div>
   );
 }

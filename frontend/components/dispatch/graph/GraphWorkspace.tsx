@@ -22,7 +22,7 @@ export function GraphWorkspace() {
   const handleReset = () => {};
 
   return (
-    <div className="relative flex h-full flex-col bg-dispatch-charcoal">
+    <div className="relative flex h-full flex-col bg-background">
       <GraphToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

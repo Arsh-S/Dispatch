@@ -2,12 +2,30 @@
 
 import { cn } from "@/lib/utils";
 import type { Severity } from "@/lib/dispatch/graphTypes";
+import {
+  ShieldAlert,
+  ShieldX,
+  AlertTriangle,
+  Shield,
+} from "lucide-react";
 
-const severityClasses: Record<Severity, string> = {
-  low: "bg-slate-500/20 text-slate-400 border border-slate-500/40",
-  medium: "bg-dispatch-yellow/20 text-dispatch-yellow border border-dispatch-yellow/40",
-  high: "bg-dispatch-orange/20 text-dispatch-orange border border-dispatch-orange/40",
-  critical: "bg-dispatch-red/20 text-dispatch-red border border-dispatch-red/40",
+const severityConfig: Record<Severity, { classes: string; Icon: React.ElementType }> = {
+  low: {
+    classes: "border-muted-foreground/30 bg-muted/50 text-muted-foreground",
+    Icon: Shield,
+  },
+  medium: {
+    classes: "border-dispatch-yellow/40 bg-dispatch-yellow/10 text-dispatch-yellow",
+    Icon: AlertTriangle,
+  },
+  high: {
+    classes: "border-dispatch-orange/40 bg-dispatch-orange/10 text-dispatch-orange",
+    Icon: ShieldAlert,
+  },
+  critical: {
+    classes: "border-dispatch-red/40 bg-dispatch-red/10 text-dispatch-red",
+    Icon: ShieldX,
+  },
 };
 
 export interface SeverityBadgeProps {
@@ -16,14 +34,16 @@ export interface SeverityBadgeProps {
 }
 
 export function SeverityBadge({ severity, className }: SeverityBadgeProps) {
+  const { classes, Icon } = severityConfig[severity];
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize",
-        severityClasses[severity],
+        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium capitalize tracking-tight",
+        classes,
         className
       )}
     >
+      <Icon className="size-3" />
       {severity}
     </span>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import { Map } from "lucide-react";
+
 export interface MiniMapProps {
   width?: number;
   height?: number;
@@ -13,11 +15,12 @@ export function MiniMap({
 }: MiniMapProps) {
   return (
     <div
-      className={`rounded border border-dispatch-muted bg-dispatch-slate/80 ${className}`}
+      className={`rounded-lg border border-border bg-card/95 shadow-lg backdrop-blur-sm ${className}`}
       style={{ width, height }}
     >
-      <div className="flex h-full items-center justify-center text-[10px] text-slate-500">
-        Mini map
+      <div className="flex h-full flex-col items-center justify-center gap-1">
+        <Map className="size-3.5 text-muted-foreground/60" />
+        <span className="text-[9px] text-muted-foreground/60">Mini map</span>
       </div>
     </div>
   );

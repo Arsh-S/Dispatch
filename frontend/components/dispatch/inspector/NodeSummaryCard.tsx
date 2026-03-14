@@ -1,6 +1,7 @@
 "use client";
 
 import { SeverityBadge } from "@/components/dispatch/common/SeverityBadge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Severity } from "@/lib/dispatch/graphTypes";
 
 export interface NodeSummaryCardProps {
@@ -19,40 +20,44 @@ export function NodeSummaryCard({
   severity,
 }: NodeSummaryCardProps) {
   return (
-    <div className="rounded-lg border border-dispatch-muted bg-dispatch-slate/50 p-3">
-      <h4 className="mb-2 text-xs font-medium text-slate-400">Summary</h4>
-      <dl className="space-y-1.5 text-xs">
-        {currentTask != null && (
-          <div>
-            <dt className="text-slate-500">Task</dt>
-            <dd className="text-slate-200">{currentTask}</dd>
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          Summary
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <dl className="space-y-2 text-xs">
+          {currentTask != null && (
+            <div className="flex justify-between gap-2">
+              <dt className="shrink-0 text-muted-foreground">Task</dt>
+              <dd className="text-right text-foreground">{currentTask}</dd>
+            </div>
+          )}
+          {assignedTarget != null && (
+            <div className="flex justify-between gap-2">
+              <dt className="shrink-0 text-muted-foreground">Target</dt>
+              <dd className="font-mono text-foreground">{assignedTarget}</dd>
+            </div>
+          )}
+          <div className="flex justify-between gap-2">
+            <dt className="shrink-0 text-muted-foreground">Status</dt>
+            <dd className="capitalize text-foreground">{status}</dd>
           </div>
-        )}
-        {assignedTarget != null && (
-          <div>
-            <dt className="text-slate-500">Target</dt>
-            <dd className="text-slate-200 font-mono">{assignedTarget}</dd>
-          </div>
-        )}
-        <div>
-          <dt className="text-slate-500">Status</dt>
-          <dd className="text-slate-200">{status}</dd>
-        </div>
-        {lastUpdate != null && (
-          <div>
-            <dt className="text-slate-500">Last update</dt>
-            <dd className="text-slate-200">{lastUpdate}</dd>
-          </div>
-        )}
-        {severity != null && (
-          <div>
-            <dt className="text-slate-500">Severity</dt>
-            <dd>
-              <SeverityBadge severity={severity} />
-            </dd>
-          </div>
-        )}
-      </dl>
-    </div>
+          {lastUpdate != null && (
+            <div className="flex justify-between gap-2">
+              <dt className="shrink-0 text-muted-foreground">Last update</dt>
+              <dd className="text-foreground">{lastUpdate}</dd>
+            </div>
+          )}
+          {severity != null && (
+            <div className="flex items-center justify-between gap-2">
+              <dt className="shrink-0 text-muted-foreground">Severity</dt>
+              <dd><SeverityBadge severity={severity} /></dd>
+            </div>
+          )}
+        </dl>
+      </CardContent>
+    </Card>
   );
 }

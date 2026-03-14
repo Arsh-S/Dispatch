@@ -2,7 +2,10 @@
 
 import { CommandSearch } from "@/components/dispatch/common/CommandSearch";
 import { FilterBar } from "@/components/dispatch/common/FilterBar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import type { GraphFilters } from "@/lib/dispatch/state";
+import { Maximize, RotateCcw } from "lucide-react";
 
 export interface GraphToolbarProps {
   searchQuery: string;
@@ -22,30 +25,32 @@ export function GraphToolbar({
   onResetLayout,
 }: GraphToolbarProps) {
   return (
-    <div className="flex flex-col gap-2 border-b border-dispatch-muted bg-dispatch-slate/30 px-3 py-2">
+    <div className="flex items-center gap-2 border-b border-border bg-card/30 px-3 py-2">
       <CommandSearch
         value={searchQuery}
         onChange={onSearchChange}
-        className="w-full"
+        className="w-64"
       />
-      <div className="flex items-center justify-between gap-2">
-        <FilterBar filters={filters} onFilterChange={onFilterChange} />
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={onFitToScreen}
-            className="rounded border border-dispatch-muted bg-dispatch-slate px-2 py-1 text-[10px] text-slate-400 hover:bg-dispatch-muted hover:text-slate-300"
-          >
-            Fit
-          </button>
-          <button
-            type="button"
-            onClick={onResetLayout}
-            className="rounded border border-dispatch-muted bg-dispatch-slate px-2 py-1 text-[10px] text-slate-400 hover:bg-dispatch-muted hover:text-slate-300"
-          >
-            Reset
-          </button>
-        </div>
+      <Separator orientation="vertical" className="h-6" />
+      <FilterBar filters={filters} onFilterChange={onFilterChange} className="flex-1" />
+      <Separator orientation="vertical" className="h-6" />
+      <div className="flex gap-1">
+        <Button
+          variant="outline"
+          size="icon-xs"
+          onClick={onFitToScreen}
+          title="Fit to screen"
+        >
+          <Maximize className="size-3" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-xs"
+          onClick={onResetLayout}
+          title="Reset layout"
+        >
+          <RotateCcw className="size-3" />
+        </Button>
       </div>
     </div>
   );

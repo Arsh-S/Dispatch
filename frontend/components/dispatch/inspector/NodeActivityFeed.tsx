@@ -1,41 +1,55 @@
 "use client";
 
 import type { NodeEvent } from "@/lib/dispatch/graphTypes";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Info,
+  AlertTriangle,
+  XCircle,
+  CheckCircle2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface NodeActivityFeedProps {
   events: NodeEvent[];
 }
 
-const levelIcon: Record<string, string> = {
-  info: "○",
-  warn: "⚠",
-  error: "✕",
-  success: "✓",
+const levelConfig: Record<string, { Icon: React.ElementType; className: string }> = {
+  info: { Icon: Info, className: "text-muted-foreground" },
+  warn: { Icon: AlertTriangle, className: "text-dispatch-orange" },
+  error: { Icon: XCircle, className: "text-dispatch-red" },
+  success: { Icon: CheckCircle2, className: "text-dispatch-green" },
 };
 
 export function NodeActivityFeed({ events }: NodeActivityFeedProps) {
-  if (events.length === 0) {
-    return (
-      <div className="rounded-lg border border-dispatch-muted bg-dispatch-slate/30 p-3">
-        <h4 className="mb-2 text-xs font-medium text-slate-400">Activity</h4>
-        <p className="text-xs text-slate-500">No events yet.</p>
-      </div>
-    );
-  }
   return (
-    <div className="rounded-lg border border-dispatch-muted bg-dispatch-slate/30 p-3">
-      <h4 className="mb-2 text-xs font-medium text-slate-400">Activity</h4>
-      <ul className="max-h-48 space-y-1.5 overflow-y-auto">
-        {events.map((e) => (
-          <li key={e.id} className="flex gap-2 text-xs">
-            <span className="shrink-0 text-slate-600">{e.timestamp}</span>
-            <span className="shrink-0 text-slate-500">
-              {levelIcon[e.level ?? "info"] ?? "○"}
-            </span>
-            <span className="text-slate-300">{e.message}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          Activity
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {events.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No events yet.</p>
+        ) : (
+          <ul className="max-h-48 space-y-1.5 overflow-y-auto">
+            {events.map((e) => {
+              const config = levelConfig[e.level ?? "info"] ?? levelConfig.info;
+              const { Icon } = config;
+              return (
+                <li key={e.id} className="flex items-start gap-2 text-xs">
+                  <span className="shrink-0 font-mono text-[10px] text-muted-foreground/60">
+                    {e.timestamp}
+                  </span>
+                  <Icon className={cn("mt-0.5 size-3 shrink-0", config.className)} />
+                  <span className="text-foreground/80">{e.message}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -1,99 +1,92 @@
 "use client";
 
 import type { OrchestratorSpec } from "@/lib/dispatch/state";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExternalLink } from "lucide-react";
 
 export interface OrchestratorSpecCardProps {
   spec: OrchestratorSpec | null;
 }
 
+function TagList({ items, variant = "default" }: { items: string[]; variant?: "default" | "primary" }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {items.map((item) => (
+        <span
+          key={item}
+          className={
+            variant === "primary"
+              ? "rounded-md bg-primary/15 px-1.5 py-0.5 text-[11px] font-medium text-primary"
+              : "rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground"
+          }
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function OrchestratorSpecCard({ spec }: OrchestratorSpecCardProps) {
   if (!spec) return null;
+
   return (
-    <div className="rounded-lg border border-dispatch-muted bg-dispatch-slate/50 p-4">
-      <h3 className="mb-3 text-sm font-medium text-slate-300">Orchestrator spec</h3>
-      <dl className="space-y-2 text-xs">
-        <div>
-          <dt className="text-slate-500">Target repo</dt>
-          <dd className="text-slate-200">
-            {spec.repoUrl ? (
-              <a
-                href={spec.repoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-dispatch-blue hover:underline"
-              >
-                {spec.repoName}
-              </a>
-            ) : (
-              spec.repoName
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-slate-500">Environment</dt>
-          <dd className="text-slate-200">{spec.targetEnvironment}</dd>
-        </div>
-        <div>
-          <dt className="text-slate-500">Scan mode</dt>
-          <dd className="text-slate-200">
-            <span className="rounded bg-dispatch-muted/80 px-1.5 py-0.5 font-medium">
-              {spec.scanMode}
-            </span>
-          </dd>
-        </div>
-        <div>
-          <dt className="text-slate-500">Frameworks</dt>
-          <dd className="flex flex-wrap gap-1">
-            {spec.frameworks.map((f) => (
-              <span
-                key={f}
-                className="rounded bg-dispatch-muted/80 px-1.5 py-0.5 text-slate-300"
-              >
-                {f}
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          Orchestrator Spec
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <dl className="space-y-2.5 text-xs">
+          <div className="flex items-baseline justify-between">
+            <dt className="text-muted-foreground">Repo</dt>
+            <dd>
+              {spec.repoUrl ? (
+                <a
+                  href={spec.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  {spec.repoName}
+                  <ExternalLink className="size-3" />
+                </a>
+              ) : (
+                <span className="text-foreground">{spec.repoName}</span>
+              )}
+            </dd>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <dt className="text-muted-foreground">Environment</dt>
+            <dd className="text-foreground">{spec.targetEnvironment}</dd>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <dt className="text-muted-foreground">Scan mode</dt>
+            <dd>
+              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+                {spec.scanMode}
               </span>
-            ))}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-slate-500">Integrations</dt>
-          <dd className="flex flex-wrap gap-1">
-            {spec.integrations.map((i) => (
-              <span
-                key={i}
-                className="rounded bg-dispatch-muted/80 px-1.5 py-0.5 text-slate-300"
-              >
-                {i}
-              </span>
-            ))}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-slate-500">Worker types</dt>
-          <dd className="flex flex-wrap gap-1">
-            {spec.workerTypes.map((w) => (
-              <span
-                key={w}
-                className="rounded bg-dispatch-blue/20 px-1.5 py-0.5 text-dispatch-blue"
-              >
-                {w}
-              </span>
-            ))}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-slate-500">Priorities (RULES.md)</dt>
-          <dd className="flex flex-wrap gap-1">
-            {spec.priorities.map((p) => (
-              <span
-                key={p}
-                className="rounded bg-dispatch-muted/80 px-1.5 py-0.5 text-slate-300"
-              >
-                {p}
-              </span>
-            ))}
-          </dd>
-        </div>
-      </dl>
-    </div>
+            </dd>
+          </div>
+          <div>
+            <dt className="mb-1 text-muted-foreground">Frameworks</dt>
+            <dd><TagList items={spec.frameworks} /></dd>
+          </div>
+          <div>
+            <dt className="mb-1 text-muted-foreground">Integrations</dt>
+            <dd><TagList items={spec.integrations} /></dd>
+          </div>
+          <div>
+            <dt className="mb-1 text-muted-foreground">Workers</dt>
+            <dd><TagList items={spec.workerTypes} variant="primary" /></dd>
+          </div>
+          <div>
+            <dt className="mb-1 text-muted-foreground">Priorities</dt>
+            <dd><TagList items={spec.priorities} /></dd>
+          </div>
+        </dl>
+      </CardContent>
+    </Card>
   );
 }

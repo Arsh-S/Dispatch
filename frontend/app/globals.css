@@ -2,20 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --dispatch-bg: #1a1d21;
-  --dispatch-panel: #252a31;
-  --dispatch-border: #3d4550;
-  --dispatch-planning: #3b82f6;
-  --dispatch-active: #eab308;
-  --dispatch-success: #22c55e;
-  --dispatch-critical: #ef4444;
-  --dispatch-warning: #f97316;
-  --dispatch-fixer: #a855f7;
-  --dispatch-retest: #14b8a6;
-}
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 15%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 15%;
+    --destructive: 0 84% 60%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 64%;
+    --radius: 0.625rem;
+  }
 
-body {
-  background: var(--dispatch-bg);
-  color: #e2e8f0;
+  .dark {
+    --background: 220 16% 12%;
+    --foreground: 214 32% 91%;
+    --card: 215 14% 17%;
+    --card-foreground: 214 32% 91%;
+    --popover: 215 14% 17%;
+    --popover-foreground: 214 32% 91%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 14% 22%;
+    --secondary-foreground: 214 32% 91%;
+    --muted: 215 10% 26%;
+    --muted-foreground: 215 16% 57%;
+    --accent: 215 14% 22%;
+    --accent-foreground: 214 32% 91%;
+    --destructive: 0 84% 60%;
+    --border: 215 10% 26%;
+    --input: 215 10% 30%;
+    --ring: 217 91% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
 }

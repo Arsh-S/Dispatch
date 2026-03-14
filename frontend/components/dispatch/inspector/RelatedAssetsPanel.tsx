@@ -1,36 +1,68 @@
 "use client";
 
 import type { RelatedAsset } from "@/lib/dispatch/graphTypes";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Route,
+  FileCode,
+  Bug,
+  Ticket,
+  GitPullRequest,
+  RefreshCcw,
+} from "lucide-react";
 
 export interface RelatedAssetsPanelProps {
   assets: RelatedAsset[];
 }
 
+const typeIcon: Record<string, React.ElementType> = {
+  route: Route,
+  file: FileCode,
+  finding: Bug,
+  ticket: Ticket,
+  pr: GitPullRequest,
+  retest: RefreshCcw,
+};
+
 export function RelatedAssetsPanel({ assets }: RelatedAssetsPanelProps) {
   if (assets.length === 0) return null;
+
   return (
-    <div className="rounded-lg border border-dispatch-muted bg-dispatch-slate/30 p-3">
-      <h4 className="mb-2 text-xs font-medium text-slate-400">Related</h4>
-      <div className="flex flex-wrap gap-1.5">
-        {assets.map((a) =>
-          a.href ? (
-            <a
-              key={a.id}
-              href={a.href}
-              className="rounded-md border border-dispatch-muted bg-dispatch-slate px-2 py-1 text-xs text-slate-300 hover:bg-dispatch-muted hover:text-slate-100"
-            >
-              {a.label}
-            </a>
-          ) : (
-            <span
-              key={a.id}
-              className="rounded-md border border-dispatch-muted bg-dispatch-slate px-2 py-1 text-xs text-slate-300"
-            >
-              {a.label}
-            </span>
-          )
-        )}
-      </div>
-    </div>
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          Related
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap gap-1.5">
+          {assets.map((a) => {
+            const Icon = typeIcon[a.type] ?? FileCode;
+            const inner = (
+              <>
+                <Icon className="size-3 text-muted-foreground" />
+                <span>{a.label}</span>
+              </>
+            );
+            return a.href ? (
+              <a
+                key={a.id}
+                href={a.href}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
+              >
+                {inner}
+              </a>
+            ) : (
+              <span
+                key={a.id}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground/80"
+              >
+                {inner}
+              </span>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

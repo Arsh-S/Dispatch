@@ -2,6 +2,7 @@
 
 import { StatusBadge } from "@/components/dispatch/common/StatusBadge";
 import type { StatusVariant } from "@/components/dispatch/common/StatusBadge";
+import { Clock } from "lucide-react";
 
 export interface NodeHeaderProps {
   name: string;
@@ -21,6 +22,7 @@ const stateToVariant: Record<string, StatusVariant> = {
   fixer: "fixer",
   retest: "retest",
   queued: "planning",
+  planning: "planning",
 };
 
 export function NodeHeader({
@@ -33,20 +35,25 @@ export function NodeHeader({
 }: NodeHeaderProps) {
   const variant = stateToVariant[state] ?? "idle";
   return (
-    <div className="border-b border-dispatch-muted pb-3">
-      <h2 className="text-base font-semibold text-slate-100">{name}</h2>
-      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+    <div className="space-y-2 border-b border-border pb-3">
+      <h2 className="text-sm font-semibold text-foreground">{name}</h2>
+      <div className="flex flex-wrap items-center gap-1.5">
         <StatusBadge variant="idle">{type}</StatusBadge>
         <StatusBadge variant={variant}>{state}</StatusBadge>
         {duration != null && (
-          <span className="text-xs text-slate-500">{duration} active</span>
+          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Clock className="size-3" />
+            {duration}
+          </span>
         )}
       </div>
       {clusterLabel != null && (
-        <p className="mt-1 text-xs text-slate-500">Cluster: {clusterLabel}</p>
+        <p className="text-[11px] text-muted-foreground">
+          Cluster: <span className="text-foreground/80">{clusterLabel}</span>
+        </p>
       )}
       {timestamp != null && (
-        <p className="mt-0.5 text-[10px] text-slate-600">{timestamp}</p>
+        <p className="text-[10px] text-muted-foreground/60">{timestamp}</p>
       )}
     </div>
   );

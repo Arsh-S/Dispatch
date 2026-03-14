@@ -1,25 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  GitBranch,
+  FileText,
+  ShieldCheck,
+  KeyRound,
+  Users,
+} from "lucide-react";
 
 const sections = [
   {
     id: "codebase",
     title: "Codebase",
+    Icon: GitBranch,
     content: (
-      <ul className="space-y-1 text-xs text-slate-400">
-        <li>Repo: github.com/org/my-app</li>
-        <li>Branch: main</li>
-        <li>Last commit: a1b2c3d</li>
-        <li>.dispatchignore: 4 entries</li>
+      <ul className="space-y-1 text-xs text-muted-foreground">
+        <li className="flex justify-between"><span>Repo</span><span className="text-foreground">github.com/org/my-app</span></li>
+        <li className="flex justify-between"><span>Branch</span><span className="text-foreground">main</span></li>
+        <li className="flex justify-between"><span>Last commit</span><span className="font-mono text-foreground">a1b2c3d</span></li>
+        <li className="flex justify-between"><span>.dispatchignore</span><span className="text-foreground">4 entries</span></li>
       </ul>
     ),
   },
   {
     id: "spec",
     title: "Spec",
+    Icon: FileText,
     content: (
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-muted-foreground">
         Test all auth, injection, secrets, and critical payment routes.
       </p>
     ),
@@ -27,8 +41,9 @@ const sections = [
   {
     id: "rules",
     title: "Rules",
+    Icon: ShieldCheck,
     content: (
-      <ul className="space-y-1 text-xs text-slate-400">
+      <ul className="space-y-1 text-xs text-muted-foreground">
         <li>Enforce auth on /admin</li>
         <li>No raw SQL in payment handlers</li>
         <li>Secrets in env only</li>
@@ -37,21 +52,23 @@ const sections = [
   },
   {
     id: "secrets",
-    title: "Secrets / access",
+    title: "Secrets / Access",
+    Icon: KeyRound,
     content: (
-      <ul className="space-y-1 text-xs text-slate-400">
-        <li>API credentials: connected</li>
-        <li>Datadog: connected</li>
-        <li>GitHub: connected</li>
-        <li>Linear: not connected</li>
+      <ul className="space-y-1 text-xs text-muted-foreground">
+        <li className="flex justify-between"><span>API credentials</span><span className="text-dispatch-green">connected</span></li>
+        <li className="flex justify-between"><span>Datadog</span><span className="text-dispatch-green">connected</span></li>
+        <li className="flex justify-between"><span>GitHub</span><span className="text-dispatch-green">connected</span></li>
+        <li className="flex justify-between"><span>Linear</span><span className="text-muted-foreground">not connected</span></li>
       </ul>
     ),
   },
   {
     id: "worker",
-    title: "Worker profile",
+    title: "Worker Profile",
+    Icon: Users,
     content: (
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-muted-foreground">
         Auth, Injection, Config, Fixer, Retest. Concurrency: 4.
       </p>
     ),
@@ -59,28 +76,17 @@ const sections = [
 ];
 
 export function SetupAccordion() {
-  const [openId, setOpenId] = useState<string | null>("codebase");
   return (
-    <div className="border border-dispatch-muted rounded-lg overflow-hidden">
-      {sections.map(({ id, title, content }) => (
-        <div key={id} className="border-b border-dispatch-muted last:border-b-0">
-          <button
-            type="button"
-            onClick={() => setOpenId(openId === id ? null : id)}
-            className="flex w-full items-center justify-between bg-dispatch-slate/50 px-3 py-2.5 text-left text-sm font-medium text-slate-200 hover:bg-dispatch-slate"
-          >
+    <Accordion className="rounded-lg border border-border">
+      {sections.map(({ id, title, Icon, content }) => (
+        <AccordionItem key={id} className="border-b border-border last:border-b-0 px-3" value={id}>
+          <AccordionTrigger className="gap-2 text-xs hover:no-underline">
+            <Icon className="size-3.5 text-muted-foreground" />
             {title}
-            <span className="text-slate-500">
-              {openId === id ? "−" : "+"}
-            </span>
-          </button>
-          {openId === id && (
-            <div className="border-t border-dispatch-muted bg-dispatch-charcoal/50 px-3 py-2">
-              {content}
-            </div>
-          )}
-        </div>
+          </AccordionTrigger>
+          <AccordionContent>{content}</AccordionContent>
+        </AccordionItem>
       ))}
-    </div>
+    </Accordion>
   );
 }

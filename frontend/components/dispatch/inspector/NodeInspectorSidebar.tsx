@@ -1,6 +1,10 @@
 "use client";
 
 import { useDispatchWorkspace } from "@/lib/dispatch/state";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { X } from "lucide-react";
 import { EmptyInspectorState } from "./EmptyInspectorState";
 import { NodeStatusLegend } from "./NodeStatusLegend";
 import { NodeHeader } from "./NodeHeader";
@@ -29,21 +33,23 @@ export function NodeInspectorSidebar() {
 
   if (selectedNodeId == null) {
     return (
-      <div className="flex w-52 flex-shrink-0 flex-col border-l border-dispatch-muted bg-dispatch-slate/30 py-4">
-        <div className="px-4">
-          <EmptyInspectorState />
-          <NodeStatusLegend />
-        </div>
-      </div>
+      <aside className="flex w-56 shrink-0 flex-col border-l border-border bg-card/50">
+        <ScrollArea className="flex-1 overflow-y-auto">
+          <div className="px-3 py-2">
+            <EmptyInspectorState />
+            <NodeStatusLegend />
+          </div>
+        </ScrollArea>
+      </aside>
     );
   }
 
   const node = graphData.nodes[selectedNodeId];
   if (!node) {
     return (
-      <div className="w-[22%] min-w-[240px] flex-shrink-0 border-l border-dispatch-muted bg-dispatch-slate/30 p-4">
+      <aside className="flex w-64 shrink-0 flex-col border-l border-border bg-card/50 p-3">
         <EmptyInspectorState />
-      </div>
+      </aside>
     );
   }
 
@@ -52,49 +58,52 @@ export function NodeInspectorSidebar() {
     : undefined;
 
   return (
-    <div className="w-[22%] min-w-[260px] flex-shrink-0 flex flex-col border-l border-dispatch-muted bg-dispatch-slate/30 overflow-y-auto">
-      <div className="sticky top-0 flex justify-end border-b border-dispatch-muted bg-dispatch-slate/50 px-2 py-1">
-        <button
-          type="button"
+    <aside className="flex w-72 shrink-0 flex-col border-l border-border bg-card/50">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+        <span className="text-xs font-medium text-muted-foreground">Inspector</span>
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={() => selectNode(null)}
-          className="rounded px-2 py-1 text-xs text-slate-500 hover:bg-dispatch-muted hover:text-slate-300"
         >
-          Close
-        </button>
+          <X className="size-3.5" />
+        </Button>
       </div>
-      <div className="space-y-4 p-4">
-        <NodeHeader
-          name={node.label}
-          type={node.type}
-          state={node.status}
-          duration="12s"
-          clusterLabel={clusterLabel}
-        />
-        <NodeSummaryCard
-          currentTask="Scan /orders/:id for injection"
-          assignedTarget="/orders/:id"
-          status={node.status}
-          lastUpdate="Just now"
-          severity={node.severity}
-        />
-        {node.type === "finding" && node.severity && (
-          <FindingDetailsCard
-            severity={node.severity}
-            endpoint="/orders/:id"
-            filePath="src/routes/orders.ts"
-            lineNumber={42}
-            exploitSummary="SQLi via orderId param"
-            remediation="Use parameterized query"
+      <ScrollArea className="flex-1 overflow-y-auto">
+        <div className="space-y-3 p-3">
+          <NodeHeader
+            name={node.label}
+            type={node.type}
+            state={node.status}
+            duration="12s"
+            clusterLabel={clusterLabel}
           />
-        )}
-        <NodeActivityFeed events={mockEvents} />
-        <RelatedAssetsPanel assets={mockAssets} />
-        <NodeActionsPanel
-          onRerun={() => {}}
-          onCreateTicket={() => {}}
-          onJumpToCode={() => {}}
-        />
-      </div>
-    </div>
+          <NodeSummaryCard
+            currentTask="Scan /orders/:id for injection"
+            assignedTarget="/orders/:id"
+            status={node.status}
+            lastUpdate="Just now"
+            severity={node.severity}
+          />
+          {node.type === "finding" && node.severity && (
+            <FindingDetailsCard
+              severity={node.severity}
+              endpoint="/orders/:id"
+              filePath="src/routes/orders.ts"
+              lineNumber={42}
+              exploitSummary="SQLi via orderId param"
+              remediation="Use parameterized query"
+            />
+          )}
+          <NodeActivityFeed events={mockEvents} />
+          <RelatedAssetsPanel assets={mockAssets} />
+          <NodeActionsPanel
+            onRerun={() => {}}
+            onCreateTicket={() => {}}
+            onJumpToCode={() => {}}
+          />
+        </div>
+      </ScrollArea>
+    </aside>
   );
 }

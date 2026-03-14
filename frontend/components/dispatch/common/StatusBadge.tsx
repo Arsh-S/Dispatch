@@ -15,16 +15,16 @@ export type StatusVariant =
   | "retest";
 
 const variantClasses: Record<StatusVariant, string> = {
-  idle: "bg-dispatch-muted text-slate-300",
-  planning: "bg-dispatch-blue/20 text-dispatch-blue border border-dispatch-blue/40",
-  executing: "bg-dispatch-yellow/20 text-dispatch-yellow border border-dispatch-yellow/40",
-  completed: "bg-dispatch-green/20 text-dispatch-green border border-dispatch-green/40",
-  running: "bg-dispatch-yellow/20 text-dispatch-yellow border border-dispatch-yellow/40",
-  success: "bg-dispatch-green/20 text-dispatch-green border border-dispatch-green/40",
-  failed: "bg-dispatch-red/20 text-dispatch-red border border-dispatch-red/40",
-  warning: "bg-dispatch-orange/20 text-dispatch-orange border border-dispatch-orange/40",
-  fixer: "bg-dispatch-purple/20 text-dispatch-purple border border-dispatch-purple/40",
-  retest: "bg-dispatch-teal/20 text-dispatch-teal border border-dispatch-teal/40",
+  idle: "border-border bg-muted/50 text-muted-foreground",
+  planning: "border-dispatch-blue/40 bg-dispatch-blue/10 text-dispatch-blue",
+  executing: "border-dispatch-yellow/40 bg-dispatch-yellow/10 text-dispatch-yellow",
+  completed: "border-dispatch-green/40 bg-dispatch-green/10 text-dispatch-green",
+  running: "border-dispatch-yellow/40 bg-dispatch-yellow/10 text-dispatch-yellow",
+  success: "border-dispatch-green/40 bg-dispatch-green/10 text-dispatch-green",
+  failed: "border-dispatch-red/40 bg-dispatch-red/10 text-dispatch-red",
+  warning: "border-dispatch-orange/40 bg-dispatch-orange/10 text-dispatch-orange",
+  fixer: "border-dispatch-purple/40 bg-dispatch-purple/10 text-dispatch-purple",
+  retest: "border-dispatch-teal/40 bg-dispatch-teal/10 text-dispatch-teal",
 };
 
 export interface StatusBadgeProps {
@@ -37,7 +37,7 @@ export function StatusBadge({ children, variant = "idle", className }: StatusBad
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium capitalize tracking-tight",
         variantClasses[variant],
         className
       )}
