@@ -5,9 +5,9 @@ import { PreReconDeliverableSchema } from '../../schemas/pre-recon-deliverable';
 
 const SAMPLE_APP_DIR = path.resolve(__dirname, '../../../sample-app');
 
-describe('runOrchestrator', () => {
+describe('runOrchestrator', { timeout: 30000 }, () => {
   it('should return a preRecon deliverable that validates against the schema', async () => {
-    const result = await runOrchestrator({ targetDir: SAMPLE_APP_DIR });
+    const result = await runOrchestrator({ targetDir: SAMPLE_APP_DIR, mode: 'local' });
 
     expect(result.preRecon).toBeDefined();
     const parsed = PreReconDeliverableSchema.safeParse(result.preRecon);

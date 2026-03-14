@@ -1,0 +1,98 @@
+{
+  "dispatch_run_id": "dispatch-run-demo1",
+  "completed_at": "2026-03-14T19:00:00Z",
+  "duration_seconds": 245,
+  "total_workers": 2,
+  "findings": [
+    {
+      "finding_id": "finding-sql-orders-001",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "src/routes/orders.js",
+        "line": 47,
+        "endpoint": "POST /api/orders",
+        "method": "POST",
+        "parameter": "order_id"
+      },
+      "description": "The order_id parameter is interpolated directly into a SQL query via string concatenation on line 47. An attacker can inject arbitrary SQL to read, modify, or delete data in the orders table.",
+      "reproduction": {
+        "steps": [
+          "Send POST /api/orders with a valid auth token",
+          "Set order_id to: 1; DROP TABLE orders;--",
+          "Observe 500 Internal Server Error with database error in response body"
+        ],
+        "command": "curl -X POST http://localhost:3000/api/orders -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOi...' -d '{\"order_id\": \"1; DROP TABLE orders;--\"}'",
+        "expected": "400 Bad Request or parameterized query escapes the input",
+        "actual": "500 Internal Server Error — database error surfaced in response body"
+      },
+      "server_logs": [
+        { "timestamp": "2026-03-14T18:32:01Z", "level": "ERROR", "message": "QueryFailedError: syntax error at or near \"Drop\"" }
+      ],
+      "monkeypatch": {
+        "status": "validated",
+        "diff": "--- a/src/routes/orders.js\n+++ b/src/routes/orders.js\n@@ -45,3 +45,3 @@\n-  const result = await db.query(`SELECT * FROM orders WHERE id = '${req.body.order_id}'`);\n+  const result = await db.query('SELECT * FROM orders WHERE id = $1', [req.body.order_id]);",
+        "validation": {
+          "test": "Replayed reproduction payload",
+          "result": "PASS",
+          "response": "200 OK — returned empty result set"
+        }
+      },
+      "recommended_fix": "Refactor to use knex query builder instead of raw SQL, matching the convention in src/routes/users.js.",
+      "rules_violated": ["No raw SQL queries — must use parameterized statements", "Payment endpoints are critical priority"]
+    },
+    {
+      "finding_id": "finding-auth-admin-001",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8,
+      "owasp": "A01:2021",
+      "vuln_type": "broken-auth",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "src/routes/admin.js",
+        "line": 12,
+        "endpoint": "GET /api/admin/users",
+        "method": "GET",
+        "parameter": null
+      },
+      "description": "The admin users endpoint has no authentication middleware. Any unauthenticated user can access the full user list including emails and roles.",
+      "reproduction": {
+        "steps": [
+          "Send GET /api/admin/users with no Authorization header",
+          "Observe 200 OK with full user list"
+        ],
+        "command": "curl http://localhost:3000/api/admin/users",
+        "expected": "401 Unauthorized",
+        "actual": "200 OK — returned all user data"
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "not-attempted",
+        "diff": null,
+        "validation": null
+      },
+      "recommended_fix": "Add authMiddleware to the route definition and add admin role check.",
+      "rules_violated": ["All API endpoints must require authentication"]
+    }
+  ],
+  "clean_endpoints": [
+    {
+      "endpoint": "POST /api/orders",
+      "parameter": "quantity",
+      "attack_type": "sql-injection",
+      "notes": "quantity is cast to integer before use"
+    }
+  ],
+  "summary": {
+    "critical": 1,
+    "high": 1,
+    "medium": 0,
+    "low": 0,
+    "total_endpoints": 5,
+    "vulnerable_endpoints": 2,
+    "clean_endpoints": 3
+  }
+}
