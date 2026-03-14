@@ -224,7 +224,7 @@ const RealtimeVisualization = () => {
           ref={canvasRef}
           width={800}
           height={400}
-          className="w-full rounded-lg border border-primary/30 bg-[hsl(252,34%,6%)]"
+          className="w-full rounded-lg border border-primary/30 bg-[hsl(var(--background))]"
         />
 
         <div className="mt-4 grid grid-cols-2 gap-4">

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, useSpring, AnimatePresence } from 'framer-motion'
-import { useLanguage } from '@/contexts/LanguageContext'
 
 interface NavItem {
   label: string
@@ -14,17 +13,16 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
   const [isTransitioning, setIsTransitioning] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const prevSectionRef = useRef('home')
-  const { t } = useLanguage()
   
   const navItems: NavItem[] = [
-    { label: t('nav.home'), id: 'home' },
-    { label: t('nav.problem'), id: 'problem' },
-    { label: t('nav.clinical'), id: 'clinical' },
-    { label: t('nav.solution'), id: 'solution' },
-    { label: t('nav.how-it-works'), id: 'how-it-works' },
-    { label: t('nav.dashboard'), id: 'dashboard' },
-    { label: t('nav.muscle'), id: 'muscle' },
-    { label: t('nav.summary'), id: 'summary' },
+    { label: 'Home', id: 'home' },
+    { label: 'Problem', id: 'problem' },
+    { label: 'Pre-Recon', id: 'clinical' },
+    { label: 'Architecture', id: 'solution' },
+    { label: 'Workflow', id: 'how-it-works' },
+    { label: 'Outputs', id: 'dashboard' },
+    { label: 'Fix Loop', id: 'muscle' },
+    { label: 'Summary', id: 'summary' },
   ]
 
   const pillWidth = useSpring(1200, { stiffness: 220, damping: 25, mass: 1 })
@@ -50,14 +48,14 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
         height: '56px',
         background: `
           linear-gradient(135deg, 
-            #0a0a0b 0%, 
-            #121214 15%, 
-            #1a1a1c 30%, 
-            #222224 45%, 
-            #2a2a2c 60%, 
-            #323234 75%, 
-            #3a3a3c 90%, 
-            #2e2e30 100%
+            #08110d 0%, 
+            #0d1712 15%, 
+            #122019 30%, 
+            #162922 45%, 
+            #19322a 60%, 
+            #1d3a31 75%, 
+            #214339 90%, 
+            #183026 100%
           )
         `,
         boxShadow: `
@@ -172,7 +170,7 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
       <div 
         className="absolute inset-0 rounded-full pointer-events-none"
         style={{
-          boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.04)',
+          boxShadow: 'inset 0 0 40px rgba(62, 207, 142, 0.05)',
           opacity: 0.7,
         }}
       />
@@ -212,7 +210,7 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
                 style={{
                   fontSize: isActive ? '14.5px' : '14px',
                   fontWeight: isActive ? 680 : 510,
-                  color: isActive ? '#f0f0f0' : '#a0a0a0',
+                  color: isActive ? '#eefcf4' : '#9ebbad',
                   textDecoration: 'none',
                   letterSpacing: '0.45px',
                   background: 'transparent',
@@ -240,7 +238,7 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.color = '#d0d0d0'
+                    e.currentTarget.style.color = '#d7efe1'
                     e.currentTarget.style.transform = 'translateY(-0.5px)'
                     e.currentTarget.style.textShadow = `
                       0 1px 0 rgba(255, 255, 255, 0.12),
@@ -252,7 +250,7 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.color = '#a0a0a0'
+                    e.currentTarget.style.color = '#9ebbad'
                     e.currentTarget.style.transform = 'translateY(0)'
                     e.currentTarget.style.textShadow = `
                       0 1px 0 rgba(255, 255, 255, 0.08),

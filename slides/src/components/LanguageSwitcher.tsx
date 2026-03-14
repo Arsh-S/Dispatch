@@ -35,14 +35,14 @@ export const LanguageSwitcher: React.FC = () => {
             height: '56px',
             background: `
               linear-gradient(135deg, 
-                #0a0a0b 0%, 
-                #121214 15%, 
-                #1a1a1c 30%, 
-                #222224 45%, 
-                #2a2a2c 60%, 
-                #323234 75%, 
-                #3a3a3c 90%, 
-                #2e2e30 100%
+                #08110d 0%, 
+                #0d1712 15%, 
+                #122019 30%, 
+                #162922 45%, 
+                #19322a 60%, 
+                #1d3a31 75%, 
+                #214339 90%, 
+                #183026 100%
               )
             `,
             boxShadow: `
@@ -121,7 +121,7 @@ export const LanguageSwitcher: React.FC = () => {
           <div 
             className="absolute inset-0 rounded-full pointer-events-none"
             style={{
-              boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.04)',
+              boxShadow: 'inset 0 0 20px rgba(62, 207, 142, 0.05)',
             }}
           />
           
@@ -145,14 +145,14 @@ export const LanguageSwitcher: React.FC = () => {
         style={{
           background: `
             linear-gradient(135deg, 
-              #0a0a0b 0%, 
-              #121214 15%, 
-              #1a1a1c 30%, 
-              #222224 45%, 
-              #2a2a2c 60%, 
-              #323234 75%, 
-              #3a3a3c 90%, 
-              #2e2e30 100%
+              #08110d 0%, 
+              #0d1712 15%, 
+              #122019 30%, 
+              #162922 45%, 
+              #19322a 60%, 
+              #1d3a31 75%, 
+              #214339 90%, 
+              #183026 100%
             )
           `,
           boxShadow: `
@@ -161,7 +161,7 @@ export const LanguageSwitcher: React.FC = () => {
             0 12px 24px rgba(0, 0, 0, 0.6),
             inset 0 1px 1px rgba(255, 255, 255, 0.08)
           `,
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(62, 207, 142, 0.16)',
         }}
       >
         <div className="space-y-1">
@@ -201,4 +201,3 @@ export const LanguageSwitcher: React.FC = () => {
     </Popover>
   );
 };
-
