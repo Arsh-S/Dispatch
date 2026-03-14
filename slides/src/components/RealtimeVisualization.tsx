@@ -224,27 +224,27 @@ const RealtimeVisualization = () => {
           ref={canvasRef}
           width={800}
           height={400}
-          className="w-full border border-gray-700 rounded-lg bg-[#0a0a0a]"
+          className="w-full rounded-lg border border-primary/30 bg-[hsl(252,34%,6%)]"
         />
 
         <div className="mt-4 grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <p className="text-sm font-mono">
-              <span className="text-gray-400">Thigh Yaw (rel):</span>{' '}
-              <span className="text-blue-400">{relThigh.toFixed(2)}°</span>
+              <span className="text-muted-foreground">Thigh Yaw (rel):</span>{' '}
+              <span className="text-secondary">{relThigh.toFixed(2)}°</span>
             </p>
             <p className="text-sm font-mono">
-              <span className="text-gray-400">Knee Angle:</span>{' '}
+              <span className="text-muted-foreground">Knee Angle:</span>{' '}
               <span className="text-green-400">{kneeAngle.toFixed(2)}°</span>
             </p>
           </div>
           <div className="space-y-2">
             <p className="text-sm font-mono">
-              <span className="text-gray-400">Thigh (cont):</span>{' '}
+              <span className="text-muted-foreground">Thigh (cont):</span>{' '}
               {sensorData.yawThigh.toFixed(2)}°
             </p>
             <p className="text-sm font-mono">
-              <span className="text-gray-400">Shin (cont):</span>{' '}
+              <span className="text-muted-foreground">Shin (cont):</span>{' '}
               {sensorData.yawShin.toFixed(2)}°
             </p>
           </div>
