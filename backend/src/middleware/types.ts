@@ -4,6 +4,8 @@ export interface DispatchLogEntry {
   source: string;
   message: string;
   stack?: string;
+  dispatch_worker_id?: string;
+  dispatch_run_id?: string;
 }
 
 export interface DispatchLogResponse {
