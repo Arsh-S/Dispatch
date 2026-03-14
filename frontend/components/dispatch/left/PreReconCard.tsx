@@ -20,7 +20,7 @@ export interface PreReconCardProps {
 }
 
 export function PreReconCard({ preRecon }: PreReconCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   if (!preRecon) return null;
 

@@ -19,10 +19,16 @@ import type { GraphData, NodeId, NodeType, NodeStatus } from "./graphTypes";
 export interface SimNode extends SimulationNodeDatum {
   id: string;
   label: string;
+  displayLabel: string;
+  labelLines: string[];
   nodeType: NodeType;
   status: NodeStatus;
+  hopDistance: number | null;
+  baseRadius: number;
   radius: number;
   color: string;
+  textColor: string;
+  fontSize: number;
 }
 
 export interface SimLink extends SimulationLinkDatum<SimNode> {
@@ -66,6 +72,120 @@ function nodeColor(type: NodeType, status: NodeStatus): string {
   return STATUS_OVERRIDES[status] ?? TYPE_COLORS[type] ?? "#6b7280";
 }
 
+function getDisplayLabel(label: string, nodeType: NodeType): string {
+  if (nodeType === "finding") {
+    const shortLabel = label.split(":")[0]?.trim();
+    return shortLabel ? shortLabel.replace(/-/g, " ") : label;
+  }
+
+  return label.replace(/-/g, " ");
+}
+
+function splitLabel(label: string, maxLineLength: number): string[] {
+  const words = label.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [label];
+
+  const lines: string[] = [];
+  let currentLine = "";
+
+  for (const word of words) {
+    if (!currentLine) {
+      currentLine = word;
+      continue;
+    }
+
+    const candidate = `${currentLine} ${word}`;
+    if (candidate.length <= maxLineLength || lines.length >= 1) {
+      currentLine = candidate;
+      continue;
+    }
+
+    lines.push(currentLine);
+    currentLine = word;
+  }
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  if (lines.length <= 2) {
+    return lines;
+  }
+
+  const mergedTail = lines.slice(1).join(" ");
+  return [
+    lines[0],
+    mergedTail.length > maxLineLength + 3
+      ? `${mergedTail.slice(0, maxLineLength).trimEnd()}...`
+      : mergedTail,
+  ];
+}
+
+function hexToRgb(hex: string) {
+  const normalized = hex.replace("#", "");
+  if (normalized.length !== 6) return null;
+
+  return {
+    r: parseInt(normalized.slice(0, 2), 16),
+    g: parseInt(normalized.slice(2, 4), 16),
+    b: parseInt(normalized.slice(4, 6), 16),
+  };
+}
+
+function getTextColor(fill: string) {
+  const rgb = hexToRgb(fill);
+  if (!rgb) return "#f8fafc";
+
+  const luminance =
+    (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+
+  return luminance > 0.58 ? "#0f172a" : "#f8fafc";
+}
+
+function getLabelMetrics(label: string, nodeType: NodeType) {
+  const displayLabel = getDisplayLabel(label, nodeType);
+  const labelLines = splitLabel(
+    displayLabel,
+    nodeType === "orchestrator" ? 14 : nodeType === "finding" ? 12 : 11
+  );
+  const longestLineLength = labelLines.reduce(
+    (max, line) => Math.max(max, line.length),
+    0
+  );
+
+  return { displayLabel, labelLines, longestLineLength };
+}
+
+function getHopDistances(graphData: GraphData, rootId: string) {
+  const adjacency = new Map<string, Set<string>>();
+
+  for (const edge of graphData.edges) {
+    if (!adjacency.has(edge.from)) adjacency.set(edge.from, new Set());
+    if (!adjacency.has(edge.to)) adjacency.set(edge.to, new Set());
+    adjacency.get(edge.from)?.add(edge.to);
+    adjacency.get(edge.to)?.add(edge.from);
+  }
+
+  const distances = new Map<string, number>();
+  const queue: string[] = [rootId];
+  distances.set(rootId, 0);
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) continue;
+
+    const currentDistance = distances.get(current) ?? 0;
+    const neighbors = adjacency.get(current);
+    for (const neighbor of neighbors ? Array.from(neighbors) : []) {
+      if (distances.has(neighbor)) continue;
+      distances.set(neighbor, currentDistance + 1);
+      queue.push(neighbor);
+    }
+  }
+
+  return distances;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Hook                                                               */
 /* ------------------------------------------------------------------ */
@@ -105,6 +225,7 @@ export function useForceGraph(
     const h = canvas.clientHeight || 600;
 
     const degreeMap: Record<string, number> = {};
+    const hopDistances = getHopDistances(graphData, "orchestrator");
     for (const e of graphData.edges) {
       degreeMap[e.from] = (degreeMap[e.from] ?? 0) + 1;
       degreeMap[e.to] = (degreeMap[e.to] ?? 0) + 1;
@@ -112,16 +233,46 @@ export function useForceGraph(
 
     const nodes: SimNode[] = Object.values(graphData.nodes).map((n) => {
       const degree = degreeMap[n.id] ?? 0;
+      const { displayLabel, labelLines, longestLineLength } = getLabelMetrics(
+        n.label,
+        n.type
+      );
+      const hopDistance = hopDistances.get(n.id) ?? null;
+      const sizeHint = n.size ? n.size / 2 : 0;
       const baseRadius =
-        n.type === "orchestrator" ? 10 : n.type === "cluster" ? 6 : 4;
-      const radius = baseRadius + Math.min(degree * 1.2, 8);
+        n.type === "orchestrator"
+          ? Math.max(sizeHint, 24)
+          : n.type === "cluster"
+          ? Math.max(sizeHint, 14)
+          : n.type === "finding"
+          ? Math.max(sizeHint, 10)
+          : Math.max(sizeHint, 7);
+      const workerScale =
+        n.type === "worker"
+          ? Math.max(0.7, 1.15 - Math.max((hopDistance ?? 2) - 1, 0) * 0.15)
+          : 1;
+      const radius = Math.max(
+        6,
+        Math.round((baseRadius + Math.min(degree * 0.3, 2)) * workerScale)
+      );
+      const fontSize = Math.max(
+        9,
+        Math.min(13, Math.floor(radius / (labelLines.length > 1 ? 2.4 : 1.9)))
+      );
+      const color = nodeColor(n.type, n.status);
       return {
         id: n.id,
         label: n.label,
+        displayLabel,
+        labelLines,
         nodeType: n.type,
         status: n.status,
+        hopDistance,
+        baseRadius: radius,
         radius,
-        color: nodeColor(n.type, n.status),
+        color,
+        textColor: getTextColor(color),
+        fontSize,
         x: w / 2 + (Math.random() - 0.5) * 200,
         y: h / 2 + (Math.random() - 0.5) * 200,
       };
@@ -155,7 +306,7 @@ export function useForceGraph(
       .force("center", forceCenter(w / 2, h / 2))
       .force(
         "collide",
-        forceCollide<SimNode>().radius((d) => d.radius + 4)
+        forceCollide<SimNode>().radius((d) => d.radius + 10)
       )
       .alphaDecay(0.02)
       .velocityDecay(0.3);
@@ -297,21 +448,22 @@ export function useForceGraph(
       ctx.restore();
     }
 
-    /* --- hover label --- */
     if (hovered) {
       const nx = hovered.x!;
       const ny = hovered.y!;
-      const label = hovered.label;
-      const fontSize = 12;
-      ctx.font = `500 ${fontSize}px Inter, system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
+      const hoverFontSize = Math.round(hovered.fontSize * 1.35);
+      const hoverLabel = hovered.displayLabel.toUpperCase();
 
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
-      ctx.shadowBlur = 4;
-      ctx.fillStyle = "#fff";
-      ctx.fillText(label, nx, ny - hovered.radius - 6);
-      ctx.shadowBlur = 0;
+      ctx.save();
+      ctx.font = `800 ${hoverFontSize}px Outfit, ui-sans-serif, system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "#ffffff";
+
+      const startY = ny - hovered.radius - hoverFontSize - 8;
+      ctx.fillText(hoverLabel, nx, startY);
+
+      ctx.restore();
     }
 
     ctx.restore();
