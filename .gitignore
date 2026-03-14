@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 frontend/node_modules/
+slides/node_modules/
 
 # Next.js
 frontend/.next/
@@ -22,6 +23,7 @@ Thumbs.db
 dist/
 build/
 out/
+slides/dist/
 *.log
 npm-debug.log*
 
