@@ -31,3 +31,9 @@ npm-debug.log*
 coverage/
 .nyc_output/
 *.tsbuildinfo
+*.db
+*.db-wal
+*.db-shm
+sample-app/test-token.txt
+sample-app/data.db
+.nfs*
