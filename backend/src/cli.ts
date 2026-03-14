@@ -1,6 +1,7 @@
 import { runOrchestrator } from './orchestrator/agent';
 import { bootstrapLabels } from './github/labels';
 import { createIssuesFromReport } from './github/issues';
+import { generatePdfReport } from './reporting/pdf';
 import { FindingForIssue } from './github/types';
 import { Finding } from './schemas/finding-report';
 import path from 'path';
@@ -26,11 +27,15 @@ async function main() {
       process.exit(1);
     }
 
-    const githubRepo = args[2] || process.env.GITHUB_REPO; // optional: owner/repo for issue creation
+    const useBlaxel = args.includes('--blaxel');
+    const remainingArgs = args.filter(a => a !== '--blaxel').slice(2);
+    const githubRepo = remainingArgs[0] || process.env.GITHUB_REPO; // optional: owner/repo for issue creation
     const outputPath = path.join(process.cwd(), 'dispatch-output.json');
+    const mode = useBlaxel ? 'blaxel' : 'local';
 
     console.log('=== Dispatch Security Scanner ===');
     console.log(`Target: ${targetDir}`);
+    console.log(`Mode: ${mode}`);
     console.log(`Output: ${outputPath}`);
     if (githubRepo) console.log(`GitHub: ${githubRepo}`);
     console.log('');
@@ -38,7 +43,7 @@ async function main() {
     // Run orchestrator
     const result = await runOrchestrator({
       targetDir,
-      mode: 'local',
+      mode,
       maxWorkers: 2,
       outputPath,
     });
@@ -70,11 +75,24 @@ async function main() {
         }
       }
 
+      // Generate PDF report
+      const pdfPath = outputPath.replace(/\.json$/, '.pdf');
+      try {
+        await generatePdfReport(report, pdfPath);
+        console.log(`\nPDF report: ${pdfPath}`);
+
+        // Copy PDF to dashboard public dir
+        const dashboardPdf = path.join(__dirname, 'dashboard/public/dispatch-report.pdf');
+        try { fs.copyFileSync(pdfPath, dashboardPdf); } catch { /* dashboard dir may not exist */ }
+      } catch (err: any) {
+        console.error(`PDF generation failed: ${err.message}`);
+      }
+
       // Also copy output to dashboard public dir
       const dashboardOutput = path.join(__dirname, 'dashboard/public/dispatch-output.json');
       try {
         fs.copyFileSync(outputPath, dashboardOutput);
-        console.log(`\nDashboard data updated. Run: cd src/dashboard && pnpm dev`);
+        console.log(`Dashboard data updated. Run: cd src/dashboard && pnpm dev`);
       } catch {
         // Dashboard dir may not exist yet
       }
@@ -86,15 +104,34 @@ async function main() {
         if (w.error) console.log(`  ${w.workerId}: ${w.error}`);
       });
     }
+  } else if (command === 'report') {
+    const inputPath = args[1] || path.join(process.cwd(), 'dispatch-output.json');
+    const pdfOutputPath = args[2] || inputPath.replace(/\.json$/, '.pdf');
+
+    if (!fs.existsSync(inputPath)) {
+      console.error(`Input file not found: ${inputPath}`);
+      process.exit(1);
+    }
+
+    console.log(`Generating PDF report from ${inputPath}...`);
+    const data = JSON.parse(fs.readFileSync(inputPath, 'utf-8'));
+    const result = await generatePdfReport(data, pdfOutputPath);
+    console.log(`PDF report written to: ${result}`);
   } else {
     console.log('Dispatch Security Scanner');
     console.log('');
     console.log('Usage:');
-    console.log('  pnpm tsx src/cli.ts scan <path-to-repo> [owner/repo]');
+    console.log('  pnpm tsx src/cli.ts scan <path-to-repo> [owner/repo] [--blaxel]');
+    console.log('  pnpm tsx src/cli.ts report [input.json] [output.pdf]');
+    console.log('');
+    console.log('Options:');
+    console.log('  --blaxel    Run workers in Blaxel sandboxes (default: local)');
     console.log('');
     console.log('Examples:');
     console.log('  pnpm tsx src/cli.ts scan ./sample-app');
+    console.log('  pnpm tsx src/cli.ts scan ./sample-app --blaxel');
     console.log('  pnpm tsx src/cli.ts scan ./sample-app myorg/myrepo');
+    console.log('  pnpm tsx src/cli.ts report dispatch-output.json report.pdf');
   }
 }
 
