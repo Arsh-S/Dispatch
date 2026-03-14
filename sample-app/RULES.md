@@ -1,0 +1,5 @@
+- All API endpoints must require authentication
+- No raw SQL queries — must use parameterized statements
+- JWT tokens must verify signature and check expiration
+- No hardcoded API keys or secrets in source files
+- Payment endpoints are critical priority
