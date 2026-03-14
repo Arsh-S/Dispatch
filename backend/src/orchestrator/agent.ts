@@ -1,7 +1,7 @@
 import { runPreRecon } from './pre-recon';
 import { buildAttackMatrix, createTaskAssignments } from './attack-matrix';
 import { dispatchWorkers, WorkerResult } from './dispatcher';
-import { mergeReports, MergedReport } from './collector';
+import { mergeReports, MergedReport, forwardToDatadog } from './collector';
 import { DispatchOutputWriter } from './dispatch-output-writer';
 import type { PreReconDeliverable } from '../schemas/pre-recon-deliverable';
 import type { TaskAssignment } from '../schemas/task-assignment';
@@ -96,6 +96,7 @@ export async function runOrchestrator(options: OrchestratorOptions): Promise<Orc
   if (completedReports.length > 0) {
     console.log('[Orchestrator] Merging reports...');
     mergedReport = mergeReports(completedReports);
+    await forwardToDatadog(mergedReport);
     console.log(`[Orchestrator] Merged: ${mergedReport.findings.length} findings (${mergedReport.summary.critical} critical, ${mergedReport.summary.high} high).`);
   } else {
     console.log('[Orchestrator] No completed reports to merge.');
