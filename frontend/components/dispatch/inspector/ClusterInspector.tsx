@@ -27,8 +27,8 @@ const statusToVariant: Record<string, StatusVariant> = {
 };
 
 export function ClusterInspector({ clusterId, assignments, graphNodes }: ClusterInspectorProps) {
-  const attackTypes = [...new Set(assignments.map((a) => a.attack_type))];
-  const endpoints = [...new Set(assignments.map((a) => `${a.target.method} ${a.target.endpoint}`))];
+  const attackTypes = Array.from(new Set(assignments.map((a) => a.attack_type)));
+  const endpoints = Array.from(new Set(assignments.map((a) => `${a.target.method} ${a.target.endpoint}`)));
 
   const workerNodes = Object.values(graphNodes).filter(
     (n) => n.type === "worker" && n.clusterId === clusterId
