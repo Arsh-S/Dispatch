@@ -139,12 +139,12 @@ Click node → Inspector looks up by node type + id → render backend data
 
 ## 8. Checklist (Revised)
 
-- [ ] Remove left panel (all HUD components)
-- [ ] Remove/simplify GraphToolbar and GraphLegend
-- [ ] Update DispatchWorkspace layout (graph + inspector only)
-- [ ] Worker inspector: show briefing, target, report from task_assignments + finding_reports
-- [ ] Orchestrator inspector: show pre_recon (routes, risk signals, briefing)
-- [ ] Cluster inspector: show workers and endpoints in cluster
-- [ ] Finding inspector: keep FindingDetailsCard, backend-backed
-- [ ] Empty state when no scan data
-- [ ] (Optional) Backend: attach assignment/pre_recon to node meta
+- [x] Remove left panel (all HUD components)
+- [x] Remove/simplify GraphToolbar and GraphLegend
+- [x] Update DispatchWorkspace layout (graph + inspector only)
+- [x] Worker inspector: show briefing, target, report from task_assignments + finding_reports
+- [x] Orchestrator inspector: show pre_recon (routes, risk signals, briefing)
+- [x] Cluster inspector: show workers and endpoints in cluster
+- [x] Finding inspector: keep FindingDetailsCard, backend-backed
+- [x] Empty state when no scan data
+- [x] Backend: attach assignment/pre_recon to node meta
