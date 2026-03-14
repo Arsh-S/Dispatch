@@ -14,6 +14,7 @@ frontend/.next/
 
 # IDE and OS
 .idea/
+.cursor/mcp.json
 *.swp
 *.swo
 .DS_Store

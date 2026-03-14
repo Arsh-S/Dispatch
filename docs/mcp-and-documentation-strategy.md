@@ -108,6 +108,7 @@ These MCPs are used by the Dispatch agent during live operation.
 
 | MCP | Package / Endpoint | Tools | Auth |
 |---|---|---|---|
+| **BrowserBase** | `@browserbasehq/mcp-server-browserbase` or hosted SHTTP | `navigate`, `act`, `observe`, `extract`, `start`, `end` — cloud-headed browser for UI testing | `BROWSERBASE_API_KEY` (+ `GEMINI_API_KEY` for custom models) |
 | **OWASP ZAP** | `lisberndt/zap-mcp-server` | `start_spider`, `start_active_scan`, `start_ajax_spider`, `get_alerts`, `generate_report` | ZAP API key |
 | **Playwright** | `@playwright/mcp` | Navigate, click, fill, evaluate JS, get accessibility tree | None (local browser) |
 | **Security Tools** | `cyproxio/mcp-for-security` | SQLMap, FFUF, Nmap, Masscan | None (local CLIs) |
@@ -142,6 +143,14 @@ These MCPs are used by the Dispatch agent during live operation.
     "playwright": {
       "command": "npx",
       "args": ["@playwright/mcp@latest"]
+    },
+    "browserbase": {
+      "command": "npx",
+      "args": ["-y", "@browserbasehq/mcp-server-browserbase"],
+      "env": {
+        "BROWSERBASE_API_KEY": "<from https://www.browserbase.com/overview>",
+        "GEMINI_API_KEY": "<optional — for Stagehand AI, default: google/gemini-2.5-flash-lite>"
+      }
     }
   }
 }
@@ -288,11 +297,12 @@ await sandbox.process.exec({ command: "npm install", workingDir: "/app" });
 ## Action Items
 
 1. **Immediately configure build-time MCPs** — Add `@mastra/mcp-docs-server` + `@upstash/context7-mcp` to Claude Code settings
-2. **Verify Context7 coverage** — Run `resolve-library-id` for: mastra, blaxel, slack-bolt, linear-sdk, datadogpy. Submit missing ones at `context7.com/add-library`
-3. **Get API keys** — GitHub PAT, Slack Bot Token, Linear API key, Sentry token, Datadog API+App keys, Firecrawl API key
-4. **Decision: Juice Shop vs Custom App** — Juice Shop saves hours of build time but changes middleware injection approach. For hackathon, Juice Shop is recommended.
-5. **Set up ZAP MCP** — `pip install` the ZAP MCP server + run ZAP daemon in Docker for security scanning
-6. **Test Blaxel sandbox MCP** — Each sandbox exposes MCP at `<url>/mcp` — verify this works for agent-to-sandbox communication
+2. **Configure BrowserBase (optional)** — Copy `.cursor/mcp.json.example` → `.cursor/mcp.json`, add `BROWSERBASE_API_KEY` from [browserbase.com/overview](https://www.browserbase.com/overview). Add `BROWSERBASE_API_KEY` to `backend/.env` for runtime use.
+3. **Verify Context7 coverage** — Run `resolve-library-id` for: mastra, blaxel, slack-bolt, linear-sdk, datadogpy. Submit missing ones at `context7.com/add-library`
+4. **Get API keys** — GitHub PAT, Slack Bot Token, Linear API key, Sentry token, Datadog API+App keys, Firecrawl API key, BrowserBase API key
+5. **Decision: Juice Shop vs Custom App** — Juice Shop saves hours of build time but changes middleware injection approach. For hackathon, Juice Shop is recommended.
+6. **Set up ZAP MCP** — `pip install` the ZAP MCP server + run ZAP daemon in Docker for security scanning
+7. **Test Blaxel sandbox MCP** — Each sandbox exposes MCP at `<url>/mcp` — verify this works for agent-to-sandbox communication
 
 ---
 
