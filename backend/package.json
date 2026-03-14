@@ -6,6 +6,8 @@
   "scripts": {
     "scan": "tsx src/cli.ts scan",
     "scan:sample": "tsx src/cli.ts scan ./sample-app",
+    "scan:blaxel": "tsx src/cli.ts scan ./sample-app --blaxel",
+    "report": "tsx src/cli.ts report",
     "dashboard": "cd src/dashboard && pnpm dev",
     "test": "vitest run"
   },
@@ -28,11 +30,14 @@
     ]
   },
   "dependencies": {
+    "@blaxel/core": "^0.2.74",
     "@octokit/rest": "^22.0.1",
+    "@types/pdfkit": "^0.17.5",
     "crypto-js": "^4.2.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "glob": "^13.0.6",
+    "pdfkit": "^0.17.2",
     "uuid": "^13.0.0",
     "yaml": "^2.8.2",
     "zod": "^3.25.76"
