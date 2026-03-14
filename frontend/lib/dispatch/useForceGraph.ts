@@ -401,7 +401,7 @@ export function useForceGraph(
         ctx.strokeStyle = "rgba(255,255,255,0.03)";
         ctx.lineWidth = 0.5;
       } else if (edgeConnected) {
-        ctx.strokeStyle = "rgba(62,207,142,0.6)"; // Supabase green
+        ctx.strokeStyle = "rgba(255,255,255,0.22)";
         ctx.lineWidth = 1.5;
       } else {
         ctx.strokeStyle = "rgba(255,255,255,0.08)";
