@@ -1,7 +1,23 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import express, { Request, Response } from 'express';
-import { dispatchLogMiddleware, clearDispatchLogs, logStore } from '../dispatch-log-middleware.js';
 import http from 'http';
+
+// Mock Datadog modules to prevent initDatadog/startAutoFlush side effects at module load
+vi.mock('../../integrations/datadog/client.js', () => ({
+  initDatadog: vi.fn(),
+  isEnabled: vi.fn(() => false),
+  isReadEnabled: vi.fn(() => false),
+}));
+vi.mock('../../integrations/datadog/log-forwarder.js', () => ({
+  enqueue: vi.fn(),
+  startAutoFlush: vi.fn(),
+  shutdown: vi.fn(),
+}));
+vi.mock('../../integrations/datadog/log-reader.js', () => ({
+  queryLogs: vi.fn(),
+}));
+
+import { dispatchLogMiddleware, clearDispatchLogs, logStore } from '../dispatch-log-middleware.js';
 
 function createTestApp() {
   const app = express();
