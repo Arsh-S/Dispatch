@@ -1,83 +1,456 @@
 "use client";
 
+import { useState } from "react";
 import { SeverityBadge } from "@/components/dispatch/common/SeverityBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Severity } from "@/lib/dispatch/graphTypes";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Copy,
+  Check,
+  ExternalLink,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Clock,
+  FileCode,
+  Terminal,
+  GitBranch,
+  Wrench,
+} from "lucide-react";
+import type {
+  Finding,
+  Severity,
+  ExploitConfidence,
+  MonkeypatchStatus,
+  FixStatus,
+} from "@/lib/dispatch/graphTypes";
 
+// Props that accept a full Finding object
 export interface FindingDetailsCardProps {
-  severity: Severity;
-  endpoint?: string;
-  filePath?: string;
-  lineNumber?: number;
-  exploitSummary?: string;
-  remediation?: string;
-  ticketStatus?: string;
-  fixVerificationStatus?: string;
+  finding: Finding;
 }
 
-export function FindingDetailsCard({
-  severity,
-  endpoint,
-  filePath,
-  lineNumber,
-  exploitSummary,
-  remediation,
-  ticketStatus,
-  fixVerificationStatus,
-}: FindingDetailsCardProps) {
+// Exploit confidence badge component
+function ExploitConfidenceBadge({ confidence }: { confidence: ExploitConfidence }) {
+  if (confidence === "confirmed") {
+    return (
+      <Badge variant="destructive" className="text-[10px] gap-1">
+        <CheckCircle className="w-3 h-3" />
+        Confirmed
+      </Badge>
+    );
+  }
   return (
-    <Card size="sm" className="border-dispatch-red/30 ring-dispatch-red/10">
-      <CardHeader>
-        <CardTitle className="text-xs font-medium text-dispatch-red uppercase tracking-wider">
-          Finding Details
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <dl className="space-y-2 text-xs">
-          <div className="flex items-center justify-between gap-2">
-            <dt className="text-muted-foreground">Severity</dt>
-            <dd><SeverityBadge severity={severity} /></dd>
+    <Badge variant="secondary" className="text-[10px] gap-1 bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+      <AlertTriangle className="w-3 h-3" />
+      Unconfirmed
+    </Badge>
+  );
+}
+
+// Monkeypatch status badge component
+function MonkeypatchBadge({ status }: { status: MonkeypatchStatus }) {
+  switch (status) {
+    case "validated":
+      return (
+        <Badge className="text-[10px] gap-1 bg-green-500/20 text-green-400 border-green-500/30">
+          <CheckCircle className="w-3 h-3" />
+          Validated
+        </Badge>
+      );
+    case "failed":
+      return (
+        <Badge variant="destructive" className="text-[10px] gap-1">
+          <XCircle className="w-3 h-3" />
+          Failed
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="text-[10px] gap-1">
+          <Clock className="w-3 h-3" />
+          Not Attempted
+        </Badge>
+      );
+  }
+}
+
+// Fix status badge component
+function FixStatusBadge({ status }: { status?: FixStatus }) {
+  switch (status) {
+    case "verified":
+      return (
+        <Badge className="text-[10px] gap-1 bg-green-500/20 text-green-400 border-green-500/30">
+          <CheckCircle className="w-3 h-3" />
+          Fix Verified
+        </Badge>
+      );
+    case "in-progress":
+      return (
+        <Badge className="text-[10px] gap-1 bg-blue-500/20 text-blue-400 border-blue-500/30">
+          <Wrench className="w-3 h-3" />
+          In Progress
+        </Badge>
+      );
+    case "unverified":
+      return (
+        <Badge className="text-[10px] gap-1 bg-orange-500/20 text-orange-400 border-orange-500/30">
+          <AlertTriangle className="w-3 h-3" />
+          Unverified
+        </Badge>
+      );
+    case "failed":
+      return (
+        <Badge variant="destructive" className="text-[10px] gap-1">
+          <XCircle className="w-3 h-3" />
+          Fix Failed
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="text-[10px] gap-1">
+          <Clock className="w-3 h-3" />
+          Unfixed
+        </Badge>
+      );
+  }
+}
+
+// Copy button component
+function CopyButton({ text, label }: { text: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleCopy}
+      className="h-6 px-2 text-[10px] gap-1"
+    >
+      {copied ? (
+        <>
+          <Check className="w-3 h-3" />
+          Copied
+        </>
+      ) : (
+        <>
+          <Copy className="w-3 h-3" />
+          {label || "Copy"}
+        </>
+      )}
+    </Button>
+  );
+}
+
+export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
+  const [showFullDiff, setShowFullDiff] = useState(false);
+
+  const severityColor = {
+    CRITICAL: "border-red-500/50 bg-red-500/5",
+    HIGH: "border-orange-500/50 bg-orange-500/5",
+    MEDIUM: "border-yellow-500/50 bg-yellow-500/5",
+    LOW: "border-gray-500/50 bg-gray-500/5",
+  }[finding.severity] || "border-dispatch-red/30";
+
+  return (
+    <div className="space-y-3">
+      {/* Main Finding Card */}
+      <Card size="sm" className={severityColor}>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xs font-medium text-foreground uppercase tracking-wider flex items-center gap-2">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              {finding.vuln_type.replace(/-/g, " ").toUpperCase()}
+            </CardTitle>
+            <SeverityBadge severity={finding.severity.toLowerCase() as Severity} />
           </div>
-          {endpoint != null && (
-            <div className="flex justify-between gap-2">
-              <dt className="shrink-0 text-muted-foreground">Endpoint</dt>
-              <dd className="font-mono text-foreground">{endpoint}</dd>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Location */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-1 text-muted-foreground text-[10px] uppercase tracking-wider">
+              <FileCode className="w-3 h-3" />
+              Location
+            </div>
+            <div className="font-mono text-xs bg-black/20 rounded px-2 py-1.5 space-y-0.5">
+              <div className="text-foreground">
+                {finding.location.file}:{finding.location.line}
+              </div>
+              <div className="text-blue-400">
+                {finding.location.method} {finding.location.endpoint}
+              </div>
+              {finding.location.parameter && (
+                <div className="text-muted-foreground">
+                  Parameter: <span className="text-yellow-400">{finding.location.parameter}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Status Badges */}
+          <div className="flex flex-wrap gap-1.5">
+            <ExploitConfidenceBadge confidence={finding.exploit_confidence} />
+            <MonkeypatchBadge status={finding.monkeypatch.status} />
+            <FixStatusBadge status={finding.fix_status} />
+          </div>
+
+          {/* Metadata */}
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            {finding.cvss_score && (
+              <>
+                <dt className="text-muted-foreground">CVSS Score</dt>
+                <dd className="text-foreground font-medium">{finding.cvss_score}</dd>
+              </>
+            )}
+            {finding.owasp && (
+              <>
+                <dt className="text-muted-foreground">OWASP</dt>
+                <dd className="text-foreground font-mono">{finding.owasp}</dd>
+              </>
+            )}
+          </dl>
+
+          {/* Description */}
+          <div className="space-y-1">
+            <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+              Description
+            </div>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              {finding.description}
+            </p>
+          </div>
+
+          {/* Rules Violated */}
+          {finding.rules_violated.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+                Rules Violated
+              </div>
+              <ul className="space-y-0.5">
+                {finding.rules_violated.map((rule, i) => (
+                  <li key={i} className="text-xs text-red-400 flex items-start gap-1.5">
+                    <XCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                    {rule}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
-          {filePath != null && (
-            <div className="flex justify-between gap-2">
-              <dt className="shrink-0 text-muted-foreground">File</dt>
-              <dd className="font-mono text-foreground">
-                {filePath}{lineNumber != null && `:${lineNumber}`}
-              </dd>
-            </div>
+
+          {/* GitHub Issue Link */}
+          {finding.github_issue_url && (
+            <a
+              href={finding.github_issue_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              <GitBranch className="w-3 h-3" />
+              Issue #{finding.github_issue_number}
+              <ExternalLink className="w-3 h-3" />
+            </a>
           )}
-          {exploitSummary != null && (
-            <div>
-              <dt className="mb-0.5 text-muted-foreground">Exploit / repro</dt>
-              <dd className="text-foreground/80">{exploitSummary}</dd>
+        </CardContent>
+      </Card>
+
+      {/* Reproduction Card */}
+      {finding.reproduction && (
+        <Card size="sm" className="border-blue-500/30 bg-blue-500/5">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-blue-400 uppercase tracking-wider flex items-center gap-2">
+                <Terminal className="w-3.5 h-3.5" />
+                Reproduction
+              </CardTitle>
+              <CopyButton text={finding.reproduction.command} label="Copy curl" />
             </div>
-          )}
-          {remediation != null && (
-            <div>
-              <dt className="mb-0.5 text-muted-foreground">Remediation</dt>
-              <dd className="text-foreground/80">{remediation}</dd>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Steps */}
+            <div className="space-y-1">
+              <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+                Steps
+              </div>
+              <ol className="space-y-1 list-decimal list-inside">
+                {finding.reproduction.steps.map((step, i) => (
+                  <li key={i} className="text-xs text-foreground/80">
+                    {step}
+                  </li>
+                ))}
+              </ol>
             </div>
-          )}
-          {ticketStatus != null && (
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Ticket</dt>
-              <dd className="text-foreground">{ticketStatus}</dd>
+
+            {/* Command */}
+            <div className="space-y-1">
+              <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+                Command
+              </div>
+              <pre className="font-mono text-[10px] bg-black/40 rounded p-2 overflow-x-auto text-green-400 whitespace-pre-wrap break-all">
+                {finding.reproduction.command}
+              </pre>
             </div>
-          )}
-          {fixVerificationStatus != null && (
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Fix verification</dt>
-              <dd className="text-foreground">{fixVerificationStatus}</dd>
+
+            {/* Expected vs Actual */}
+            <div className="grid grid-cols-1 gap-2">
+              <div className="space-y-1">
+                <div className="text-muted-foreground text-[10px] uppercase tracking-wider flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3 text-green-400" />
+                  Expected
+                </div>
+                <div className="text-xs text-foreground/80 bg-green-500/10 rounded px-2 py-1">
+                  {finding.reproduction.expected}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-muted-foreground text-[10px] uppercase tracking-wider flex items-center gap-1">
+                  <XCircle className="w-3 h-3 text-red-400" />
+                  Actual
+                </div>
+                <div className="text-xs text-foreground/80 bg-red-500/10 rounded px-2 py-1">
+                  {finding.reproduction.actual}
+                </div>
+              </div>
             </div>
-          )}
-        </dl>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Server Logs Card */}
+      {finding.server_logs.length > 0 && (
+        <Card size="sm" className="border-purple-500/30 bg-purple-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-purple-400 uppercase tracking-wider flex items-center gap-2">
+              <Terminal className="w-3.5 h-3.5" />
+              Server Logs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="font-mono text-[10px] bg-black/40 rounded p-2 space-y-1 max-h-32 overflow-y-auto">
+              {finding.server_logs.map((log, i) => (
+                <div key={i} className="flex gap-2">
+                  <span className="text-muted-foreground shrink-0">
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </span>
+                  <span
+                    className={
+                      log.level === "ERROR"
+                        ? "text-red-400"
+                        : log.level === "WARN"
+                        ? "text-yellow-400"
+                        : "text-foreground/70"
+                    }
+                  >
+                    [{log.level}]
+                  </span>
+                  <span className="text-foreground/80">{log.message}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Monkeypatch Card */}
+      {finding.monkeypatch.diff && (
+        <Card size="sm" className="border-green-500/30 bg-green-500/5">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium text-green-400 uppercase tracking-wider flex items-center gap-2">
+                <GitBranch className="w-3.5 h-3.5" />
+                Monkeypatch
+              </CardTitle>
+              <MonkeypatchBadge status={finding.monkeypatch.status} />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <pre className={`font-mono text-[10px] bg-black/40 rounded p-2 overflow-x-auto ${showFullDiff ? "" : "max-h-24"}`}>
+              {finding.monkeypatch.diff.split("\n").map((line, i) => (
+                <div
+                  key={i}
+                  className={
+                    line.startsWith("+")
+                      ? "text-green-400"
+                      : line.startsWith("-")
+                      ? "text-red-400"
+                      : line.startsWith("@@")
+                      ? "text-blue-400"
+                      : "text-foreground/60"
+                  }
+                >
+                  {line}
+                </div>
+              ))}
+            </pre>
+            {finding.monkeypatch.diff.split("\n").length > 6 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFullDiff(!showFullDiff)}
+                className="h-6 text-[10px] w-full"
+              >
+                {showFullDiff ? "Show less" : "Show full diff"}
+              </Button>
+            )}
+
+            {/* Validation result */}
+            {finding.monkeypatch.validation && (
+              <div className="space-y-1 pt-2 border-t border-green-500/20">
+                <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+                  Validation
+                </div>
+                <div className="text-xs space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Test:</span>
+                    <span className="text-foreground/80">{finding.monkeypatch.validation.test}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Result:</span>
+                    <Badge
+                      className={
+                        finding.monkeypatch.validation.result === "PASS"
+                          ? "bg-green-500/20 text-green-400 border-green-500/30"
+                          : "bg-red-500/20 text-red-400 border-red-500/30"
+                      }
+                    >
+                      {finding.monkeypatch.validation.result}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Response:</span>
+                    <span className="text-foreground/80">{finding.monkeypatch.validation.response}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recommended Fix Card */}
+      <Card size="sm" className="border-cyan-500/30 bg-cyan-500/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs font-medium text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+            <Wrench className="w-3.5 h-3.5" />
+            Recommended Fix
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            {finding.recommended_fix}
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
