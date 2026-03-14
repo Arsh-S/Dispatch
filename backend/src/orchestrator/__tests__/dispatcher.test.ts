@@ -99,8 +99,9 @@ describe('dispatchWorkers', () => {
     expect(results.map(r => r.workerId)).toEqual(['w-1', 'w-2', 'w-3']);
   });
 
-  it('should throw for blaxel mode', async () => {
+  it('should return empty results for blaxel mode with no assignments', async () => {
     const options: DispatcherOptions = { mode: 'blaxel', targetDir: tmpDir };
-    await expect(dispatchWorkers([], options)).rejects.toThrow('Blaxel mode not yet implemented');
+    const results = await dispatchWorkers([], options);
+    expect(results).toEqual([]);
   });
 });
