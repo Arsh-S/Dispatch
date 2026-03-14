@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "scan": "tsx src/cli.ts scan",
-    "scan:sample": "tsx src/cli.ts scan ./sample-app",
-    "scan:blaxel": "tsx src/cli.ts scan ./sample-app --blaxel",
+    "scan:sample": "tsx src/cli.ts scan ../sample-app",
+    "scan:blaxel": "tsx src/cli.ts scan ../sample-app --blaxel",
     "report": "tsx src/cli.ts report",
     "dashboard": "cd src/dashboard && pnpm dev",
     "slack": "tsx src/slack/index.ts",
