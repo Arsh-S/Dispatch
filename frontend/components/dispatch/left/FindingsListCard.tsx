@@ -21,12 +21,12 @@ function getSeverityColor(severity: string): string {
   switch (severity.toUpperCase()) {
     case "CRITICAL":
     case "HIGH":
-      return "bg-destructive/20 text-destructive border-destructive/30";
+      return "bg-destructive/20 text-destructive ";
     case "MEDIUM":
-      return "bg-muted text-muted-foreground border-border";
+      return "bg-muted text-muted-foreground ";
     case "LOW":
     default:
-      return "bg-muted/50 text-muted-foreground border-border";
+      return "bg-muted/50 text-muted-foreground ";
   }
 }
 
@@ -54,18 +54,18 @@ export function FindingsListCard({ findings, onSelectFinding }: FindingsListCard
   );
 
   return (
-    <Card size="sm" className="ring-destructive bg-destructive/5">
+    <Card size="sm" className="bg-destructive/5">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs font-medium text-destructive uppercase tracking-wider flex items-center gap-2">
-            <AlertTriangle className="w-3.5 h-3.5" />
+          <CardTitle className="text-sm font-medium text-destructive uppercase tracking-wider flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
             Findings ({findings.length})
           </CardTitle>
           <div className="flex gap-1 text-[9px]">
-            <Badge className="bg-destructive/20 text-destructive border-destructive/30 px-1 py-0">
+            <Badge className="bg-destructive/20 text-destructive  px-1 py-0">
               {findings.filter((f) => f.severity === "CRITICAL").length} CRIT
             </Badge>
-            <Badge className="bg-destructive/20 text-destructive border-destructive/30 px-1 py-0">
+            <Badge className="bg-destructive/20 text-destructive  px-1 py-0">
               {findings.filter((f) => f.severity === "HIGH").length} HIGH
             </Badge>
           </div>
@@ -73,7 +73,7 @@ export function FindingsListCard({ findings, onSelectFinding }: FindingsListCard
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="max-h-48">
-          <ul className="divide-y divide-border/50">
+          <ul>
             {sortedFindings.map((finding) => (
               <li
                 key={finding.finding_id}

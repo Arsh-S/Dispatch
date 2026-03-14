@@ -25,7 +25,7 @@ export function PreReconCard({ preRecon }: PreReconCardProps) {
   if (!preRecon) return null;
 
   return (
-    <Card size="sm" className="ring-primary">
+    <Card size="sm" className="">
       <CardHeader className="pb-1">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold text-primary uppercase tracking-wider flex items-center gap-2">
@@ -114,7 +114,7 @@ export function PreReconCard({ preRecon }: PreReconCardProps) {
                     </span>
                     <div className="flex gap-1.5">
                       {route.middleware.length === 0 ? (
-                        <Badge className="text-[11px] px-1.5 py-0.5 leading-none bg-destructive/20 text-destructive border-destructive/30">
+                        <Badge className="text-[11px] px-1.5 py-0.5 leading-none bg-destructive/20 text-destructive ">
                           no auth
                         </Badge>
                       ) : (

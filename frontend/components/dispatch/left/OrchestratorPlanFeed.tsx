@@ -35,9 +35,9 @@ export function OrchestratorPlanFeed({ items }: OrchestratorPlanFeedProps) {
   if (items.length === 0) return null;
 
   return (
-    <Card size="sm" className="ring-border">
+    <Card size="sm" className="">
       <CardHeader>
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Orchestrator Plan
         </CardTitle>
       </CardHeader>

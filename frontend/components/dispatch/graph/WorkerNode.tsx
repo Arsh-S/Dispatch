@@ -48,7 +48,6 @@ export function WorkerNode({
         cx={x}
         cy={y}
         className={cn(
-          "stroke-border stroke",
           fill,
           status === "running" && "animate-pulse",
           isSelected && "stroke-primary stroke-2"

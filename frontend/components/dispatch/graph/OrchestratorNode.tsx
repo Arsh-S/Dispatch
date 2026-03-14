@@ -49,8 +49,8 @@ export function OrchestratorNode({
         cx={x}
         cy={y}
         className={cn(
-          "fill-muted stroke-border stroke",
-          isSelected && "fill-primary/20 stroke-primary"
+          "fill-muted",
+          isSelected && "fill-primary/20 stroke-primary stroke-2"
         )}
       />
       <text

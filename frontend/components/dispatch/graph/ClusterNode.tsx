@@ -42,7 +42,6 @@ export function ClusterNode({
         cx={x}
         cy={y}
         className={cn(
-          "stroke-border stroke",
           fill,
           isSelected && "stroke-primary fill-primary/20"
         )}

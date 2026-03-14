@@ -10,9 +10,9 @@ export interface GraphEdgeProps {
 }
 
 const kindStroke: Record<EdgeKind, string> = {
-  orchestrator: "stroke-border",
-  cluster: "stroke-border",
-  worker: "stroke-border",
+  orchestrator: "stroke-muted-foreground/30",
+  cluster: "stroke-muted-foreground/30",
+  worker: "stroke-muted-foreground/30",
   finding: "stroke-destructive/60",
   fixer: "stroke-primary/60",
   retest: "stroke-primary/60",
@@ -26,7 +26,7 @@ export function GraphEdge({
 }: GraphEdgeProps) {
   const stroke = isHighlighted
     ? "stroke-primary"
-    : kindStroke[edge.kind] ?? "stroke-border";
+    : kindStroke[edge.kind] ?? "stroke-muted-foreground/30";
   return (
     <line
       x1={fromPos.x}

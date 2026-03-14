@@ -31,9 +31,9 @@ export function OrchestratorSpecCard({ spec }: OrchestratorSpecCardProps) {
   if (!spec) return null;
 
   return (
-    <Card size="sm" className="ring-border">
+    <Card size="sm" className="">
       <CardHeader>
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Orchestrator Spec
         </CardTitle>
       </CardHeader>

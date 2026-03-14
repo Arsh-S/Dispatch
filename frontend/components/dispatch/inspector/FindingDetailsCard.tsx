@@ -33,7 +33,7 @@ export interface FindingDetailsCardProps {
 function ExploitConfidenceBadge({ confidence }: { confidence: ExploitConfidence }) {
   if (confidence === "confirmed") {
     return (
-      <Badge className="text-[10px] gap-1 bg-primary/20 text-primary border-primary/30">
+      <Badge className="text-[10px] gap-1 bg-primary/20 text-primary ">
         <CheckCircle className="w-3 h-3" />
         Confirmed
       </Badge>
@@ -51,14 +51,14 @@ function MonkeypatchBadge({ status }: { status: MonkeypatchStatus }) {
   switch (status) {
     case "validated":
       return (
-        <Badge className="text-[10px] gap-1 bg-primary/20 text-primary border-primary/30">
+        <Badge className="text-[10px] gap-1 bg-primary/20 text-primary ">
           <CheckCircle className="w-3 h-3" />
           Validated
         </Badge>
       );
     case "failed":
       return (
-        <Badge className="text-[10px] gap-1 bg-destructive/20 text-destructive border-destructive/30">
+        <Badge className="text-[10px] gap-1 bg-destructive/20 text-destructive ">
           <XCircle className="w-3 h-3" />
           Failed
         </Badge>
@@ -77,14 +77,14 @@ function FixStatusBadge({ status }: { status?: FixStatus }) {
   switch (status) {
     case "verified":
       return (
-        <Badge className="text-[10px] gap-1 bg-primary/20 text-primary border-primary/30">
+        <Badge className="text-[10px] gap-1 bg-primary/20 text-primary ">
           <CheckCircle className="w-3 h-3" />
           Fix Verified
         </Badge>
       );
     case "in-progress":
       return (
-        <Badge className="text-[10px] gap-1 bg-primary/20 text-primary border-primary/30">
+        <Badge className="text-[10px] gap-1 bg-primary/20 text-primary ">
           <Wrench className="w-3 h-3" />
           In Progress
         </Badge>
@@ -98,7 +98,7 @@ function FixStatusBadge({ status }: { status?: FixStatus }) {
       );
     case "failed":
       return (
-        <Badge className="text-[10px] gap-1 bg-destructive/20 text-destructive border-destructive/30">
+        <Badge className="text-[10px] gap-1 bg-destructive/20 text-destructive ">
           <XCircle className="w-3 h-3" />
           Fix Failed
         </Badge>
@@ -152,12 +152,11 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
   const [showFullDiff, setShowFullDiff] = useState(false);
 
   const isHighSeverity = finding.severity === "CRITICAL" || finding.severity === "HIGH";
-  const cardBorder = isHighSeverity ? "ring-destructive/30" : "ring-border";
 
   return (
     <div className="space-y-3">
       {/* Main Finding Card */}
-      <Card size="sm" className={cardBorder}>
+      <Card size="sm">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs font-medium text-foreground uppercase tracking-wider flex items-center gap-2">
@@ -257,7 +256,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
 
       {/* Reproduction Card */}
       {finding.reproduction && (
-        <Card size="sm" className="ring-border">
+        <Card size="sm" className="">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -319,7 +318,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
 
       {/* Server Logs Card */}
       {finding.server_logs.length > 0 && (
-        <Card size="sm" className="ring-border">
+        <Card size="sm" className="">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <Terminal className="w-3.5 h-3.5" />
@@ -354,7 +353,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
 
       {/* Monkeypatch Card */}
       {finding.monkeypatch.diff && (
-        <Card size="sm" className="ring-primary">
+        <Card size="sm" className="">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs font-medium text-primary uppercase tracking-wider flex items-center gap-2">
@@ -410,8 +409,8 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
                     <Badge
                       className={
                         finding.monkeypatch.validation.result === "PASS"
-                          ? "bg-primary/20 text-primary border-primary/30"
-                          : "bg-destructive/20 text-destructive border-destructive/30"
+                          ? "bg-primary/20 text-primary "
+                          : "bg-destructive/20 text-destructive "
                       }
                     >
                       {finding.monkeypatch.validation.result}
@@ -429,7 +428,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
       )}
 
       {/* Recommended Fix Card */}
-      <Card size="sm" className="ring-border">
+      <Card size="sm" className="">
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
             <Wrench className="w-3.5 h-3.5" />

@@ -79,7 +79,7 @@ export function SetupAccordion() {
   return (
     <Accordion className="rounded-lg bg-card">
       {sections.map(({ id, title, Icon, content }) => (
-        <AccordionItem key={id} className="last:border-b-0 px-3" value={id}>
+        <AccordionItem key={id} className="px-3" value={id}>
           <AccordionTrigger className="gap-2 text-sm hover:no-underline">
             <Icon className="size-4 text-muted-foreground" />
             {title}
