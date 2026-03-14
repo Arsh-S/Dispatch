@@ -1,0 +1,36 @@
+{
+  "dispatch_run_id": "dispatch-run-bcfde",
+  "worker_id": "worker-xss-comments-0f1",
+  "assigned_at": "2026-03-14T20:42:05.315Z",
+  "timeout_seconds": 300,
+  "target": {
+    "file": "src/routes/comments.ts",
+    "endpoint": "/api/comments",
+    "method": "POST",
+    "parameters": [
+      "content"
+    ]
+  },
+  "attack_type": "xss",
+  "context": {
+    "relevant_files": [
+      "src/db/connection.ts",
+      "src/middleware/auth.ts"
+    ],
+    "api_keys": {
+      "auth_token": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoiYWxpY2UiLCJyb2xlIjoidXNlciIsImlhdCI6MTc3MzUxMzkwOSwiZXhwIjoxNzczNjAwMzA5fQ.LsgRSb6pb0IF4u3LOsS2zO2tqbRg6Y31TEPz2rHafV0"
+    },
+    "rules_md": [
+      "Payment endpoints are critical priority"
+    ]
+  },
+  "app_config": {
+    "runtime": "node",
+    "install": "pnpm install",
+    "start": "pnpm dev",
+    "port": 3000,
+    "seed": "pnpm db:seed",
+    "env": {}
+  },
+  "briefing": "xss-unsanitized-output detected at src/routes/comments.ts:16 — \"res.send(`<div class=\"comment\"><p>Comment posted: ${content}</p><p>By user ${userId}</p></div>`);\". The target endpoint is POST /api/comments handled in src/routes/comments.ts:8."
+}
