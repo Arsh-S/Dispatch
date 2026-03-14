@@ -30,13 +30,17 @@ async function main() {
     const useBlaxel = args.includes('--blaxel');
     const remainingArgs = args.filter(a => a !== '--blaxel').slice(2);
     const githubRepo = remainingArgs[0] || process.env.GITHUB_REPO; // optional: owner/repo for issue creation
-    const outputPath = path.join(process.cwd(), 'dispatch-output.json');
+    // Write to frontend/public for live graph view (frontend polls every 2s)
+    const frontendPublic = path.join(__dirname, '../../frontend/public');
+    const outputPath = fs.existsSync(frontendPublic)
+      ? path.join(frontendPublic, 'dispatch-output.json')
+      : path.join(process.cwd(), 'dispatch-output.json');
     const mode = useBlaxel ? 'blaxel' : 'local';
 
     console.log('=== Dispatch Security Scanner ===');
     console.log(`Target: ${targetDir}`);
     console.log(`Mode: ${mode}`);
-    console.log(`Output: ${outputPath}`);
+    console.log(`Output: ${outputPath}${outputPath.includes('frontend/public') ? ' (live graph)' : ''}`);
     if (githubRepo) console.log(`GitHub: ${githubRepo}`);
     console.log('');
 
@@ -108,16 +112,7 @@ async function main() {
         fs.copyFileSync(outputPath, dashboardOutput);
         console.log(`Dashboard data updated. Run: cd src/dashboard && pnpm dev`);
       } catch {
-        // Dashboard dir may not exist yet
-      }
-
-      // Copy output to frontend public dir for live polling
-      const frontendOutput = path.join(__dirname, '../../frontend/public/dispatch-output.json');
-      try {
-        fs.copyFileSync(outputPath, frontendOutput);
-        console.log(`Frontend data updated at ${frontendOutput}`);
-      } catch {
-        // frontend dir may not exist
+        /* dashboard dir may not exist */
       }
 
       console.log(`\nFull report: ${outputPath}`);
@@ -127,6 +122,8 @@ async function main() {
         if (w.error) console.log(`  ${w.workerId}: ${w.error}`);
       });
     }
+
+    // Output is written directly to frontend/public for live graph (no copy needed)
   } else if (command === 'report') {
     const inputPath = args[1] || path.join(process.cwd(), 'dispatch-output.json');
     const pdfOutputPath = args[2] || inputPath.replace(/\.json$/, '.pdf');
