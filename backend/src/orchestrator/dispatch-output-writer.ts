@@ -4,7 +4,7 @@ import type { TaskAssignment } from '../schemas/task-assignment';
 import type { FindingReport } from '../schemas/finding-report';
 import type { WorkerResult } from './dispatcher';
 import type { MergedReport } from './collector';
-import type { DispatchOutput, RunStatus, RunMetrics } from './graph-types';
+import type { DispatchOutput, RunStatus, RunMetrics, TriggeredBy } from './graph-types';
 import { buildGraphData } from './graph-builder';
 
 const emptyMetrics: RunMetrics = {
@@ -24,12 +24,13 @@ export class DispatchOutputWriter {
   private dispatchedWorkerIds: Set<string> = new Set();
   private completedResults: WorkerResult[] = [];
 
-  constructor(outputPath: string, dispatchRunId: string, repoName?: string) {
+  constructor(outputPath: string, dispatchRunId: string, repoName?: string, triggeredBy?: TriggeredBy) {
     this.outputPath = outputPath;
     this.output = {
       dispatch_run_id: dispatchRunId,
       status: 'idle',
       started_at: new Date().toISOString(),
+      triggered_by: triggeredBy,
       repo: { name: repoName ?? 'unknown' },
       task_assignments: [],
       finding_reports: [],

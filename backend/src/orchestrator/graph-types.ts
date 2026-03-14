@@ -75,11 +75,14 @@ export interface RunMetrics {
   retestsPassed: number;
 }
 
+export type TriggeredBy = 'slack' | 'dashboard' | 'github' | 'api';
+
 export interface DispatchOutput {
   dispatch_run_id: string;
   status: RunStatus;
   started_at: string;
   completed_at?: string;
+  triggered_by?: TriggeredBy;
   repo: {
     name: string;
     url?: string;

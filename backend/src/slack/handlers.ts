@@ -1,6 +1,28 @@
-import { SlackHandlerContext, SlackAppMentionEvent, AgentProcessingResult, AgentConfig } from './types';
+import { SlackHandlerContext, SlackAppMentionEvent, AgentProcessingResult, AgentConfig, Finding } from './types';
 import { extractCommand, formatBlockKitResponse, formatErrorResponse, formatFindingsResponse } from './client';
-import { tracer } from 'dd-trace';
+import { runOrchestrator } from '../orchestrator/agent';
+import { createSimpleIssue, createIssuesFromReport, bootstrapLabels, convertFindingToIssueFormat } from '../github/issues';
+import type { Finding as OrchestratorFinding } from '../schemas/finding-report';
+import type { FindingForIssue } from '../github/types';
+import path from 'path';
+import fs from 'fs';
+
+/** Lazy-loaded dd-trace; no-op when Datadog is not configured */
+function getTracer(): { startSpan: (name: string, opts?: { tags?: Record<string, string> }) => { setTag: (k: string, v: unknown) => void; finish: () => void } } {
+  if (process.env.DD_AGENT_HOST) {
+    try {
+      return require('dd-trace').default;
+    } catch {
+      /* dd-trace not available */
+    }
+  }
+  return {
+    startSpan: (_name, _opts) => ({
+      setTag: () => {},
+      finish: () => {},
+    }),
+  };
+}
 
 /**
  * Handle app mentions (when the bot is tagged in a message)
@@ -13,27 +35,24 @@ export async function handleAppMention(context: SlackHandlerContext, agentConfig
 
   console.log(`📨 App Mention from <@${event.user}>: ${command}`);
 
-  // Start Datadog trace
+  const tracer = getTracer();
   const span = tracer.startSpan('slack.handle_app_mention', {
     tags: {
       'slack.user': event.user,
       'slack.channel': event.channel,
-      'command': command,
+      command,
     },
   });
 
   try {
-    // Acknowledge the message
     await context.say({
       channel: event.channel,
       text: 'Processing your request...',
       thread_ts: event.ts,
     });
 
-    // Process the command through the agent
     const result = await processAgentCommand(command, agentConfig);
 
-    // Format and send response
     if (result.success) {
       const blocks =
         result.findings && result.findings.length > 0
@@ -44,7 +63,7 @@ export async function handleAppMention(context: SlackHandlerContext, agentConfig
         channel: event.channel,
         blocks,
         thread_ts: event.ts,
-        text: result.response, // Fallback for clients that don't support Block Kit
+        text: result.response,
       });
     } else {
       const blocks = formatErrorResponse(result.error || 'Unknown error occurred');
@@ -55,7 +74,6 @@ export async function handleAppMention(context: SlackHandlerContext, agentConfig
       });
     }
 
-    // Record execution time
     span.setTag('execution_time_ms', result.executionTimeMs);
   } catch (error) {
     context.logger.error(`Error handling app mention: ${error}`);
@@ -74,8 +92,6 @@ export async function handleAppMention(context: SlackHandlerContext, agentConfig
 
 /**
  * Handle direct messages
- * @param context Handler context from Slack
- * @param agentConfig Agent configuration
  */
 export async function handleDirectMessage(
   context: SlackHandlerContext,
@@ -86,6 +102,7 @@ export async function handleDirectMessage(
 
   console.log(`💬 Direct Message from <@${event.user}>: ${text}`);
 
+  const tracer = getTracer();
   const span = tracer.startSpan('slack.handle_direct_message', {
     tags: {
       'slack.user': event.user,
@@ -131,11 +148,6 @@ export async function handleDirectMessage(
 
 /**
  * Core agent logic - processes user commands
- * This is where the agent interacts with Juice Shop, GitHub, Linear, etc.
- *
- * @param command User command from Slack
- * @param agentConfig Agent configuration
- * @returns Agent processing result
  */
 export async function processAgentCommand(
   command: string,
@@ -145,8 +157,6 @@ export async function processAgentCommand(
   const lowerCommand = command.toLowerCase();
 
   try {
-    // Route different commands to agent modules
-    // Check more specific commands first
     if (lowerCommand.includes('create issue') || lowerCommand.includes('github')) {
       return await handleGitHubCommand(command, agentConfig);
     } else if (lowerCommand.includes('help')) {
@@ -172,37 +182,98 @@ export async function processAgentCommand(
   }
 }
 
+/** Map orchestrator Finding to Slack Finding */
+function toSlackFinding(f: OrchestratorFinding): Finding {
+  const severity = f.severity.toLowerCase() as Finding['severity'];
+  return {
+    type: f.vuln_type,
+    severity: severity === 'critical' || severity === 'high' || severity === 'medium' || severity === 'low' ? severity : 'medium',
+    description: f.description,
+    endpoint: f.location?.endpoint,
+    recommendation: f.recommended_fix,
+  };
+}
+
 /**
- * Handle security scan commands
+ * Handle security scan - calls runOrchestrator with configured targetDir
  */
 async function handleSecurityScan(command: string, agentConfig: AgentConfig): Promise<AgentProcessingResult> {
   const startTime = Date.now();
 
-  // This is a placeholder - integrate with your actual Dispatch scanner
-  const mockFindings = [
-    {
-      type: 'SQL Injection Vulnerability',
-      severity: 'critical' as const,
-      description: 'Potential SQL injection in `/api/login` endpoint',
-      endpoint: '/api/login',
-      recommendation: 'Use parameterized queries and input validation',
-    },
-    {
-      type: 'Missing CSRF Token',
-      severity: 'high' as const,
-      description: 'POST endpoints missing CSRF protection',
-      endpoint: '/api/checkout',
-      recommendation: 'Implement CSRF token validation',
-    },
-  ];
+  if (!agentConfig.targetDir) {
+    return {
+      success: false,
+      response: '',
+      error: 'DISPATCH_TARGET_DIR not configured. Set it to the path of the app to scan.',
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
 
-  return {
-    success: true,
-    response: 'Security scan completed',
-    findings: mockFindings,
-    issueUrls: [], // Would be populated by actual GitHub integration
-    executionTimeMs: Date.now() - startTime,
-  };
+  const targetDir = path.resolve(agentConfig.targetDir);
+  if (!fs.existsSync(targetDir)) {
+    return {
+      success: false,
+      response: '',
+      error: `Target directory not found: ${targetDir}`,
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
+
+  const outputPath = path.join(process.cwd(), 'dispatch-output-slack.json');
+
+  try {
+    const result = await runOrchestrator({
+      targetDir,
+      mode: 'local',
+      maxWorkers: 2,
+      outputPath,
+      triggeredBy: 'slack',
+    });
+
+    const mergedReport = result.mergedReport;
+    if (!mergedReport || mergedReport.findings.length === 0) {
+      return {
+        success: true,
+        response: `Security scan completed. No findings. (Routes: ${result.preRecon.route_map.length})`,
+        executionTimeMs: Date.now() - startTime,
+      };
+    }
+
+    const slackFindings = mergedReport.findings.map(toSlackFinding);
+    let issueUrls: string[] = [];
+
+    if (agentConfig.githubRepo && agentConfig.githubToken && mergedReport.findings.length > 0) {
+      try {
+        if (!process.env.GITHUB_TOKEN) process.env.GITHUB_TOKEN = agentConfig.githubToken;
+        await bootstrapLabels(agentConfig.githubRepo);
+        const issueFindings: FindingForIssue[] = mergedReport.findings.map(f =>
+          convertFindingToIssueFormat(f, result.preRecon.dispatch_run_id)
+        );
+        const issues = await createIssuesFromReport(agentConfig.githubRepo, issueFindings);
+        issueUrls = issues.map(i => i.url);
+      } catch (err: any) {
+        console.warn(`[Slack] GitHub issue creation failed: ${err.message}`);
+      }
+    }
+
+    const summary = mergedReport.summary;
+    const response = `Security scan completed. Found ${mergedReport.findings.length} findings (${summary.critical} critical, ${summary.high} high, ${summary.medium} medium, ${summary.low} low).${issueUrls.length > 0 ? ` Created ${issueUrls.length} GitHub issues.` : ''}`;
+
+    return {
+      success: true,
+      response,
+      findings: slackFindings,
+      issueUrls: issueUrls.length > 0 ? issueUrls : undefined,
+      executionTimeMs: Date.now() - startTime,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      response: '',
+      error: `Scan failed: ${error.message}`,
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
 }
 
 /**
@@ -220,13 +291,6 @@ async function handleJuiceShopCommand(command: string, agentConfig: AgentConfig)
     };
   }
 
-  // Placeholder for Juice Shop interaction logic
-  // In production, you would:
-  // 1. Make HTTP requests to Juice Shop
-  // 2. Analyze responses for vulnerabilities
-  // 3. Create findings
-  // 4. Optionally create GitHub issues
-
   return {
     success: true,
     response: `Connected to Juice Shop at ${agentConfig.juiceShopUrl}. Analyzing endpoints...`,
@@ -235,7 +299,7 @@ async function handleJuiceShopCommand(command: string, agentConfig: AgentConfig)
 }
 
 /**
- * Handle GitHub-related commands
+ * Handle GitHub create issue - uses createSimpleIssue for ad-hoc issues
  */
 async function handleGitHubCommand(command: string, agentConfig: AgentConfig): Promise<AgentProcessingResult> {
   const startTime = Date.now();
@@ -249,23 +313,31 @@ async function handleGitHubCommand(command: string, agentConfig: AgentConfig): P
     };
   }
 
-  // Extract the issue title from the command
-  // Example: "create issue SQL Injection vulnerability" → "SQL Injection vulnerability"
   const match = command.match(/create\s+issue\s+(.+)/i);
   const issueTitle = match ? match[1].trim() : 'Security Finding';
 
-  // Mock issue creation response
-  const mockIssueNumber = Math.floor(Math.random() * 1000) + 1;
-  const mockIssueUrl = `https://github.com/${agentConfig.githubRepo}/issues/${mockIssueNumber}`;
-  
-  const response = `✅ *GitHub Issue Created*\n\n*Title:* ${issueTitle}\n*Issue #:* ${mockIssueNumber}\n*Repository:* ${agentConfig.githubRepo}\n*URL:* ${mockIssueUrl}`;
+  try {
+    if (agentConfig.githubToken && !process.env.GITHUB_TOKEN) {
+      process.env.GITHUB_TOKEN = agentConfig.githubToken;
+    }
+    const created = await createSimpleIssue(agentConfig.githubRepo, issueTitle);
 
-  return {
-    success: true,
-    response: response,
-    issueUrls: [mockIssueUrl],
-    executionTimeMs: Date.now() - startTime,
-  };
+    const response = `✅ *GitHub Issue Created*\n\n*Title:* ${issueTitle}\n*Issue #:* ${created.number}\n*Repository:* ${agentConfig.githubRepo}\n*URL:* ${created.url}`;
+
+    return {
+      success: true,
+      response,
+      issueUrls: [created.url],
+      executionTimeMs: Date.now() - startTime,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      response: '',
+      error: `GitHub issue creation failed: ${error.message}`,
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
 }
 
 /**
@@ -275,13 +347,13 @@ function handleHelpCommand(): AgentProcessingResult {
   const helpText = `
 *Available Commands:*
 
-• \`scan [endpoint]\` - Run a security scan on specified endpoint
+• \`scan [endpoint]\` - Run a security scan (requires DISPATCH_TARGET_DIR)
 • \`juice [command]\` - Interact with Juice Shop (e.g., "juice scan /api/users")
 • \`create issue [title]\` - Create a GitHub issue
 • \`help\` - Show this help message
 
 *Examples:*
-• "@Dispatch scan /api/login"
+• "@Dispatch scan"
 • "@Dispatch juice test /rest/admin"
 • "@Dispatch create issue SQL Injection in login form"
 `;

@@ -67,6 +67,7 @@ function loadConfiguration(): {
     juiceShopUrl: process.env.JUICE_SHOP_URL,
     linearApiKey: process.env.LINEAR_API_KEY,
     linearTeamId: process.env.LINEAR_TEAM_ID,
+    targetDir: process.env.DISPATCH_TARGET_DIR,
   };
 
   const observabilityConfig: ObservabilityConfig = {

@@ -1,5 +1,6 @@
 import { getOctokit, parseRepo } from './client';
 import { FindingForIssue, CreatedIssue } from './types';
+import type { Finding } from '../schemas/finding-report';
 
 export async function createIssueFromFinding(
   repoFullName: string,
@@ -177,6 +178,73 @@ export function getLabels(finding: FindingForIssue): string[] {
   labels.push(`dispatch-worker:${finding.dispatch_worker_id}`);
 
   return labels;
+}
+
+/**
+ * Convert orchestrator Finding to FindingForIssue for GitHub issue creation.
+ */
+export function convertFindingToIssueFormat(finding: Finding, dispatchRunId: string): FindingForIssue {
+  return {
+    dispatch_run_id: dispatchRunId,
+    dispatch_worker_id: finding.finding_id,
+    timestamp: new Date().toISOString(),
+    severity: finding.severity,
+    cvss_score: finding.cvss_score,
+    owasp: finding.owasp,
+    vuln_type: finding.vuln_type,
+    exploit_confidence: finding.exploit_confidence,
+    monkeypatch_status: finding.monkeypatch?.status || 'not-attempted',
+    fix_status: 'unfixed',
+    location: {
+      file: finding.location.file,
+      line: finding.location.line,
+      endpoint: finding.location.endpoint,
+      method: finding.location.method,
+      parameter: finding.location.parameter,
+    },
+    description: finding.description,
+    reproduction: finding.reproduction,
+    server_logs: finding.server_logs,
+    monkeypatch: finding.monkeypatch
+      ? {
+          status: finding.monkeypatch.status,
+          diff: finding.monkeypatch.diff,
+          validation: finding.monkeypatch.validation,
+          post_patch_logs: finding.monkeypatch.post_patch_logs,
+        }
+      : undefined,
+    recommended_fix: finding.recommended_fix,
+    rules_violated: finding.rules_violated,
+  };
+}
+
+/**
+ * Create a simple GitHub issue from a title (e.g. from Slack "create issue X").
+ * Uses minimal labels; suitable for ad-hoc issue creation.
+ */
+export async function createSimpleIssue(
+  repoFullName: string,
+  title: string,
+  body?: string,
+): Promise<CreatedIssue> {
+  const octokit = getOctokit();
+  const { owner, repo } = parseRepo(repoFullName);
+
+  const { data: issue } = await octokit.issues.create({
+    owner,
+    repo,
+    title,
+    body: body ?? `Created via Dispatch Slack Agent.\n\n${title}`,
+    labels: ['dispatch'],
+  });
+
+  console.log(`[GitHub] Created issue #${issue.number}: ${title}`);
+
+  return {
+    number: issue.number,
+    url: issue.html_url,
+    title,
+  };
 }
 
 export async function createIssuesFromReport(

@@ -83,6 +83,8 @@ export interface AgentConfig {
   juiceShopUrl?: string;
   linearApiKey?: string;
   linearTeamId?: string;
+  /** Target directory for security scans (e.g. from DISPATCH_TARGET_DIR) */
+  targetDir?: string;
 }
 
 export interface ObservabilityConfig {

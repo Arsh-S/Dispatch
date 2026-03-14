@@ -11,11 +11,14 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
+export type TriggeredBy = 'slack' | 'dashboard' | 'github' | 'api';
+
 interface OrchestratorOptions {
   targetDir: string;
   mode?: 'local' | 'blaxel';
   maxWorkers?: number;
   outputPath?: string;
+  triggeredBy?: TriggeredBy;
 }
 
 export interface OrchestratorResult {
@@ -31,7 +34,7 @@ export async function runOrchestrator(options: OrchestratorOptions): Promise<Orc
   const mode = options.mode || 'local';
   const outputPath = options.outputPath || path.join(options.targetDir, '..', 'dispatch-output.json');
 
-  const writer = new DispatchOutputWriter(outputPath, dispatchRunId, path.basename(options.targetDir));
+  const writer = new DispatchOutputWriter(outputPath, dispatchRunId, path.basename(options.targetDir), options.triggeredBy);
 
   console.log(`[Orchestrator] Starting scan run: ${dispatchRunId}`);
   console.log(`[Orchestrator] Target: ${options.targetDir}`);

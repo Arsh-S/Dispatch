@@ -1,8 +1,7 @@
 import { runOrchestrator } from './orchestrator/agent';
 import { bootstrapLabels } from './github/labels';
-import { createIssuesFromReport } from './github/issues';
+import { createIssuesFromReport, convertFindingToIssueFormat } from './github/issues';
 import { generatePdfReport } from './reporting/pdf';
-import { FindingForIssue } from './github/types';
 import { Finding, CleanEndpoint } from './schemas/finding-report';
 import path from 'path';
 import fs from 'fs';
@@ -70,7 +69,7 @@ async function main() {
         console.log(`\nCreating GitHub Issues on ${githubRepo}...`);
         try {
           await bootstrapLabels(githubRepo);
-          const issueFindings = report.findings.map(f => convertToIssueFormat(f, result.preRecon.dispatch_run_id));
+          const issueFindings = report.findings.map(f => convertFindingToIssueFormat(f, result.preRecon.dispatch_run_id));
           issues = await createIssuesFromReport(githubRepo, issueFindings);
           console.log(`Created ${issues.length} issues:`);
           issues.forEach(i => console.log(`  #${i.number}: ${i.title} — ${i.url}`));
@@ -192,39 +191,6 @@ function normalizeToMergedReport(raw: unknown): import('./orchestrator/collector
       vulnerable_endpoints: vulnerableEndpoints.size,
       clean_endpoints: new Set((cleanEndpoints as Array<{ endpoint?: string }>).map(c => c.endpoint)).size,
     },
-  };
-}
-
-function convertToIssueFormat(finding: Finding, dispatchRunId: string): FindingForIssue {
-  return {
-    dispatch_run_id: dispatchRunId,
-    dispatch_worker_id: finding.finding_id, // Use finding ID as worker ref
-    timestamp: new Date().toISOString(),
-    severity: finding.severity,
-    cvss_score: finding.cvss_score,
-    owasp: finding.owasp,
-    vuln_type: finding.vuln_type,
-    exploit_confidence: finding.exploit_confidence,
-    monkeypatch_status: finding.monkeypatch?.status || 'not-attempted',
-    fix_status: 'unfixed',
-    location: {
-      file: finding.location.file,
-      line: finding.location.line,
-      endpoint: finding.location.endpoint,
-      method: finding.location.method,
-      parameter: finding.location.parameter,
-    },
-    description: finding.description,
-    reproduction: finding.reproduction,
-    server_logs: finding.server_logs,
-    monkeypatch: finding.monkeypatch ? {
-      status: finding.monkeypatch.status,
-      diff: finding.monkeypatch.diff,
-      validation: finding.monkeypatch.validation,
-      post_patch_logs: finding.monkeypatch.post_patch_logs,
-    } : undefined,
-    recommended_fix: finding.recommended_fix,
-    rules_violated: finding.rules_violated,
   };
 }
 
