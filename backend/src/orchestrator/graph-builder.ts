@@ -38,6 +38,15 @@ export function buildGraphData(
     status: 'running',
     position: { x: 400, y: 300 },
     size: 48,
+    meta: preRecon
+      ? {
+          pre_recon: {
+            route_count: preRecon.route_map.length,
+            risk_count: preRecon.risk_signals.length,
+            briefing_notes: preRecon.briefing_notes,
+          },
+        }
+      : undefined,
   };
 
   // 2. Group assignments by attack_type
@@ -83,6 +92,11 @@ export function buildGraphData(
       status: clusterStatus,
       position: { x: cx, y: cy },
       size: 28,
+      meta: {
+        attack_type: attackType,
+        worker_ids: clusterAssignments.map(a => a.worker_id),
+        endpoint_count: clusterAssignments.length,
+      },
     };
 
     // Edge: orchestrator → cluster
@@ -98,6 +112,7 @@ export function buildGraphData(
     clusterAssignments.forEach((assignment, workerIndex) => {
       const workerStatus = resolveWorkerStatus(assignment.worker_id, resultByWorkerId);
 
+      const workerReport = resultByWorkerId.get(assignment.worker_id)?.report ?? null;
       nodes[assignment.worker_id] = {
         id: assignment.worker_id,
         label: `${attackType}: ${assignment.target.endpoint}`,
@@ -106,6 +121,21 @@ export function buildGraphData(
         status: workerStatus,
         position: radialChildPosition(cx, cy, workerIndex, workerCount, 70),
         size: 14,
+        meta: {
+          assignment: {
+            attack_type: assignment.attack_type,
+            briefing: assignment.briefing,
+            target: assignment.target,
+          },
+          report: workerReport
+            ? {
+                status: workerReport.status,
+                duration_seconds: workerReport.duration_seconds,
+                findings_count: workerReport.findings.length,
+                clean_count: workerReport.clean_endpoints.length,
+              }
+            : null,
+        },
       };
 
       // Edge: cluster → worker
