@@ -22,6 +22,7 @@
     "@types/glob": "^9.0.0",
     "@types/node": "^25.5.0",
     "@types/uuid": "^11.0.0",
+    "pdf-parse": "^2.4.5",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
