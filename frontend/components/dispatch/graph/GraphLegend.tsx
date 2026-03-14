@@ -22,9 +22,6 @@ export function GraphLegend() {
           </div>
         ))}
       </div>
-      <p className="mt-1.5 text-xs text-muted-foreground/60">
-        Drag to pan &middot; Scroll to zoom &middot; Click to inspect
-      </p>
     </div>
   );
 }

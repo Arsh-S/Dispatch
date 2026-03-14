@@ -42,6 +42,9 @@ export function GraphWorkspace() {
           resetViewRef={resetViewRef}
         />
         <div className="pointer-events-none absolute inset-0 z-10">
+          <p className="absolute left-3 top-3 text-xs text-muted-foreground/40">
+            Drag to pan &middot; Scroll to zoom &middot; Click to inspect
+          </p>
           <div className="pointer-events-auto absolute bottom-3 left-3">
             <GraphLegend />
           </div>
