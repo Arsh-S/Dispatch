@@ -14,17 +14,16 @@ const config: Config = {
         sans: ["var(--font-sans)", "sans-serif"],
       },
       colors: {
-        dispatch: {
-          charcoal: "#1a1d21",
-          slate: "#252a31",
-          muted: "#3d4550",
-          blue: "#3b82f6",
-          yellow: "#eab308",
-          green: "#22c55e",
-          red: "#ef4444",
-          orange: "#f97316",
-          purple: "#a855f7",
-          teal: "#14b8a6",
+        // Supabase-themed semantic status colors (cohesive palette)
+        status: {
+          idle: "oklch(0.55 0 0)",           // neutral gray
+          running: "oklch(0.75 0.15 85)",    // warm amber
+          success: "var(--primary)",         // supabase green
+          warning: "oklch(0.70 0.15 55)",    // soft orange
+          error: "oklch(0.60 0.20 25)",      // muted red
+          info: "oklch(0.65 0.12 240)",      // soft blue
+          fixer: "oklch(0.65 0.15 300)",     // muted purple
+          retest: "oklch(0.70 0.12 180)",    // teal
         },
         background: "var(--background)",
         foreground: "var(--foreground)",

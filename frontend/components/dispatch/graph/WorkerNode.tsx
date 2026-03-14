@@ -14,15 +14,15 @@ export interface WorkerNodeProps {
 }
 
 const statusColors: Record<NodeStatus, string> = {
-  idle: "fill-slate-600",
-  queued: "fill-dispatch-blue/50",
-  planning: "fill-dispatch-blue/60",
-  running: "fill-dispatch-yellow",
-  warning: "fill-dispatch-orange",
-  failed: "fill-dispatch-red",
-  success: "fill-dispatch-green",
-  fixer: "fill-dispatch-purple",
-  retestVerified: "fill-dispatch-teal",
+  idle: "fill-muted-foreground/60",
+  queued: "fill-primary/50",
+  planning: "fill-primary/60",
+  running: "fill-status-running",
+  warning: "fill-status-warning",
+  failed: "fill-status-error",
+  success: "fill-primary",
+  fixer: "fill-status-fixer",
+  retestVerified: "fill-status-retest",
 };
 
 export function WorkerNode({
@@ -48,10 +48,10 @@ export function WorkerNode({
         cx={x}
         cy={y}
         className={cn(
-          "stroke-dispatch-muted stroke",
+          "stroke-border stroke",
           fill,
           status === "running" && "animate-pulse",
-          isSelected && "stroke-dispatch-blue stroke-2"
+          isSelected && "stroke-primary stroke-2"
         )}
       />
       <title>{label}</title>

@@ -13,10 +13,10 @@ export interface OrchestratorNodeProps {
 }
 
 const statusRing = {
-  idle: "stroke-slate-500",
-  planning: "stroke-dispatch-blue animate-pulse",
-  executing: "stroke-dispatch-yellow",
-  completed: "stroke-dispatch-green",
+  idle: "stroke-muted-foreground",
+  planning: "stroke-primary animate-pulse",
+  executing: "stroke-status-running",
+  completed: "stroke-primary",
 };
 
 export function OrchestratorNode({
@@ -49,15 +49,15 @@ export function OrchestratorNode({
         cx={x}
         cy={y}
         className={cn(
-          "fill-dispatch-slate stroke-dispatch-muted stroke",
-          isSelected && "fill-dispatch-blue/20 stroke-dispatch-blue"
+          "fill-muted stroke-border stroke",
+          isSelected && "fill-primary/20 stroke-primary"
         )}
       />
       <text
         x={x}
         y={y - 2}
         textAnchor="middle"
-        className="fill-slate-200 text-[10px] font-medium"
+        className="fill-foreground text-[10px] font-medium"
       >
         Orchestrator
       </text>
@@ -65,7 +65,7 @@ export function OrchestratorNode({
         x={x}
         y={y + 10}
         textAnchor="middle"
-        className="fill-slate-500 text-[8px]"
+        className="fill-muted-foreground text-[8px]"
       >
         {phase}
       </text>

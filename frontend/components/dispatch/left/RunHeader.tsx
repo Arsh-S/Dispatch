@@ -96,7 +96,7 @@ export function RunHeader({
       </div>
       <Button
         onClick={onPrimaryAction}
-        className="w-full gap-2 bg-dispatch-purple hover:bg-dispatch-purple/90"
+        className="w-full gap-2"
         size="sm"
       >
         <Icon className="size-3.5" />

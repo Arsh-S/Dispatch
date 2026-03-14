@@ -1,14 +1,14 @@
 "use client";
 
 const items = [
-  { color: "bg-muted-foreground/60", label: "Idle" },
-  { color: "bg-dispatch-blue", label: "Planning" },
-  { color: "bg-dispatch-yellow", label: "Running" },
-  { color: "bg-dispatch-orange", label: "Warning" },
-  { color: "bg-dispatch-red", label: "Failed" },
-  { color: "bg-dispatch-green", label: "Success" },
-  { color: "bg-dispatch-purple", label: "Fixer" },
-  { color: "bg-dispatch-teal", label: "Retest" },
+  { color: "bg-status-idle", label: "Idle" },
+  { color: "bg-primary", label: "Planning" },
+  { color: "bg-status-running", label: "Running" },
+  { color: "bg-status-warning", label: "Warning" },
+  { color: "bg-status-error", label: "Failed" },
+  { color: "bg-primary", label: "Success" },
+  { color: "bg-status-fixer", label: "Fixer" },
+  { color: "bg-status-retest", label: "Retest" },
 ];
 
 export function GraphLegend() {

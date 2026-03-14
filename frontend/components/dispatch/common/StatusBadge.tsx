@@ -16,15 +16,15 @@ export type StatusVariant =
 
 const variantClasses: Record<StatusVariant, string> = {
   idle: "border-border bg-muted/50 text-muted-foreground",
-  planning: "border-dispatch-blue/40 bg-dispatch-blue/10 text-dispatch-blue",
-  executing: "border-dispatch-yellow/40 bg-dispatch-yellow/10 text-dispatch-yellow",
-  completed: "border-dispatch-green/40 bg-dispatch-green/10 text-dispatch-green",
-  running: "border-dispatch-yellow/40 bg-dispatch-yellow/10 text-dispatch-yellow",
-  success: "border-dispatch-green/40 bg-dispatch-green/10 text-dispatch-green",
-  failed: "border-dispatch-red/40 bg-dispatch-red/10 text-dispatch-red",
-  warning: "border-dispatch-orange/40 bg-dispatch-orange/10 text-dispatch-orange",
-  fixer: "border-dispatch-purple/40 bg-dispatch-purple/10 text-dispatch-purple",
-  retest: "border-dispatch-teal/40 bg-dispatch-teal/10 text-dispatch-teal",
+  planning: "border-primary/40 bg-primary/10 text-primary",
+  executing: "border-status-running/40 bg-status-running/10 text-status-running",
+  completed: "border-primary/40 bg-primary/10 text-primary",
+  running: "border-status-running/40 bg-status-running/10 text-status-running",
+  success: "border-primary/40 bg-primary/10 text-primary",
+  failed: "border-status-error/40 bg-status-error/10 text-status-error",
+  warning: "border-status-warning/40 bg-status-warning/10 text-status-warning",
+  fixer: "border-status-fixer/40 bg-status-fixer/10 text-status-fixer",
+  retest: "border-status-retest/40 bg-status-retest/10 text-status-retest",
 };
 
 export interface StatusBadgeProps {

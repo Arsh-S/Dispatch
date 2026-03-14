@@ -13,10 +13,10 @@ export interface ClusterNodeProps {
 }
 
 const statusFill: Record<string, string> = {
-  idle: "fill-dispatch-slate",
-  running: "fill-dispatch-yellow/30",
-  success: "fill-dispatch-green/30",
-  failed: "fill-dispatch-red/30",
+  idle: "fill-muted/80",
+  running: "fill-status-running/30",
+  success: "fill-primary/30",
+  failed: "fill-status-error/30",
 };
 
 export function ClusterNode({
@@ -29,7 +29,7 @@ export function ClusterNode({
   size = 28,
 }: ClusterNodeProps) {
   const fill =
-    statusFill[status] ?? "fill-dispatch-slate";
+    statusFill[status] ?? "fill-muted/80";
   return (
     <g
       className={cn(
@@ -43,16 +43,16 @@ export function ClusterNode({
         cx={x}
         cy={y}
         className={cn(
-          "stroke-dispatch-muted stroke",
+          "stroke-border stroke",
           fill,
-          isSelected && "stroke-dispatch-blue fill-dispatch-blue/20"
+          isSelected && "stroke-primary fill-primary/20"
         )}
       />
       <text
         x={x + size / 2 + 6}
         y={y}
         dominantBaseline="middle"
-        className="fill-slate-400 text-[9px]"
+        className="fill-muted-foreground text-[9px]"
       >
         {label}
       </text>

@@ -39,27 +39,31 @@ export interface UseForceGraphOptions {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Color palette                                                      */
+/*  Color palette - Supabase themed (emerald greens + neutral grays)  */
 /* ------------------------------------------------------------------ */
 
+// Supabase emerald primary: oklch(0.4365 0.1044 156.7556) ≈ #3ecf8e
+const SUPABASE_GREEN = "#3ecf8e";
+const SUPABASE_GREEN_DIM = "#2a9d6a";
+
 const TYPE_COLORS: Record<NodeType, string> = {
-  orchestrator: "#7f6df2",
-  cluster: "#4a9eff",
-  worker: "#a0a0a0",
-  finding: "#e05252",
+  orchestrator: SUPABASE_GREEN,    // Primary green for orchestrator
+  cluster: "#6b7280",              // Neutral gray for clusters
+  worker: "#4b5563",               // Darker gray for workers
+  finding: "#ef6461",              // Muted coral for findings
 };
 
 const STATUS_OVERRIDES: Partial<Record<NodeStatus, string>> = {
-  running: "#e2b340",
-  failed: "#e05252",
-  success: "#4ade80",
-  warning: "#f59e0b",
-  fixer: "#a78bfa",
-  retestVerified: "#2dd4bf",
+  running: "#d4a853",              // Warm amber
+  failed: "#ef6461",               // Muted coral
+  success: SUPABASE_GREEN,         // Supabase green
+  warning: "#e5954a",              // Soft orange
+  fixer: "#9f7aea",                // Muted purple
+  retestVerified: "#4fd1c5",       // Soft teal
 };
 
 function nodeColor(type: NodeType, status: NodeStatus): string {
-  return STATUS_OVERRIDES[status] ?? TYPE_COLORS[type] ?? "#888";
+  return STATUS_OVERRIDES[status] ?? TYPE_COLORS[type] ?? "#6b7280";
 }
 
 /* ------------------------------------------------------------------ */
@@ -246,7 +250,7 @@ export function useForceGraph(
         ctx.strokeStyle = "rgba(255,255,255,0.03)";
         ctx.lineWidth = 0.5;
       } else if (edgeConnected) {
-        ctx.strokeStyle = "rgba(127,109,242,0.6)";
+        ctx.strokeStyle = "rgba(62,207,142,0.6)"; // Supabase green
         ctx.lineWidth = 1.5;
       } else {
         ctx.strokeStyle = "rgba(255,255,255,0.08)";

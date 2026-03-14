@@ -15,15 +15,15 @@ const severityConfig: Record<Severity, { classes: string; Icon: React.ElementTyp
     Icon: Shield,
   },
   medium: {
-    classes: "border-dispatch-yellow/40 bg-dispatch-yellow/10 text-dispatch-yellow",
+    classes: "border-status-running/40 bg-status-running/10 text-status-running",
     Icon: AlertTriangle,
   },
   high: {
-    classes: "border-dispatch-orange/40 bg-dispatch-orange/10 text-dispatch-orange",
+    classes: "border-status-warning/40 bg-status-warning/10 text-status-warning",
     Icon: ShieldAlert,
   },
   critical: {
-    classes: "border-dispatch-red/40 bg-dispatch-red/10 text-dispatch-red",
+    classes: "border-status-error/40 bg-status-error/10 text-status-error",
     Icon: ShieldX,
   },
 };
