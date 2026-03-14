@@ -1,0 +1,37 @@
+{
+  "dispatch_run_id": "dispatch-run-bcfde",
+  "worker_id": "worker-open-debug-orders-69e",
+  "assigned_at": "2026-03-14T20:42:05.315Z",
+  "timeout_seconds": 300,
+  "target": {
+    "file": "src/routes/orders.ts",
+    "endpoint": "/api/orders",
+    "method": "POST",
+    "parameters": [
+      "order_id",
+      "quantity"
+    ]
+  },
+  "attack_type": "open-debug",
+  "context": {
+    "relevant_files": [
+      "src/db/connection.ts",
+      "src/middleware/auth.ts"
+    ],
+    "api_keys": {
+      "auth_token": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoiYWxpY2UiLCJyb2xlIjoidXNlciIsImlhdCI6MTc3MzUxMzkwOSwiZXhwIjoxNzczNjAwMzA5fQ.LsgRSb6pb0IF4u3LOsS2zO2tqbRg6Y31TEPz2rHafV0"
+    },
+    "rules_md": [
+      "Payment endpoints are critical priority"
+    ]
+  },
+  "app_config": {
+    "runtime": "node",
+    "install": "pnpm install",
+    "start": "pnpm dev",
+    "port": 3000,
+    "seed": "pnpm db:seed",
+    "env": {}
+  },
+  "briefing": "error-detail-leak detected at src/routes/orders.ts:30 — \"res.status(500).json({ error: err.message });\". The target endpoint is POST /api/orders handled in src/routes/orders.ts:16."
+}

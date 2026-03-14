@@ -1,0 +1,23 @@
+{
+  "dispatch_run_id": "dispatch-run-bcfde",
+  "worker_id": "worker-open-debug-orders-041",
+  "completed_at": "2026-03-14T20:42:08.322Z",
+  "status": "completed",
+  "duration_seconds": 3,
+  "error_detail": null,
+  "findings": [],
+  "clean_endpoints": [
+    {
+      "endpoint": "GET /api/orders",
+      "parameter": "order_id",
+      "attack_type": "open-debug",
+      "notes": "Parameter order_id tested and found safe"
+    },
+    {
+      "endpoint": "GET /api/orders",
+      "parameter": "quantity",
+      "attack_type": "open-debug",
+      "notes": "Parameter quantity tested and found safe"
+    }
+  ]
+}

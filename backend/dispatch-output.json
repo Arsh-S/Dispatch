@@ -1,0 +1,45 @@
+{
+  "dispatch_run_id": "dispatch-run-e8c03",
+  "status": "completed",
+  "started_at": "2026-03-14T21:01:58.190Z",
+  "repo": {
+    "name": "sample-app"
+  },
+  "task_assignments": [],
+  "finding_reports": [],
+  "findings": [],
+  "metrics": {
+    "routesDiscovered": 0,
+    "workersActive": 0,
+    "findingsFound": 0,
+    "ticketsCreated": 0,
+    "prsOpened": 0,
+    "retestsPassed": 0
+  },
+  "graph_data": {
+    "nodes": {
+      "orchestrator": {
+        "id": "orchestrator",
+        "label": "Orchestrator",
+        "type": "orchestrator",
+        "status": "running",
+        "position": {
+          "x": 400,
+          "y": 300
+        },
+        "size": 48
+      }
+    },
+    "edges": [],
+    "clusters": {}
+  },
+  "pre_recon": {
+    "dispatch_run_id": "dispatch-run-e8c03",
+    "completed_at": "2026-03-14T21:01:58.250Z",
+    "route_map": [],
+    "risk_signals": [],
+    "dependency_graph": {},
+    "briefing_notes": "Codebase analysis complete. Found 0 routes and 0 risk signals. Risk patterns detected: . Database layer: unknown. Auth middleware: not found. No RULES.md found."
+  },
+  "completed_at": "2026-03-14T21:01:58.255Z"
+}
