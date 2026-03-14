@@ -124,7 +124,7 @@ export function NodeActionsPanel({
   if (actions.length === 0) return null;
 
   return (
-    <Card size="sm">
+    <Card size="sm" className="ring-border">
       <CardHeader>
         <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Actions
@@ -139,7 +139,7 @@ export function NodeActionsPanel({
               size="sm"
               onClick={onClick}
               className={`w-full justify-start gap-2 text-xs ${
-                variant === "default" ? "bg-dispatch-purple hover:bg-dispatch-purple/90" : ""
+                variant === "default" ? "bg-primary hover:bg-primary/90" : ""
               }`}
             >
               <Icon className="size-3.5 shrink-0" />

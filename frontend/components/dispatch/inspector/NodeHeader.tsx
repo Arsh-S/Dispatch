@@ -35,25 +35,25 @@ export function NodeHeader({
 }: NodeHeaderProps) {
   const variant = stateToVariant[state] ?? "idle";
   return (
-    <div className="space-y-2 border-b border-border pb-3">
-      <h2 className="text-sm font-semibold text-foreground">{name}</h2>
-      <div className="flex flex-wrap items-center gap-1.5">
+    <div className="space-y-2 pb-3">
+      <h2 className="text-base font-semibold text-foreground">{name}</h2>
+      <div className="flex flex-wrap items-center gap-2">
         <StatusBadge variant="idle">{type}</StatusBadge>
         <StatusBadge variant={variant}>{state}</StatusBadge>
         {duration != null && (
-          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Clock className="size-3" />
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock className="size-3.5" />
             {duration}
           </span>
         )}
       </div>
       {clusterLabel != null && (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Cluster: <span className="text-foreground/80">{clusterLabel}</span>
         </p>
       )}
       {timestamp != null && (
-        <p className="text-[10px] text-muted-foreground/60">{timestamp}</p>
+        <p className="text-xs text-muted-foreground/60">{timestamp}</p>
       )}
     </div>
   );

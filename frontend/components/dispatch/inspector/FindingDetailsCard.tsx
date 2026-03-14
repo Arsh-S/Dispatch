@@ -26,12 +26,10 @@ import type {
   FixStatus,
 } from "@/lib/dispatch/graphTypes";
 
-// Props that accept a full Finding object
 export interface FindingDetailsCardProps {
   finding: Finding;
 }
 
-// Exploit confidence badge component
 function ExploitConfidenceBadge({ confidence }: { confidence: ExploitConfidence }) {
   if (confidence === "confirmed") {
     return (
@@ -42,14 +40,13 @@ function ExploitConfidenceBadge({ confidence }: { confidence: ExploitConfidence 
     );
   }
   return (
-    <Badge variant="secondary" className="text-[10px] gap-1 bg-status-running/20 text-status-running border-status-running/30">
+    <Badge variant="secondary" className="text-[10px] gap-1">
       <AlertTriangle className="w-3 h-3" />
       Unconfirmed
     </Badge>
   );
 }
 
-// Monkeypatch status badge component
 function MonkeypatchBadge({ status }: { status: MonkeypatchStatus }) {
   switch (status) {
     case "validated":
@@ -61,7 +58,7 @@ function MonkeypatchBadge({ status }: { status: MonkeypatchStatus }) {
       );
     case "failed":
       return (
-        <Badge className="text-[10px] gap-1 bg-status-error/20 text-status-error border-status-error/30">
+        <Badge className="text-[10px] gap-1 bg-destructive/20 text-destructive border-destructive/30">
           <XCircle className="w-3 h-3" />
           Failed
         </Badge>
@@ -76,7 +73,6 @@ function MonkeypatchBadge({ status }: { status: MonkeypatchStatus }) {
   }
 }
 
-// Fix status badge component
 function FixStatusBadge({ status }: { status?: FixStatus }) {
   switch (status) {
     case "verified":
@@ -88,21 +84,21 @@ function FixStatusBadge({ status }: { status?: FixStatus }) {
       );
     case "in-progress":
       return (
-        <Badge className="text-[10px] gap-1 bg-status-info/20 text-status-info border-status-info/30">
+        <Badge className="text-[10px] gap-1 bg-primary/20 text-primary border-primary/30">
           <Wrench className="w-3 h-3" />
           In Progress
         </Badge>
       );
     case "unverified":
       return (
-        <Badge className="text-[10px] gap-1 bg-status-warning/20 text-status-warning border-status-warning/30">
+        <Badge variant="secondary" className="text-[10px] gap-1">
           <AlertTriangle className="w-3 h-3" />
           Unverified
         </Badge>
       );
     case "failed":
       return (
-        <Badge className="text-[10px] gap-1 bg-status-error/20 text-status-error border-status-error/30">
+        <Badge className="text-[10px] gap-1 bg-destructive/20 text-destructive border-destructive/30">
           <XCircle className="w-3 h-3" />
           Fix Failed
         </Badge>
@@ -117,7 +113,6 @@ function FixStatusBadge({ status }: { status?: FixStatus }) {
   }
 }
 
-// Copy button component
 function CopyButton({ text, label }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -156,17 +151,13 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
 export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
   const [showFullDiff, setShowFullDiff] = useState(false);
 
-  const severityColor = {
-    CRITICAL: "border-status-error/50 bg-status-error/5",
-    HIGH: "border-status-warning/50 bg-status-warning/5",
-    MEDIUM: "border-status-running/50 bg-status-running/5",
-    LOW: "border-muted-foreground/50 bg-muted/30",
-  }[finding.severity] || "border-status-error/30";
+  const isHighSeverity = finding.severity === "CRITICAL" || finding.severity === "HIGH";
+  const cardBorder = isHighSeverity ? "ring-destructive/30" : "ring-border";
 
   return (
     <div className="space-y-3">
       {/* Main Finding Card */}
-      <Card size="sm" className={severityColor}>
+      <Card size="sm" className={cardBorder}>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs font-medium text-foreground uppercase tracking-wider flex items-center gap-2">
@@ -183,7 +174,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
               <FileCode className="w-3 h-3" />
               Location
             </div>
-            <div className="font-mono text-xs bg-muted/50 rounded px-2 py-1.5 space-y-0.5">
+            <div className="font-mono text-xs bg-muted/50 rounded-md px-2 py-1.5 space-y-0.5">
               <div className="text-foreground">
                 {finding.location.file}:{finding.location.line}
               </div>
@@ -192,7 +183,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
               </div>
               {finding.location.parameter && (
                 <div className="text-muted-foreground">
-                  Parameter: <span className="text-status-running">{finding.location.parameter}</span>
+                  Parameter: <span className="text-foreground">{finding.location.parameter}</span>
                 </div>
               )}
             </div>
@@ -239,7 +230,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
               </div>
               <ul className="space-y-0.5">
                 {finding.rules_violated.map((rule, i) => (
-                  <li key={i} className="text-xs text-status-error flex items-start gap-1.5">
+                  <li key={i} className="text-xs text-destructive flex items-start gap-1.5">
                     <XCircle className="w-3 h-3 mt-0.5 shrink-0" />
                     {rule}
                   </li>
@@ -266,10 +257,10 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
 
       {/* Reproduction Card */}
       {finding.reproduction && (
-        <Card size="sm" className="border-status-info/30 bg-status-info/5">
+        <Card size="sm" className="ring-border">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium text-status-info uppercase tracking-wider flex items-center gap-2">
+              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                 <Terminal className="w-3.5 h-3.5" />
                 Reproduction
               </CardTitle>
@@ -296,7 +287,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
               <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
                 Command
               </div>
-              <pre className="font-mono text-[10px] bg-muted/50 rounded p-2 overflow-x-auto text-primary whitespace-pre-wrap break-all">
+              <pre className="font-mono text-[10px] bg-muted/50 rounded-md p-2 overflow-x-auto text-primary whitespace-pre-wrap break-all">
                 {finding.reproduction.command}
               </pre>
             </div>
@@ -308,16 +299,16 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
                   <CheckCircle className="w-3 h-3 text-primary" />
                   Expected
                 </div>
-                <div className="text-xs text-foreground/80 bg-primary/10 rounded px-2 py-1">
+                <div className="text-xs text-foreground/80 bg-primary/10 rounded-md px-2 py-1">
                   {finding.reproduction.expected}
                 </div>
               </div>
               <div className="space-y-1">
                 <div className="text-muted-foreground text-[10px] uppercase tracking-wider flex items-center gap-1">
-                  <XCircle className="w-3 h-3 text-status-error" />
+                  <XCircle className="w-3 h-3 text-destructive" />
                   Actual
                 </div>
-                <div className="text-xs text-foreground/80 bg-status-error/10 rounded px-2 py-1">
+                <div className="text-xs text-foreground/80 bg-destructive/10 rounded-md px-2 py-1">
                   {finding.reproduction.actual}
                 </div>
               </div>
@@ -328,15 +319,15 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
 
       {/* Server Logs Card */}
       {finding.server_logs.length > 0 && (
-        <Card size="sm" className="border-status-fixer/30 bg-status-fixer/5">
+        <Card size="sm" className="ring-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-status-fixer uppercase tracking-wider flex items-center gap-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <Terminal className="w-3.5 h-3.5" />
               Server Logs
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="font-mono text-[10px] bg-muted/50 rounded p-2 space-y-1 max-h-32 overflow-y-auto">
+            <div className="font-mono text-[10px] bg-muted/50 rounded-md p-2 space-y-1 max-h-32 overflow-y-auto">
               {finding.server_logs.map((log, i) => (
                 <div key={i} className="flex gap-2">
                   <span className="text-muted-foreground shrink-0">
@@ -345,9 +336,9 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
                   <span
                     className={
                       log.level === "ERROR"
-                        ? "text-status-error"
+                        ? "text-destructive"
                         : log.level === "WARN"
-                        ? "text-status-running"
+                        ? "text-muted-foreground"
                         : "text-foreground/70"
                     }
                   >
@@ -363,7 +354,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
 
       {/* Monkeypatch Card */}
       {finding.monkeypatch.diff && (
-        <Card size="sm" className="border-primary/30 bg-primary/5">
+        <Card size="sm" className="ring-primary">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs font-medium text-primary uppercase tracking-wider flex items-center gap-2">
@@ -374,7 +365,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            <pre className={`font-mono text-[10px] bg-muted/50 rounded p-2 overflow-x-auto ${showFullDiff ? "" : "max-h-24"}`}>
+            <pre className={`font-mono text-[10px] bg-muted/50 rounded-md p-2 overflow-x-auto ${showFullDiff ? "" : "max-h-24"}`}>
               {finding.monkeypatch.diff.split("\n").map((line, i) => (
                 <div
                   key={i}
@@ -382,9 +373,9 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
                     line.startsWith("+")
                       ? "text-primary"
                       : line.startsWith("-")
-                      ? "text-status-error"
+                      ? "text-destructive"
                       : line.startsWith("@@")
-                      ? "text-status-info"
+                      ? "text-muted-foreground"
                       : "text-foreground/60"
                   }
                 >
@@ -405,8 +396,8 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
 
             {/* Validation result */}
             {finding.monkeypatch.validation && (
-              <div className="space-y-1 pt-2 border-t border-primary/20">
-                <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+              <div className="space-y-1 pt-2">
+                <div className="text-muted-foreground text-xs uppercase tracking-wider">
                   Validation
                 </div>
                 <div className="text-xs space-y-1">
@@ -420,7 +411,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
                       className={
                         finding.monkeypatch.validation.result === "PASS"
                           ? "bg-primary/20 text-primary border-primary/30"
-                          : "bg-status-error/20 text-status-error border-status-error/30"
+                          : "bg-destructive/20 text-destructive border-destructive/30"
                       }
                     >
                       {finding.monkeypatch.validation.result}
@@ -438,9 +429,9 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
       )}
 
       {/* Recommended Fix Card */}
-      <Card size="sm" className="border-status-retest/30 bg-status-retest/5">
+      <Card size="sm" className="ring-border">
         <CardHeader className="pb-2">
-          <CardTitle className="text-xs font-medium text-status-retest uppercase tracking-wider flex items-center gap-2">
+          <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
             <Wrench className="w-3.5 h-3.5" />
             Recommended Fix
           </CardTitle>

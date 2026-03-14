@@ -20,7 +20,7 @@ export function NodeSummaryCard({
   severity,
 }: NodeSummaryCardProps) {
   return (
-    <Card size="sm">
+    <Card size="sm" className="ring-border">
       <CardHeader>
         <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Summary

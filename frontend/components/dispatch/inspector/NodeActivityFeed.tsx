@@ -16,14 +16,14 @@ export interface NodeActivityFeedProps {
 
 const levelConfig: Record<string, { Icon: React.ElementType; className: string }> = {
   info: { Icon: Info, className: "text-muted-foreground" },
-  warn: { Icon: AlertTriangle, className: "text-dispatch-orange" },
-  error: { Icon: XCircle, className: "text-dispatch-red" },
-  success: { Icon: CheckCircle2, className: "text-dispatch-green" },
+  warn: { Icon: AlertTriangle, className: "text-destructive" },
+  error: { Icon: XCircle, className: "text-destructive" },
+  success: { Icon: CheckCircle2, className: "text-primary" },
 };
 
 export function NodeActivityFeed({ events }: NodeActivityFeedProps) {
   return (
-    <Card size="sm">
+    <Card size="sm" className="ring-border">
       <CardHeader>
         <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Activity

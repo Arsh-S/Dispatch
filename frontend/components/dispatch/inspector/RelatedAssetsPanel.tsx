@@ -30,17 +30,17 @@ export function RelatedAssetsPanel({ assets }: RelatedAssetsPanelProps) {
   return (
     <Card size="sm">
       <CardHeader>
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
           Related
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {assets.map((a) => {
             const Icon = typeIcon[a.type] ?? FileCode;
             const inner = (
               <>
-                <Icon className="size-3 text-muted-foreground" />
+                <Icon className="size-3.5 text-muted-foreground" />
                 <span>{a.label}</span>
               </>
             );
@@ -48,14 +48,14 @@ export function RelatedAssetsPanel({ assets }: RelatedAssetsPanelProps) {
               <a
                 key={a.id}
                 href={a.href}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
+                className="inline-flex items-center gap-1.5 rounded-md bg-card px-2 py-1 text-xs text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
               >
                 {inner}
               </a>
             ) : (
               <span
                 key={a.id}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground/80"
+                className="inline-flex items-center gap-1.5 rounded-md bg-card px-2 py-1 text-xs text-foreground/80"
               >
                 {inner}
               </span>
