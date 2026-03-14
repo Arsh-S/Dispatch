@@ -15,16 +15,16 @@ export type StatusVariant =
   | "retest";
 
 const variantClasses: Record<StatusVariant, string> = {
-  idle: "border-border bg-muted/50 text-muted-foreground",
-  planning: "border-primary/40 bg-primary/10 text-primary",
-  executing: "border-status-running/40 bg-status-running/10 text-status-running",
-  completed: "border-primary/40 bg-primary/10 text-primary",
-  running: "border-status-running/40 bg-status-running/10 text-status-running",
-  success: "border-primary/40 bg-primary/10 text-primary",
-  failed: "border-status-error/40 bg-status-error/10 text-status-error",
-  warning: "border-status-warning/40 bg-status-warning/10 text-status-warning",
-  fixer: "border-status-fixer/40 bg-status-fixer/10 text-status-fixer",
-  retest: "border-status-retest/40 bg-status-retest/10 text-status-retest",
+  idle: "bg-muted/50 text-muted-foreground",
+  planning: "bg-primary/10 text-primary",
+  executing: "bg-primary/10 text-primary",
+  completed: "bg-primary/10 text-primary",
+  running: "bg-primary/10 text-primary",
+  success: "bg-primary/10 text-primary",
+  failed: "bg-destructive/10 text-destructive",
+  warning: "bg-destructive/10 text-destructive",
+  fixer: "bg-primary/10 text-primary",
+  retest: "bg-primary/10 text-primary",
 };
 
 export interface StatusBadgeProps {
@@ -37,7 +37,7 @@ export function StatusBadge({ children, variant = "idle", className }: StatusBad
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium capitalize tracking-tight",
+        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize tracking-tight",
         variantClasses[variant],
         className
       )}

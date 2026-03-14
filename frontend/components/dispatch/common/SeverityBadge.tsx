@@ -11,19 +11,19 @@ import {
 
 const severityConfig: Record<Severity, { classes: string; Icon: React.ElementType }> = {
   low: {
-    classes: "border-muted-foreground/30 bg-muted/50 text-muted-foreground",
+    classes: "bg-muted/50 text-muted-foreground",
     Icon: Shield,
   },
   medium: {
-    classes: "border-status-running/40 bg-status-running/10 text-status-running",
+    classes: "bg-muted/50 text-muted-foreground",
     Icon: AlertTriangle,
   },
   high: {
-    classes: "border-status-warning/40 bg-status-warning/10 text-status-warning",
+    classes: "bg-destructive/10 text-destructive",
     Icon: ShieldAlert,
   },
   critical: {
-    classes: "border-status-error/40 bg-status-error/10 text-status-error",
+    classes: "bg-destructive/10 text-destructive",
     Icon: ShieldX,
   },
 };
@@ -38,7 +38,7 @@ export function SeverityBadge({ severity, className }: SeverityBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium capitalize tracking-tight",
+        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium capitalize tracking-tight",
         classes,
         className
       )}

@@ -33,13 +33,13 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
             type="button"
             onClick={() => onFilterChange({ [key]: !active })}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+              "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
               active
-                ? "border-primary/50 bg-primary/15 text-primary"
-                : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "bg-primary/15 text-primary"
+                : "bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
-            <Icon className="size-3" />
+            <Icon className="size-4" />
             {label}
           </button>
         );
