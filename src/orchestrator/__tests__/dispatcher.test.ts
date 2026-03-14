@@ -1,10 +1,25 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { dispatchWorkers, DispatcherOptions } from '../dispatcher';
 import { TaskAssignment } from '../../schemas/task-assignment';
-import { FindingReportSchema } from '../../schemas/finding-report';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+
+// Mock the pentester worker to avoid actually starting apps in tests
+vi.mock('../../workers/pentester/agent', () => ({
+  runPentesterWorker: vi.fn(async (_taskPath: string, _targetDir: string) => {
+    return {
+      dispatch_run_id: 'test-run-001',
+      worker_id: 'mocked-worker',
+      completed_at: new Date().toISOString(),
+      status: 'completed' as const,
+      duration_seconds: 1,
+      error_detail: null,
+      findings: [],
+      clean_endpoints: [],
+    };
+  }),
+}));
 
 function makeAssignment(overrides: Partial<TaskAssignment> = {}): TaskAssignment {
   return {
@@ -25,9 +40,9 @@ function makeAssignment(overrides: Partial<TaskAssignment> = {}): TaskAssignment
     },
     app_config: {
       runtime: 'node',
-      install: 'pnpm install',
-      start: 'pnpm dev',
-      port: 3000,
+      install: 'echo install',
+      start: 'echo started',
+      port: 39999,
       env: {},
     },
     briefing: 'Test briefing',
@@ -53,9 +68,8 @@ describe('dispatchWorkers', () => {
     const results = await dispatchWorkers(assignments, options);
     expect(results.length).toBe(1);
     expect(results[0].workerId).toBe('worker-sql-injection-users-abc');
-    // Worker not implemented yet, so report should be null
-    expect(results[0].report).toBeNull();
-    expect(results[0].error).toBe('Pentester worker not yet implemented');
+    expect(results[0].report).not.toBeNull();
+    expect(results[0].report!.status).toBe('completed');
   });
 
   it('should write task assignment JSON to .dispatch directory', async () => {
@@ -72,7 +86,7 @@ describe('dispatchWorkers', () => {
     expect(written.attack_type).toBe('sql-injection');
   });
 
-  it('should process multiple workers in batches', async () => {
+  it('should process multiple workers sequentially', async () => {
     const assignments = [
       makeAssignment({ worker_id: 'w-1' }),
       makeAssignment({ worker_id: 'w-2' }),
@@ -83,31 +97,6 @@ describe('dispatchWorkers', () => {
     const results = await dispatchWorkers(assignments, options);
     expect(results.length).toBe(3);
     expect(results.map(r => r.workerId)).toEqual(['w-1', 'w-2', 'w-3']);
-  });
-
-  it('should read finding report if present', async () => {
-    const assignment = makeAssignment();
-    const taskDir = path.join(tmpDir, '.dispatch', assignment.worker_id);
-    fs.mkdirSync(taskDir, { recursive: true });
-
-    // Pre-populate a finding report
-    const report = {
-      dispatch_run_id: 'test-run-001',
-      worker_id: assignment.worker_id,
-      completed_at: '2026-03-14T12:00:00.000Z',
-      status: 'completed',
-      duration_seconds: 60,
-      error_detail: null,
-      findings: [],
-      clean_endpoints: [],
-    };
-    fs.writeFileSync(path.join(taskDir, 'finding-report.json'), JSON.stringify(report));
-
-    const options: DispatcherOptions = { mode: 'local', targetDir: tmpDir };
-    const results = await dispatchWorkers([assignment], options);
-
-    expect(results[0].report).not.toBeNull();
-    expect(results[0].report!.status).toBe('completed');
   });
 
   it('should throw for blaxel mode', async () => {

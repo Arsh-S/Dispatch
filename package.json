@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "scan": "tsx src/cli.ts scan",
+    "scan:sample": "tsx src/cli.ts scan ./sample-app",
+    "dashboard": "cd src/dashboard && pnpm dev",
     "test": "vitest run"
   },
   "keywords": [],
@@ -29,6 +32,7 @@
     "crypto-js": "^4.2.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "glob": "^13.0.6",
     "uuid": "^13.0.0",
     "yaml": "^2.8.2",
     "zod": "^3.25.76"

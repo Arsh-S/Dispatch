@@ -1,5 +1,6 @@
 import { TaskAssignment } from '../schemas/task-assignment';
 import { FindingReport, FindingReportSchema } from '../schemas/finding-report';
+import { runPentesterWorker } from '../workers/pentester/agent';
 import fs from 'fs';
 import path from 'path';
 
@@ -34,15 +35,17 @@ async function dispatchLocal(
   options: DispatcherOptions,
 ): Promise<WorkerResult[]> {
   const results: WorkerResult[] = [];
-  const maxConcurrent = options.maxConcurrent || 2;
-
-  // Process in batches
-  for (let i = 0; i < assignments.length; i += maxConcurrent) {
-    const batch = assignments.slice(i, i + maxConcurrent);
-    const batchResults = await Promise.all(
-      batch.map(assignment => runLocalWorker(assignment, options.targetDir))
-    );
-    results.push(...batchResults);
+  // In local mode, run workers sequentially to avoid port conflicts
+  // and pnpm lockfile contention from running in the same target directory
+  for (let i = 0; i < assignments.length; i++) {
+    const assignment = assignments[i];
+    console.log(`[Dispatcher] Worker ${i + 1}/${assignments.length}`);
+    const result = await runLocalWorker(assignment, options.targetDir);
+    results.push(result);
+    // Wait for port release between sequential workers
+    if (i < assignments.length - 1) {
+      await new Promise(r => setTimeout(r, 2000));
+    }
   }
 
   return results;
@@ -58,26 +61,16 @@ async function runLocalWorker(
     // Write task assignment to a temp location
     const taskDir = path.join(targetDir, '.dispatch', assignment.worker_id);
     fs.mkdirSync(taskDir, { recursive: true });
+    const taskAssignmentPath = path.join(taskDir, 'task-assignment.json');
     fs.writeFileSync(
-      path.join(taskDir, 'task-assignment.json'),
+      taskAssignmentPath,
       JSON.stringify(assignment, null, 2)
     );
 
-    // In MVP, we call the pentester worker directly (will be implemented in Task 1.5)
-    // For now, return a placeholder
-    const reportPath = path.join(taskDir, 'finding-report.json');
-    if (fs.existsSync(reportPath)) {
-      const raw = JSON.parse(fs.readFileSync(reportPath, 'utf-8'));
-      const report = FindingReportSchema.parse(raw);
-      return { workerId: assignment.worker_id, report };
-    }
-
-    // Placeholder — pentester worker will populate this
-    return {
-      workerId: assignment.worker_id,
-      report: null,
-      error: 'Pentester worker not yet implemented',
-    };
+    // Call the pentester worker directly
+    const report = await runPentesterWorker(taskAssignmentPath, targetDir);
+    console.log(`[Dispatcher] Worker ${assignment.worker_id} completed successfully`);
+    return { workerId: assignment.worker_id, report };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return {

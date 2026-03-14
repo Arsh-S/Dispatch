@@ -69,10 +69,11 @@ function analyzeRoutes(fileContents: Map<string, string>): RouteMapEntry[] {
 
   // Match Express route patterns: router.get/post/put/delete/patch('path', ...)
   // Also match app.get/post/put/delete/patch('path', ...)
-  const routeRegex = /(?:router|app)\.(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]+)['"`]/gi;
+  // Also match named routers like commentsRouter.post(...)
+  const routeRegex = /(?:\w*(?:router|Router|app))\.(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]+)['"`]/gi;
 
   for (const [filePath, content] of fileContents) {
-    if (!filePath.includes('route') && !filePath.includes('app')) continue;
+    if (!filePath.includes('route') && !filePath.includes('app') && !filePath.includes('Router')) continue;
 
     const lines = content.split('\n');
 
@@ -118,6 +119,28 @@ function analyzeRoutes(fileContents: Map<string, string>): RouteMapEntry[] {
         const paramName = bodyMatch[1];
         if (!parameters.find(p => p.name === paramName)) {
           parameters.push({ name: paramName, source: 'body', type: 'string' });
+        }
+      }
+
+      // Also detect destructured body params: const { x, y } = req.body
+      const destructureRegex = /(?:const|let|var)\s*\{\s*([^}]+)\}\s*=\s*req\.body/g;
+      let destructureMatch;
+      while ((destructureMatch = destructureRegex.exec(routeBlock)) !== null) {
+        const names = destructureMatch[1].split(',').map(s => s.trim().split(':')[0].split('=')[0].trim());
+        for (const name of names) {
+          if (name && !parameters.find(p => p.name === name)) {
+            parameters.push({ name, source: 'body', type: 'string' });
+          }
+        }
+      }
+
+      // Query params (req.query.X or destructured)
+      const queryRegex = /req\.query\.(\w+)/g;
+      let queryMatch;
+      while ((queryMatch = queryRegex.exec(routeBlock)) !== null) {
+        const paramName = queryMatch[1];
+        if (!parameters.find(p => p.name === paramName)) {
+          parameters.push({ name: paramName, source: 'query', type: 'string' });
         }
       }
 
