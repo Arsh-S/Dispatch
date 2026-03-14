@@ -146,7 +146,10 @@ pm2 logs dispatch-agent
 
 ## 👥 Contributors
 
-- Arsh S. (@Arsh-S)
+- Arsh Singh
+- Mateo del Rio Lanse
+- Jimmy Mulosmani
+- Diya Sheth
 
 ## 📚 Additional Resources
 
