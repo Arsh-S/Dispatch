@@ -25,11 +25,11 @@ export function PreReconCard({ preRecon }: PreReconCardProps) {
   if (!preRecon) return null;
 
   return (
-    <Card size="sm" className="border-dispatch-purple/30 bg-dispatch-purple/5">
-      <CardHeader className="pb-2">
+    <Card size="sm" className="ring-primary">
+      <CardHeader className="pb-1">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs font-medium text-dispatch-purple uppercase tracking-wider flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5" />
+          <CardTitle className="text-sm font-semibold text-primary uppercase tracking-wider flex items-center gap-2">
+            <Shield className="w-5 h-5" />
             Pre-Recon Results
           </CardTitle>
           <Button
@@ -38,60 +38,58 @@ export function PreReconCard({ preRecon }: PreReconCardProps) {
             onClick={() => setExpanded(!expanded)}
             className="h-6 w-6 p-0"
           >
-            {expanded ? (
-              <ChevronUp className="w-3.5 h-3.5" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5" />
-            )}
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-1">
         {/* Summary Stats */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-2 bg-black/20 rounded px-2 py-1.5">
-            <Route className="w-3 h-3 text-blue-400" />
+        <div className="grid grid-cols-2 gap-1">
+          <div className="flex items-center gap-1 bg-muted/50 rounded-md px-2 py-1">
+            <Route className="w-4 h-4 text-primary" />
             <div>
-              <div className="text-xs font-medium">{preRecon.route_map.length}</div>
-              <div className="text-[10px] text-muted-foreground">Routes</div>
+              <div className="text-sm font-medium">{preRecon.route_map.length}</div>
+              <div className="text-xs text-muted-foreground">Routes</div>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-black/20 rounded px-2 py-1.5">
-            <AlertTriangle className="w-3 h-3 text-orange-400" />
+          <div className="flex items-center gap-1 bg-muted/50 rounded-md px-2 py-1">
+            <AlertTriangle className="w-4 h-4 text-destructive" />
             <div>
-              <div className="text-xs font-medium">{preRecon.risk_signals.length}</div>
-              <div className="text-[10px] text-muted-foreground">Risk Signals</div>
+              <div className="text-sm font-medium">{preRecon.risk_signals.length}</div>
+              <div className="text-xs text-muted-foreground">Risk Signals</div>
             </div>
           </div>
         </div>
 
         {/* Expanded Details */}
         {expanded && (
-          <div className="space-y-3 pt-2 border-t border-dispatch-purple/20">
+          <div className="space-y-1.5 pt-1">
             {/* Risk Signals */}
             <div className="space-y-1">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
+              <div className="text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4" />
                 Risk Signals
               </div>
-              <ul className="space-y-1.5">
+              <ul className="space-y-1">
                 {preRecon.risk_signals.map((signal, i) => (
-                  <li key={i} className="text-xs bg-orange-500/10 rounded px-2 py-1">
+                  <li key={i} className="text-base bg-destructive/10 rounded-md px-2 py-1">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-orange-400">{signal.pattern}</span>
-                      <div className="flex gap-1">
+                      <span className="font-mono text-destructive text-sm sm:text-[15px]">
+                        {signal.pattern}
+                      </span>
+                      <div className="flex gap-1.5">
                         {signal.suggested_attack_types.map((type) => (
                           <Badge
                             key={type}
                             variant="outline"
-                            className="text-[9px] px-1 py-0"
+                            className="text-[11px] px-1.5 py-0.5 leading-none"
                           >
                             {type}
                           </Badge>
                         ))}
                       </div>
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-sm text-muted-foreground">
                       {signal.file}:{signal.line}
                     </div>
                   </li>
@@ -101,17 +99,22 @@ export function PreReconCard({ preRecon }: PreReconCardProps) {
 
             {/* Route Map Preview */}
             <div className="space-y-1">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                <Route className="w-3 h-3" />
+              <div className="text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Route className="w-4 h-4" />
                 Routes
               </div>
-              <ul className="space-y-1 max-h-24 overflow-y-auto">
+              <ul className="space-y-1 max-h-28 overflow-y-auto pr-1">
                 {preRecon.route_map.map((route, i) => (
-                  <li key={i} className="text-xs flex items-center justify-between bg-black/20 rounded px-2 py-1">
-                    <span className="font-mono text-blue-400">{route.endpoint}</span>
-                    <div className="flex gap-1">
+                  <li
+                    key={i}
+                    className="text-base flex items-center justify-between bg-muted/50 rounded-md px-2 py-1"
+                  >
+                    <span className="font-mono text-primary text-sm sm:text-[15px]">
+                      {route.endpoint}
+                    </span>
+                    <div className="flex gap-1.5">
                       {route.middleware.length === 0 ? (
-                        <Badge variant="destructive" className="text-[9px] px-1 py-0">
+                        <Badge className="text-[11px] px-1.5 py-0.5 leading-none bg-destructive/20 text-destructive border-destructive/30">
                           no auth
                         </Badge>
                       ) : (
@@ -119,7 +122,7 @@ export function PreReconCard({ preRecon }: PreReconCardProps) {
                           <Badge
                             key={mw}
                             variant="outline"
-                            className="text-[9px] px-1 py-0"
+                            className="text-[11px] px-1.5 py-0.5 leading-none"
                           >
                             {mw}
                           </Badge>
@@ -133,37 +136,45 @@ export function PreReconCard({ preRecon }: PreReconCardProps) {
 
             {/* Dependency Graph */}
             <div className="space-y-1">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                <Database className="w-3 h-3" />
+              <div className="text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Database className="w-4 h-4" />
                 Dependencies
               </div>
-              <div className="text-xs bg-black/20 rounded px-2 py-1.5 space-y-0.5">
+              <div className="text-base bg-muted/50 rounded-md px-2 py-1.5 space-y-0.5">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">DB Layer:</span>
-                  <span className="font-mono text-foreground">{preRecon.dependency_graph.db_layer}</span>
+                  <span className="font-mono text-foreground text-sm sm:text-[15px]">
+                    {preRecon.dependency_graph.db_layer}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">ORM:</span>
-                  <span className="font-mono text-foreground text-right max-w-[150px] truncate">{preRecon.dependency_graph.orm}</span>
+                  <span className="font-mono text-foreground text-right max-w-[220px] truncate text-sm sm:text-[15px]">
+                    {preRecon.dependency_graph.orm}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Auth:</span>
-                  <span className="font-mono text-foreground">{preRecon.dependency_graph.auth_middleware}</span>
+                  <span className="font-mono text-foreground text-sm sm:text-[15px]">
+                    {preRecon.dependency_graph.auth_middleware}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Session:</span>
-                  <span className="font-mono text-foreground text-right max-w-[150px] truncate">{preRecon.dependency_graph.session_store}</span>
+                  <span className="font-mono text-foreground text-right max-w-[220px] truncate text-sm sm:text-[15px]">
+                    {preRecon.dependency_graph.session_store}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Briefing Notes */}
             <div className="space-y-1">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                <FileCode className="w-3 h-3" />
+              <div className="text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <FileCode className="w-4 h-4" />
                 Briefing
               </div>
-              <p className="text-xs text-foreground/80 leading-relaxed">
+              <p className="text-sm text-foreground/80 leading-relaxed">
                 {preRecon.briefing_notes}
               </p>
             </div>

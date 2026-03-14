@@ -10,7 +10,7 @@ import {
   Clock,
   Wrench,
 } from "lucide-react";
-import type { Finding, Severity } from "@/lib/dispatch/graphTypes";
+import type { Finding } from "@/lib/dispatch/graphTypes";
 
 export interface FindingsListCardProps {
   findings: Finding[];
@@ -20,25 +20,13 @@ export interface FindingsListCardProps {
 function getSeverityColor(severity: string): string {
   switch (severity.toUpperCase()) {
     case "CRITICAL":
-      return "bg-status-error/20 text-status-error border-status-error/30";
     case "HIGH":
-      return "bg-status-warning/20 text-status-warning border-status-warning/30";
+      return "bg-destructive/20 text-destructive border-destructive/30";
     case "MEDIUM":
-      return "bg-status-running/20 text-status-running border-status-running/30";
+      return "bg-muted text-muted-foreground border-border";
     case "LOW":
-      return "bg-muted text-muted-foreground border-border";
     default:
-      return "bg-muted text-muted-foreground border-border";
-  }
-}
-
-function getSeverityIcon(severity: string) {
-  switch (severity.toUpperCase()) {
-    case "CRITICAL":
-    case "HIGH":
-      return <AlertTriangle className="w-3 h-3" />;
-    default:
-      return <AlertTriangle className="w-3 h-3" />;
+      return "bg-muted/50 text-muted-foreground border-border";
   }
 }
 
@@ -47,9 +35,9 @@ function getFixStatusIcon(status?: string) {
     case "verified":
       return <CheckCircle className="w-3 h-3 text-primary" />;
     case "in-progress":
-      return <Wrench className="w-3 h-3 text-status-info" />;
+      return <Wrench className="w-3 h-3 text-primary" />;
     case "failed":
-      return <XCircle className="w-3 h-3 text-status-error" />;
+      return <XCircle className="w-3 h-3 text-destructive" />;
     default:
       return <Clock className="w-3 h-3 text-muted-foreground" />;
   }
@@ -58,7 +46,6 @@ function getFixStatusIcon(status?: string) {
 export function FindingsListCard({ findings, onSelectFinding }: FindingsListCardProps) {
   if (findings.length === 0) return null;
 
-  // Sort by severity: CRITICAL > HIGH > MEDIUM > LOW
   const severityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
   const sortedFindings = [...findings].sort(
     (a, b) =>
@@ -67,18 +54,18 @@ export function FindingsListCard({ findings, onSelectFinding }: FindingsListCard
   );
 
   return (
-    <Card size="sm" className="border-status-error/30 bg-status-error/5">
+    <Card size="sm" className="ring-destructive bg-destructive/5">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs font-medium text-status-error uppercase tracking-wider flex items-center gap-2">
+          <CardTitle className="text-xs font-medium text-destructive uppercase tracking-wider flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5" />
             Findings ({findings.length})
           </CardTitle>
           <div className="flex gap-1 text-[9px]">
-            <Badge className="bg-status-error/20 text-status-error border-status-error/30 px-1 py-0">
+            <Badge className="bg-destructive/20 text-destructive border-destructive/30 px-1 py-0">
               {findings.filter((f) => f.severity === "CRITICAL").length} CRIT
             </Badge>
-            <Badge className="bg-status-warning/20 text-status-warning border-status-warning/30 px-1 py-0">
+            <Badge className="bg-destructive/20 text-destructive border-destructive/30 px-1 py-0">
               {findings.filter((f) => f.severity === "HIGH").length} HIGH
             </Badge>
           </div>
@@ -91,7 +78,7 @@ export function FindingsListCard({ findings, onSelectFinding }: FindingsListCard
               <li
                 key={finding.finding_id}
                 onClick={() => onSelectFinding(finding.finding_id)}
-                className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 cursor-pointer transition-colors"
+                className="flex items-center gap-2 px-3 py-2 hover:bg-accent/50 cursor-pointer transition-colors"
               >
                 <Badge className={`${getSeverityColor(finding.severity)} text-[9px] px-1.5 py-0 shrink-0`}>
                   {finding.severity}
@@ -109,7 +96,7 @@ export function FindingsListCard({ findings, onSelectFinding }: FindingsListCard
                     {finding.exploit_confidence === "confirmed" ? (
                       <CheckCircle className="w-3 h-3 text-primary" />
                     ) : (
-                      <AlertTriangle className="w-3 h-3 text-status-running" />
+                      <AlertTriangle className="w-3 h-3 text-muted-foreground" />
                     )}
                   </span>
                   {getFixStatusIcon(finding.fix_status)}

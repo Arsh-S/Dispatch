@@ -56,9 +56,9 @@ const sections = [
     Icon: KeyRound,
     content: (
       <ul className="space-y-1 text-xs text-muted-foreground">
-        <li className="flex justify-between"><span>API credentials</span><span className="text-dispatch-green">connected</span></li>
-        <li className="flex justify-between"><span>Datadog</span><span className="text-dispatch-green">connected</span></li>
-        <li className="flex justify-between"><span>GitHub</span><span className="text-dispatch-green">connected</span></li>
+        <li className="flex justify-between"><span>API credentials</span><span className="text-primary">connected</span></li>
+        <li className="flex justify-between"><span>Datadog</span><span className="text-primary">connected</span></li>
+        <li className="flex justify-between"><span>GitHub</span><span className="text-primary">connected</span></li>
         <li className="flex justify-between"><span>Linear</span><span className="text-muted-foreground">not connected</span></li>
       </ul>
     ),
@@ -77,11 +77,11 @@ const sections = [
 
 export function SetupAccordion() {
   return (
-    <Accordion className="rounded-lg border border-border">
+    <Accordion className="rounded-lg bg-card">
       {sections.map(({ id, title, Icon, content }) => (
-        <AccordionItem key={id} className="border-b border-border last:border-b-0 px-3" value={id}>
-          <AccordionTrigger className="gap-2 text-xs hover:no-underline">
-            <Icon className="size-3.5 text-muted-foreground" />
+        <AccordionItem key={id} className="last:border-b-0 px-3" value={id}>
+          <AccordionTrigger className="gap-2 text-sm hover:no-underline">
+            <Icon className="size-4 text-muted-foreground" />
             {title}
           </AccordionTrigger>
           <AccordionContent>{content}</AccordionContent>

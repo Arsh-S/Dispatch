@@ -25,17 +25,17 @@ const metricConfig: { key: keyof RunMetrics; label: string; Icon: React.ElementT
 
 export function RunMetricsGrid({ metrics }: RunMetricsGridProps) {
   return (
-    <div className="grid grid-cols-3 gap-1.5">
+    <div className="grid grid-cols-3 gap-2">
       {metricConfig.map(({ key, label, Icon }) => (
         <div
           key={key}
-          className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-2.5"
+          className="flex flex-col items-center gap-1 rounded-lg bg-card p-3"
         >
-          <Icon className="size-3.5 text-muted-foreground" />
+          <Icon className="size-4 text-muted-foreground" />
           <p className="text-lg font-semibold tabular-nums text-foreground">
             {metrics[key]}
           </p>
-          <p className="text-[10px] text-muted-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
         </div>
       ))}
     </div>

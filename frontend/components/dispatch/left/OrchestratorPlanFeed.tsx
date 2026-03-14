@@ -11,9 +11,9 @@ export interface OrchestratorPlanFeedProps {
 function getStatusIcon(status?: string) {
   switch (status) {
     case "completed":
-      return <CheckCircle2 className="size-3 text-green-400" />;
+      return <CheckCircle2 className="size-3 text-primary" />;
     case "in-progress":
-      return <Loader2 className="size-3 text-blue-400 animate-spin" />;
+      return <Loader2 className="size-3 text-primary animate-spin" />;
     default:
       return <Circle className="size-3 text-muted-foreground" />;
   }
@@ -35,7 +35,7 @@ export function OrchestratorPlanFeed({ items }: OrchestratorPlanFeedProps) {
   if (items.length === 0) return null;
 
   return (
-    <Card size="sm">
+    <Card size="sm" className="ring-border">
       <CardHeader>
         <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Orchestrator Plan
@@ -54,7 +54,7 @@ export function OrchestratorPlanFeed({ items }: OrchestratorPlanFeedProps) {
                     item.status === "completed"
                       ? "text-foreground/60"
                       : item.status === "in-progress"
-                      ? "text-blue-400"
+                      ? "text-primary"
                       : "text-foreground/80"
                   }
                 >

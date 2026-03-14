@@ -33,7 +33,7 @@ export function LeftPanel() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b border-border shrink-0">
+      <div className="p-4 shrink-0">
         <RunHeader
           runName={runName}
           environment={environment}
@@ -44,7 +44,7 @@ export function LeftPanel() {
         />
       </div>
       <ScrollArea className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-3 p-3">
+        <div className="flex flex-col gap-4 p-4">
           <OrchestratorSpecCard spec={orchestratorSpec} />
           <SetupAccordion />
           <PreReconCard preRecon={preRecon} />

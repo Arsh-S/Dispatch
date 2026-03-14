@@ -72,24 +72,24 @@ export function RunHeader({
     <div className="space-y-3">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-base font-semibold tracking-tight text-foreground">Dispatch</h1>
-          <p className="text-xs text-muted-foreground">{runName}</p>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Dispatch</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{runName}</p>
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {isLoading ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <RefreshCw className="w-3 h-3" />
+            <RefreshCw className="w-3.5 h-3.5" />
           )}
           <span>{formatLastUpdated(lastUpdated)}</span>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         <StatusBadge variant="idle">{environment}</StatusBadge>
         <StatusBadge variant={variant}>{status}</StatusBadge>
         {isLoading && (
-          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-            <Loader2 className="w-2.5 h-2.5 animate-spin" />
+          <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <Loader2 className="w-3 h-3 animate-spin" />
             syncing
           </span>
         )}
@@ -99,10 +99,9 @@ export function RunHeader({
         className="w-full gap-2"
         size="sm"
       >
-        <Icon className="size-3.5" />
+        <Icon className="size-4" />
         {label}
       </Button>
-      <Separator />
     </div>
   );
 }
