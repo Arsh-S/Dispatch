@@ -11,20 +11,10 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "sans-serif"],
+        sans: ["var(--font-outfit)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       colors: {
-        // Supabase-themed semantic status colors (cohesive palette)
-        status: {
-          idle: "oklch(0.55 0 0)",           // neutral gray
-          running: "oklch(0.75 0.15 85)",    // warm amber
-          success: "var(--primary)",         // supabase green
-          warning: "oklch(0.70 0.15 55)",    // soft orange
-          error: "oklch(0.60 0.20 25)",      // muted red
-          info: "oklch(0.65 0.12 240)",      // soft blue
-          fixer: "oklch(0.65 0.15 300)",     // muted purple
-          retest: "oklch(0.70 0.12 180)",    // teal
-        },
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -58,6 +48,13 @@ const config: Config = {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
+        chart: {
+          1: "var(--chart-1)",
+          2: "var(--chart-2)",
+          3: "var(--chart-3)",
+          4: "var(--chart-4)",
+          5: "var(--chart-5)",
+        },
         sidebar: {
           DEFAULT: "var(--sidebar)",
           foreground: "var(--sidebar-foreground)",
