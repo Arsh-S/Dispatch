@@ -1,8 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import { DispatchLogEntry, DispatchLogResponse } from './types.js';
+import { isEnabled, isReadEnabled, initDatadog } from '../integrations/datadog/client.js';
+import { enqueue, startAutoFlush, shutdown as shutdownForwarder } from '../integrations/datadog/log-forwarder.js';
+import { queryLogs } from '../integrations/datadog/log-reader.js';
 
 // In-memory log store keyed by worker_id
 const logStore = new Map<string, DispatchLogEntry[]>();
+
+initDatadog();
+if (isEnabled()) {
+  startAutoFlush();
+  process.on('beforeExit', shutdownForwarder);
+}
 
 export function dispatchLogMiddleware() {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -32,12 +41,16 @@ export function dispatchLogMiddleware() {
     const origWarn = console.warn;
 
     const addLog = (level: DispatchLogEntry['level'], source: string, ...args: unknown[]) => {
-      workerLogs.push({
+      const entry: DispatchLogEntry = {
         timestamp: new Date().toISOString(),
         level,
         source,
         message: args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' '),
-      });
+        dispatch_worker_id: workerId,
+        dispatch_run_id: runId,
+      };
+      workerLogs.push(entry);
+      enqueue(entry, runId, workerId);
     };
 
     console.log = (...args: unknown[]) => { addLog('INFO', 'console', ...args); origLog(...args); };
@@ -57,42 +70,67 @@ export function dispatchLogMiddleware() {
 
     // Capture unhandled errors on the response stream
     res.on('error', (err: Error) => {
-      workerLogs.push({
+      const entry: DispatchLogEntry = {
         timestamp: new Date().toISOString(),
         level: 'ERROR',
         source: 'express',
         message: err.message,
         stack: err.stack,
-      });
+        dispatch_worker_id: workerId,
+        dispatch_run_id: runId,
+      };
+      workerLogs.push(entry);
+      enqueue(entry, runId, workerId);
     });
 
     next();
   };
 }
 
-function handleLogQuery(req: Request, res: Response) {
+async function handleLogQuery(req: Request, res: Response) {
   const workerId = req.query.worker_id as string;
   if (!workerId) {
     return res.status(400).json({ error: 'worker_id query parameter is required' });
   }
 
+  const runId = req.query.run_id as string | undefined;
+  const level = req.query.level as string | undefined;
+  const since = req.query.since as string | undefined;
+  const limit = parseInt(req.query.limit as string) || 100;
+
+  // If Datadog read is available, proxy the query there
+  if (isReadEnabled()) {
+    try {
+      const ddLogs = await queryLogs({ workerId, runId, level, since, limit });
+      if (ddLogs !== null) {
+        const response: DispatchLogResponse = {
+          worker_id: workerId,
+          log_count: ddLogs.length,
+          logs: ddLogs,
+        };
+        return res.json(response);
+      }
+    } catch {
+      // Fall through to in-memory on Datadog read failure
+    }
+  }
+
+  // Fallback: serve from in-memory store
   let logs = logStore.get(workerId) || [];
 
-  // Filter by level
-  const level = req.query.level as string;
   if (level) {
     logs = logs.filter(l => l.level === level.toUpperCase());
   }
 
-  // Filter by since
-  const since = req.query.since as string;
   if (since) {
     const sinceDate = new Date(since);
     logs = logs.filter(l => new Date(l.timestamp) > sinceDate);
   }
 
-  // Limit
-  const limit = parseInt(req.query.limit as string) || 100;
+  if (runId) {
+    logs = logs.filter(l => l.dispatch_run_id === runId);
+  }
+
   logs = logs.slice(-limit);
 
   const response: DispatchLogResponse = {

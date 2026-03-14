@@ -1,5 +1,7 @@
 import { FindingReport, Finding, CleanEndpoint } from '../schemas/finding-report';
 import crypto from 'crypto';
+import { isEnabled, sendEvent, sendMetrics } from '../integrations/datadog/client.js';
+import { DatadogEvent, DatadogMetricSeries } from '../integrations/datadog/types.js';
 
 export interface MergedReport {
   dispatch_run_id: string;
@@ -99,4 +101,51 @@ function deduplicateFindings(findings: Finding[]): Finding[] {
 function generateFindingKey(finding: Finding): string {
   const raw = `${finding.location.endpoint}:${finding.location.parameter || ''}:${finding.vuln_type}`;
   return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 12);
+}
+
+export async function forwardToDatadog(report: MergedReport): Promise<void> {
+  if (!isEnabled()) return;
+
+  const tags = [
+    `dispatch_run_id:${report.dispatch_run_id}`,
+    `findings_critical:${report.summary.critical}`,
+    `findings_high:${report.summary.high}`,
+    `findings_medium:${report.summary.medium}`,
+    `findings_low:${report.summary.low}`,
+  ];
+
+  let alertType: DatadogEvent['alert_type'] = 'info';
+  if (report.summary.critical > 0) alertType = 'error';
+  else if (report.summary.high > 0) alertType = 'warning';
+
+  const event: DatadogEvent = {
+    title: `Dispatch Scan Complete: ${report.dispatch_run_id}`,
+    text: [
+      `**Findings:** ${report.findings.length} total`,
+      `Critical: ${report.summary.critical} | High: ${report.summary.high} | Medium: ${report.summary.medium} | Low: ${report.summary.low}`,
+      `**Endpoints:** ${report.summary.vulnerable_endpoints} vulnerable / ${report.summary.total_endpoints} total`,
+      `**Workers:** ${report.total_workers} | Errors: ${report.worker_errors.length}`,
+      `**Duration:** ${report.duration_seconds}s`,
+    ].join('\n'),
+    tags,
+    alert_type: alertType,
+    source_type_name: 'dispatch',
+  };
+
+  const now = Math.floor(Date.now() / 1000);
+  const metricTags = [`dispatch_run_id:${report.dispatch_run_id}`];
+
+  const series: DatadogMetricSeries[] = [
+    { metric: 'dispatch.findings.critical', type: 1, points: [{ timestamp: now, value: report.summary.critical }], tags: metricTags },
+    { metric: 'dispatch.findings.high', type: 1, points: [{ timestamp: now, value: report.summary.high }], tags: metricTags },
+    { metric: 'dispatch.findings.medium', type: 1, points: [{ timestamp: now, value: report.summary.medium }], tags: metricTags },
+    { metric: 'dispatch.findings.low', type: 1, points: [{ timestamp: now, value: report.summary.low }], tags: metricTags },
+    { metric: 'dispatch.scan.duration_seconds', type: 1, points: [{ timestamp: now, value: report.duration_seconds }], tags: metricTags },
+    { metric: 'dispatch.scan.workers', type: 1, points: [{ timestamp: now, value: report.total_workers }], tags: metricTags },
+  ];
+
+  await Promise.all([
+    sendEvent(event),
+    sendMetrics({ series }),
+  ]);
 }
