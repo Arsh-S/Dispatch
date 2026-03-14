@@ -38,7 +38,7 @@ export function WorkerNode({
   return (
     <g
       className={cn(
-        "cursor-pointer transition-transform hover:scale-110",
+        "cursor-pointer transition-[filter] duration-150 hover:brightness-110",
         isSelected && "drop-shadow-md"
       )}
       onClick={onClick}

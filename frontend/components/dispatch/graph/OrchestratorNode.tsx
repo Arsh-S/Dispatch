@@ -33,7 +33,7 @@ export function OrchestratorNode({
   return (
     <g
       className={cn(
-        "cursor-pointer transition-transform hover:scale-105",
+        "cursor-pointer transition-[filter] duration-150 hover:brightness-110",
         isSelected && "drop-shadow-lg"
       )}
       onClick={onClick}

@@ -35,17 +35,25 @@ export function GraphCanvas({
     [graphData.nodes]
   );
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      e.preventDefault();
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+
+    // Hold Ctrl/Cmd to zoom, otherwise pan with scroll
+    if (e.ctrlKey || e.metaKey) {
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
       setTransform((t) => ({
         ...t,
-        scale: Math.min(2, Math.max(0.3, t.scale + delta)),
+        scale: Math.min(4, Math.max(0.1, t.scale + delta)),
       }));
-    },
-    []
-  );
+      return;
+    }
+
+    setTransform((t) => ({
+      ...t,
+      x: t.x - e.deltaX,
+      y: t.y - e.deltaY,
+    }));
+  }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button === 0) dragRef.current = { x: e.clientX, y: e.clientY };
@@ -83,6 +91,12 @@ export function GraphCanvas({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      style={{
+        backgroundColor: "#050609",
+        backgroundImage:
+          "radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.18) 1px, transparent 0)",
+        backgroundSize: "32px 32px",
+      }}
     >
       <svg
         width="100%"
@@ -94,18 +108,6 @@ export function GraphCanvas({
           transformOrigin: "0 0",
         }}
       >
-        <defs>
-          <radialGradient
-            id="graphBg"
-            cx="50%"
-            cy="50%"
-            r="50%"
-          >
-            <stop offset="0%" stopColor="#1a1d21" />
-            <stop offset="100%" stopColor="#0f1114" />
-          </radialGradient>
-        </defs>
-        <rect width={VIEW_WIDTH} height={VIEW_HEIGHT} fill="url(#graphBg)" />
         <g>
           {edges.map((edge) => {
             const fromPos = getPos(edge.from);

@@ -2,6 +2,7 @@
 
 import { useDispatchWorkspace } from "@/lib/dispatch/state";
 import { EmptyInspectorState } from "./EmptyInspectorState";
+import { NodeStatusLegend } from "./NodeStatusLegend";
 import { NodeHeader } from "./NodeHeader";
 import { NodeSummaryCard } from "./NodeSummaryCard";
 import { NodeActivityFeed } from "./NodeActivityFeed";
@@ -28,8 +29,11 @@ export function NodeInspectorSidebar() {
 
   if (selectedNodeId == null) {
     return (
-      <div className="flex w-14 flex-shrink-0 flex-col items-center border-l border-dispatch-muted bg-dispatch-slate/30 py-4">
-        <EmptyInspectorState />
+      <div className="flex w-52 flex-shrink-0 flex-col border-l border-dispatch-muted bg-dispatch-slate/30 py-4">
+        <div className="px-4">
+          <EmptyInspectorState />
+          <NodeStatusLegend />
+        </div>
       </div>
     );
   }
