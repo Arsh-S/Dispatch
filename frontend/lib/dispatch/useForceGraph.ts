@@ -196,12 +196,34 @@ export function useForceGraph(
 
     ctx.clearRect(0, 0, w, h);
 
-    ctx.fillStyle = "#0a0a0f";
+    const bg =
+      typeof document !== "undefined"
+        ? getComputedStyle(document.documentElement)
+            .getPropertyValue("--background")
+            .trim()
+        : "";
+    ctx.fillStyle = bg || "oklch(0.1822 0 0)";
     ctx.fillRect(0, 0, w, h);
 
     ctx.save();
     ctx.translate(tx, ty);
     ctx.scale(k, k);
+
+    /* --- dotted grid (world space) --- */
+    const gridSpacing = 24;
+    const dotRadius = 0.6;
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    const left = (-tx / k) | 0;
+    const top = (-ty / k) | 0;
+    const right = Math.ceil((w - tx) / k) + gridSpacing;
+    const bottom = Math.ceil((h - ty) / k) + gridSpacing;
+    for (let gx = (left / gridSpacing) * gridSpacing; gx <= right; gx += gridSpacing) {
+      for (let gy = (top / gridSpacing) * gridSpacing; gy <= bottom; gy += gridSpacing) {
+        ctx.beginPath();
+        ctx.arc(gx, gy, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
     /* --- edges --- */
     for (const l of links) {
