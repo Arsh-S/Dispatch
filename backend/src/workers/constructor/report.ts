@@ -6,6 +6,9 @@ export async function postFixReport(
   _parsed: ParsedIssue,
   fixResult: FixResult,
 ): Promise<void> {
+  if (!bootstrap.github_issue) {
+    throw new Error('postFixReport requires github_issue (use postFixReportToLinear for Linear)');
+  }
   const octokit = getOctokit();
   const { owner, repo } = parseRepo(bootstrap.github_issue.repo);
 

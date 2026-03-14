@@ -9,6 +9,7 @@
     "scan:blaxel": "tsx src/cli.ts scan ../sample-app --blaxel",
     "report": "tsx src/cli.ts report",
     "dashboard": "cd src/dashboard && pnpm dev",
+    "api": "tsx src/api/server.ts",
     "slack": "tsx src/slack/index.ts",
     "test": "vitest run"
   },
@@ -34,6 +35,7 @@
   },
   "dependencies": {
     "@blaxel/core": "^0.2.74",
+    "@linear/sdk": "^77.0.0",
     "@octokit/rest": "^22.0.1",
     "@sentry/node": "^7.84.0",
     "@slack/web-api": "^6.10.0",

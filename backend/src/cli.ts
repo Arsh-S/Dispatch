@@ -1,6 +1,7 @@
 import { runOrchestrator } from './orchestrator/agent';
 import { bootstrapLabels } from './github/labels';
 import { createIssuesFromReport, convertFindingToIssueFormat } from './github/issues';
+import { createLinearIssuesFromReport } from './linear/issues';
 import { generatePdfReport } from './reporting/pdf';
 import { Finding, CleanEndpoint } from './schemas/finding-report';
 import path from 'path';
@@ -65,16 +66,30 @@ async function main() {
       console.log(`  Low: ${report.summary.low}`);
 
       let issues: { number: number; url: string; title: string }[] | undefined;
+      const issueFindings = report.findings.map(f => convertFindingToIssueFormat(f, result.preRecon.dispatch_run_id));
+
       if (githubRepo && report.findings.length > 0) {
         console.log(`\nCreating GitHub Issues on ${githubRepo}...`);
         try {
           await bootstrapLabels(githubRepo);
-          const issueFindings = report.findings.map(f => convertFindingToIssueFormat(f, result.preRecon.dispatch_run_id));
           issues = await createIssuesFromReport(githubRepo, issueFindings);
-          console.log(`Created ${issues.length} issues:`);
+          console.log(`Created ${issues.length} GitHub issues:`);
           issues.forEach(i => console.log(`  #${i.number}: ${i.title} — ${i.url}`));
         } catch (err: any) {
           console.error(`GitHub issue creation failed: ${err.message}`);
+        }
+      }
+
+      const linearTeamId = process.env.LINEAR_TEAM_ID;
+      if (linearTeamId && report.findings.length > 0) {
+        console.log(`\nCreating Linear Issues...`);
+        try {
+          const dispatchFixUrl = process.env.DISPATCH_FIX_URL;
+          const linearIssues = await createLinearIssuesFromReport(linearTeamId, issueFindings, dispatchFixUrl);
+          console.log(`Created ${linearIssues.length} Linear issues:`);
+          linearIssues.forEach(i => console.log(`  ${i.identifier}: ${i.title} — ${i.url}`));
+        } catch (err: any) {
+          console.error(`Linear issue creation failed: ${err.message}`);
         }
       }
 
