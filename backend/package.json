@@ -8,10 +8,12 @@
     "scan:sample": "tsx src/cli.ts scan ../sample-app",
     "scan:blaxel": "tsx src/cli.ts scan ../sample-app --blaxel",
     "report": "tsx src/cli.ts report",
+    "report:linear": "tsx scripts/report-to-linear.ts",
     "dashboard": "cd src/dashboard && pnpm dev",
     "api": "tsx src/api/server.ts",
     "slack": "tsx src/slack/index.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:suite": "tsx src/cli.ts test-suite"
   },
   "keywords": [],
   "author": "",
