@@ -44,6 +44,8 @@ export interface OrchestratorSpec {
 export interface DispatchWorkspaceState {
   dispatchRunId: string | null;
   runStatus: RunStatus;
+  runName: string;
+  environment: string;
 
   preRecon: PreReconDeliverable | null;
   taskAssignments: TaskAssignment[];
@@ -79,6 +81,7 @@ type DispatchWorkspaceContextValue = DispatchWorkspaceState & {
   getAssignmentByWorkerId: (workerId: string) => TaskAssignment | undefined;
   getReportByWorkerId: (workerId: string) => FindingReport | undefined;
   setSidebarOpen: (open: boolean) => void;
+  setRunStatus: (status: RunStatus) => void;
   loadDispatchOutput: (data: DispatchOutput) => void;
   refreshData: () => Promise<void>;
 };
@@ -89,6 +92,8 @@ const DispatchWorkspaceContext =
 export function DispatchWorkspaceProvider({ children }: { children: ReactNode }) {
   const [dispatchRunId, setDispatchRunId] = useState<string | null>(null);
   const [runStatus, setRunStatus] = useState<RunStatus>("idle");
+  const [runName, setRunName] = useState<string>("");
+  const [environment] = useState<string>("staging");
 
   const [preRecon, setPreRecon] = useState<PreReconDeliverable | null>(null);
   const [taskAssignments, setTaskAssignments] = useState<TaskAssignment[]>([]);
@@ -132,9 +137,12 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
 
   const setSidebarOpen = useCallback((open: boolean) => setSidebarOpenState(open), []);
 
+  const setRunStatusFn = useCallback((status: RunStatus) => setRunStatus(status), []);
+
   const loadDispatchOutput = useCallback((data: DispatchOutput) => {
     setDispatchRunId(data.dispatch_run_id);
     setRunStatus(data.status);
+    setRunName(data.repo?.name ?? "Dispatch Run");
     if (data.pre_recon) setPreRecon(data.pre_recon);
     setTaskAssignments(data.task_assignments);
     setFindingReports(data.finding_reports);
@@ -170,6 +178,8 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
     () => ({
       dispatchRunId,
       runStatus,
+      runName,
+      environment,
       preRecon,
       taskAssignments,
       findingReports,
@@ -187,12 +197,15 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
       getAssignmentByWorkerId,
       getReportByWorkerId,
       setSidebarOpen,
+      setRunStatus: setRunStatusFn,
       loadDispatchOutput,
       refreshData,
     }),
     [
       dispatchRunId,
       runStatus,
+      runName,
+      environment,
       preRecon,
       taskAssignments,
       findingReports,
@@ -210,6 +223,7 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
       getAssignmentByWorkerId,
       getReportByWorkerId,
       setSidebarOpen,
+      setRunStatusFn,
       loadDispatchOutput,
       refreshData,
     ]
