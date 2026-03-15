@@ -55,18 +55,44 @@ export async function createLinearIssueFromFinding(
   };
 }
 
+/** Try alternate identifier formats when lookup fails (e.g. DISP-13 → DIS-13) */
+function getIdentifierFallbacks(id: string): string[] {
+  const ids = [id];
+  const match = id.match(/^([A-Z]+)-(\d+)$/i);
+  if (match) {
+    const [, prefix, num] = match;
+    if (prefix.endsWith('P') && prefix.length > 1) {
+      ids.push(`${prefix.slice(0, -1)}-${num}`);
+    }
+    if (prefix.length === 3 && !prefix.endsWith('P')) {
+      ids.push(`${prefix}P-${num}`);
+    }
+  }
+  return ids;
+}
+
 export async function fetchLinearIssue(issueIdOrIdentifier: string): Promise<{ id: string; identifier: string; title: string; description: string }> {
   const client = getLinearClient();
-  const issue = await client.issue(issueIdOrIdentifier);
-  if (!issue) {
-    throw new Error(`Linear issue not found: ${issueIdOrIdentifier}`);
+  const toTry = getIdentifierFallbacks(issueIdOrIdentifier);
+  let lastError: Error | null = null;
+
+  for (const id of toTry) {
+    try {
+      const issue = await client.issue(id);
+      if (issue) {
+        return {
+          id: issue.id,
+          identifier: issue.identifier ?? issue.id,
+          title: issue.title ?? '',
+          description: issue.description ?? '',
+        };
+      }
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+    }
   }
-  return {
-    id: issue.id,
-    identifier: issue.identifier ?? issue.id,
-    title: issue.title ?? '',
-    description: issue.description ?? '',
-  };
+
+  throw lastError ?? new Error(`Linear issue not found: ${issueIdOrIdentifier}`);
 }
 
 export async function addLinearComment(issueId: string, body: string): Promise<void> {
