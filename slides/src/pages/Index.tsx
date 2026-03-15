@@ -206,6 +206,137 @@ const summaryCards = [
   },
 ];
 
+const businessTiers = [
+  {
+    name: 'Free',
+    price: '$0',
+    period: '/mo',
+    subtitle: 'Solo devs and side projects',
+    features: [
+      '5 scans per month',
+      '1 repo workspace',
+      'Severity dashboard',
+      'OWASP tagging',
+      'Issue export',
+    ],
+    borderClassName: 'border-white/10',
+    dotClassName: 'bg-primary',
+    priceClassName: 'text-6xl md:text-7xl text-foreground',
+    shadowClassName: 'shadow-[0_24px_70px_rgba(0,0,0,0.22)]',
+  },
+  {
+    name: 'Startup',
+    price: '$99',
+    period: '/mo',
+    subtitle: 'Small teams shipping fast',
+    features: [
+      '50 scans per month',
+      'AI attack testing',
+      'GitHub or Linear tickets',
+      'Fixer-agent PR drafts',
+      'Code-aware planning',
+    ],
+    borderClassName: 'border-secondary/30',
+    dotClassName: 'bg-secondary',
+    priceClassName: 'text-6xl md:text-7xl text-secondary',
+    shadowClassName: 'shadow-[0_24px_70px_rgba(33,166,103,0.12)]',
+  },
+  {
+    name: 'Team',
+    price: '$299',
+    period: '/mo',
+    subtitle: 'Growing engineering teams',
+    features: [
+      'Everything in Startup',
+      'CI/CD scans on every push',
+      'Slack alerts on critical findings',
+      'PDF and compliance-ready reports',
+      'Multi-repo workspace',
+    ],
+    borderClassName: 'border-primary/70',
+    dotClassName: 'bg-primary',
+    priceClassName: 'text-6xl md:text-7xl text-primary',
+    shadowClassName: 'shadow-[0_32px_90px_rgba(62,207,142,0.18)]',
+    badge: 'Most popular',
+  },
+  {
+    name: 'Enterprise',
+    price: 'Custom',
+    period: '',
+    subtitle: 'Large orgs and compliance-heavy teams',
+    features: [
+      'Everything in Team',
+      'Human security engineer review',
+      'SSO and audit logs',
+      'VPC or self-hosted runner options',
+      'Custom SLA and procurement support',
+    ],
+    borderClassName: 'border-accent/35',
+    dotClassName: 'bg-accent',
+    priceClassName: 'text-5xl md:text-6xl text-accent',
+    shadowClassName: 'shadow-[0_24px_70px_rgba(20,141,120,0.12)]',
+  },
+];
+
+const businessModelRows = [
+  { label: 'Primary revenue', value: 'Monthly and annual SaaS subscriptions' },
+  { label: 'Secondary revenue', value: 'Usage overages on scans and agent runtime' },
+  { label: 'Enterprise revenue', value: 'Human review, VPC, and compliance add-ons' },
+  { label: 'Pricing model', value: 'Hybrid: platform fee + usage' },
+  { label: 'Billing', value: 'Monthly by default, annual discount available' },
+  { label: 'Growth motion', value: 'Bottom-up -> team expansion -> enterprise' },
+];
+
+const upgradeRows = [
+  { label: 'Free -> Startup', value: 'Hit scan cap or need auto-fix PRs' },
+  { label: 'Startup -> Team', value: 'Need CI/CD, Slack alerts, and multi-repo' },
+  { label: 'Team -> Enterprise', value: 'Need SSO, audit logs, or VPC deployment' },
+  { label: 'Compliance trigger', value: 'SOC 2 / ISO 27001 evidence for procurement' },
+  { label: 'Market benchmark', value: '$25-$40/dev/mo or €90/app/mo', isBadge: true },
+];
+
+const marketCards = [
+  {
+    title: 'TAM',
+    value: '$13.6B',
+    description: 'Every company worldwide that buys security testing tools',
+    bullets: [
+      'Any industry, any size, any geography',
+      'SAST, DAST, and penetration-testing budgets',
+    ],
+    borderClassName: 'border-[#5a98f2]/45',
+    accentClassName: 'text-[#7fb0ff]',
+    dotClassName: 'bg-[#4a90ff]',
+    shadowClassName: 'shadow-[0_28px_80px_rgba(74,144,255,0.14)]',
+  },
+  {
+    title: 'SAM',
+    value: '$1.5B',
+    description: 'SaaS companies with a GitHub repo and 5-500 engineers',
+    bullets: [
+      'Cloud-native, English-first markets (US, UK, CA, AU)',
+      'Teams shipping continuously under compliance pressure',
+    ],
+    borderClassName: 'border-primary/45',
+    accentClassName: 'text-primary',
+    dotClassName: 'bg-primary',
+    shadowClassName: 'shadow-[0_28px_80px_rgba(62,207,142,0.14)]',
+  },
+  {
+    title: 'SOM - Year 3',
+    value: '$0.75M-$2.5M',
+    description: 'Series A-B startups finding Dispatch via GitHub or dev communities',
+    bullets: [
+      '10-100 engineers, hitting a SOC 2 or fundraise deadline',
+      'Teams that outgrow the Free tier and need auto-fix PRs',
+    ],
+    borderClassName: 'border-[#d9a441]/45',
+    accentClassName: 'text-[#e4b24d]',
+    dotClassName: 'bg-[#c88419]',
+    shadowClassName: 'shadow-[0_28px_80px_rgba(217,164,65,0.14)]',
+  },
+];
+
 const Citation = ({ text, className = '' }: { text: string; className?: string }) => (
   <p className={`mt-4 text-xs leading-relaxed tracking-wide text-muted-foreground/70 ${className}`}>
     {text}
@@ -225,7 +356,7 @@ const Index = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['home', 'problem', 'clinical', 'solution', 'how-it-works', 'dashboard', 'muscle', 'summary'];
+      const sections = ['home', 'problem', 'clinical', 'solution', 'how-it-works', 'dashboard', 'muscle', 'summary', 'business-model', 'market-size'];
       const scrollPosition = window.scrollY + window.innerHeight / 2;
 
       for (const sectionId of sections) {
@@ -649,6 +780,150 @@ const Index = () => {
                 />
               </LinesPatternCardBody>
             </LinesPatternCard>
+          </div>
+        </Section>
+
+        <Section id="business-model" className="bg-transparent">
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Dispatch Business Model</h1>
+              <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
+                Self-serve pricing for developers, expansion revenue from teams, and enterprise upsell when compliance and sign-off matter.
+              </p>
+              <Citation
+                text={'(Snyk, 2026; Semgrep, 2026; Detectify, 2026).'}
+                className="text-center"
+              />
+            </div>
+
+            <div className="grid max-w-7xl mx-auto gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {businessTiers.map((tier, index) => (
+                <motion.div
+                  key={tier.name}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.08 * index }}
+                  className="relative"
+                >
+                  {tier.badge ? (
+                    <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-[0_18px_40px_rgba(62,207,142,0.25)]">
+                      {tier.badge}
+                    </div>
+                  ) : null}
+                  <div className={`h-full rounded-[2rem] border bg-card/90 px-8 py-10 backdrop-blur-md ${tier.borderClassName} ${tier.shadowClassName}`}>
+                    <p className="text-3xl font-bold text-foreground">{tier.name}</p>
+                    <div className="mt-6 flex items-end gap-2">
+                      <span className={`font-black tracking-tight ${tier.priceClassName}`}>{tier.price}</span>
+                      {tier.period ? (
+                        <span className="pb-2 text-3xl font-semibold text-muted-foreground">{tier.period}</span>
+                      ) : null}
+                    </div>
+                    <p className="mt-3 text-xl leading-relaxed text-muted-foreground">{tier.subtitle}</p>
+
+                    <div className="mt-8 border-t border-border/60 pt-6">
+                      <ul className="space-y-4">
+                        {tier.features.map((feature) => (
+                          <li key={feature} className="flex items-start gap-3 text-lg md:text-xl">
+                            <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${tier.dotClassName}`} />
+                            <span className="text-foreground/90">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="grid max-w-7xl mx-auto gap-6 lg:grid-cols-2">
+              <LinesPatternCard className="rounded-[2rem] shadow-2xl border-primary/25">
+                <LinesPatternCardBody className="p-8">
+                  <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-8">How Dispatch makes money</h3>
+                  <div className="space-y-4">
+                    {businessModelRows.map((row) => (
+                      <div
+                        key={row.label}
+                        className="flex flex-col gap-2 border-b border-border/60 pb-4 md:flex-row md:items-center md:justify-between"
+                      >
+                        <span className="text-xl md:text-2xl text-muted-foreground">{row.label}</span>
+                        <span className="text-xl md:text-2xl font-semibold text-foreground md:text-right">{row.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+
+              <LinesPatternCard className="rounded-[2rem] shadow-2xl border-secondary/30">
+                <LinesPatternCardBody className="p-8">
+                  <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-8">Upgrade triggers and market anchors</h3>
+                  <div className="space-y-4">
+                    {upgradeRows.map((row) => (
+                      <div
+                        key={row.label}
+                        className="flex flex-col gap-2 border-b border-border/60 pb-4 md:flex-row md:items-center md:justify-between"
+                      >
+                        <span className="text-xl md:text-2xl text-muted-foreground">{row.label}</span>
+                        {row.isBadge ? (
+                          <span className="inline-flex items-center rounded-full bg-primary/15 px-4 py-2 text-lg font-semibold text-primary md:text-xl">
+                            {row.value}
+                          </span>
+                        ) : (
+                          <span className="text-xl md:text-2xl font-semibold text-foreground md:text-right">{row.value}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Citation
+                    text={'(Snyk, 2026; Semgrep, 2026; Detectify, 2026; Vanta, 2026).'}
+                  />
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+            </div>
+          </div>
+        </Section>
+
+        <Section id="market-size" className="bg-transparent">
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Market Size</h1>
+              <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
+                A top-down view of where Dispatch can win first, then expand.
+              </p>
+            </div>
+
+            <div className="grid max-w-7xl mx-auto gap-6 lg:grid-cols-3">
+              {marketCards.map((card, index) => (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.1 * index }}
+                >
+                  <div className={`h-full rounded-[2rem] border bg-card/90 px-8 py-10 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}>
+                    <p className={`text-2xl md:text-3xl font-semibold tracking-[0.12em] uppercase ${card.accentClassName}`}>
+                      {card.title}
+                    </p>
+                    <div className={`mt-6 text-6xl md:text-7xl font-black tracking-tight ${card.accentClassName}`}>
+                      {card.value}
+                    </div>
+                    <p className="mt-6 text-xl md:text-2xl leading-relaxed text-muted-foreground">
+                      {card.description}
+                    </p>
+
+                    <div className="mt-8 border-t border-border/60 pt-6">
+                      <ul className="space-y-5">
+                        {card.bullets.map((bullet) => (
+                          <li key={bullet} className="flex items-start gap-3 text-xl leading-relaxed text-foreground/90">
+                            <span className={`mt-2.5 h-2.5 w-2.5 shrink-0 rounded-full ${card.dotClassName}`} />
+                            <span>{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </Section>
       </div>

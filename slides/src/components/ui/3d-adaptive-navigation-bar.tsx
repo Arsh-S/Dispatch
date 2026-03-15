@@ -23,6 +23,8 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
     { label: 'Outputs', id: 'dashboard' },
     { label: 'Fix Loop', id: 'muscle' },
     { label: 'Summary', id: 'summary' },
+    { label: 'Business', id: 'business-model' },
+    { label: 'Market', id: 'market-size' },
   ]
 
   const pillWidth = useSpring(1200, { stiffness: 220, damping: 25, mass: 1 })
