@@ -11,6 +11,7 @@ import {
   Wrench,
 } from "lucide-react";
 import type { Finding } from "@/lib/dispatch/graphTypes";
+import { formatEndpointDisplay } from "@/lib/dispatch/graphTypes";
 
 export interface FindingsListCardProps {
   findings: Finding[];
@@ -88,7 +89,7 @@ export function FindingsListCard({ findings, onSelectFinding }: FindingsListCard
                     {finding.vuln_type.replace(/-/g, " ")}
                   </div>
                   <div className="text-[10px] text-muted-foreground truncate">
-                    {finding.location.endpoint}
+                    {formatEndpointDisplay(finding.location)}
                   </div>
                 </div>
                 <div className="shrink-0 flex items-center gap-1.5">

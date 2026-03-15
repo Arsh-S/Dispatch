@@ -237,6 +237,15 @@ export interface FindingLocation {
   parameter: string | null;
 }
 
+/** Returns "METHOD /path" — avoids duplication when endpoint already includes method (legacy data). */
+export function formatEndpointDisplay(location: { endpoint: string; method?: string }): string {
+  if (!location.method) return location.endpoint;
+  if (location.endpoint.toUpperCase().startsWith((location.method || "").toUpperCase() + " ")) {
+    return location.endpoint;
+  }
+  return `${location.method} ${location.endpoint}`;
+}
+
 export interface FindingReproduction {
   steps: string[];
   command: string;

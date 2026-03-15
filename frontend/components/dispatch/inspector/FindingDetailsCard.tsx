@@ -25,6 +25,7 @@ import type {
   MonkeypatchStatus,
   FixStatus,
 } from "@/lib/dispatch/graphTypes";
+import { formatEndpointDisplay } from "@/lib/dispatch/graphTypes";
 
 export interface FindingDetailsCardProps {
   finding: Finding;
@@ -178,7 +179,7 @@ export function FindingDetailsCard({ finding }: FindingDetailsCardProps) {
                 {finding.location.file}:{finding.location.line}
               </div>
               <div className="text-primary">
-                {finding.location.method} {finding.location.endpoint}
+                {formatEndpointDisplay(finding.location)}
               </div>
               {finding.location.parameter && (
                 <div className="text-muted-foreground">

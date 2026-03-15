@@ -21,7 +21,7 @@ fix_status: unfixed
 |---|---|
 | **File** | \`src/routes/orders.js\` |
 | **Line** | 47 |
-| **Endpoint** | \`POST /api/orders\` |
+| **Endpoint** | \`/api/orders\` |
 | **Method** | POST |
 | **Affected Parameter** | \`order_id\` (request body) |
 
@@ -83,7 +83,7 @@ describe('parseIssueBody', () => {
     const result = parseIssueBody(FULL_ISSUE_BODY);
     expect(result.location.file).toBe('src/routes/orders.js');
     expect(result.location.line).toBe(47);
-    expect(result.location.endpoint).toBe('POST /api/orders');
+    expect(result.location.endpoint).toBe('/api/orders');
     expect(result.location.method).toBe('POST');
     expect(result.location.parameter).toBe('order_id');
   });

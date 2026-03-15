@@ -1,5 +1,11 @@
 import type { Finding } from '../types';
 
+function formatEndpointDisplay(loc: { endpoint: string; method?: string }): string {
+  if (!loc.method) return loc.endpoint;
+  if (loc.endpoint.toUpperCase().startsWith((loc.method || '').toUpperCase() + ' ')) return loc.endpoint;
+  return `${loc.method} ${loc.endpoint}`;
+}
+
 interface Props {
   finding: Finding;
 }
@@ -13,7 +19,7 @@ export function FindingDetail({ finding }: Props) {
 
   return (
     <div className="finding-detail">
-      <h2>{finding.vuln_type}: {finding.location.endpoint}</h2>
+      <h2>{finding.vuln_type}: {formatEndpointDisplay(finding.location)}</h2>
 
       <div className="detail-meta">
         <span className={`severity-badge severity-${finding.severity.toLowerCase()}`}>{finding.severity}</span>

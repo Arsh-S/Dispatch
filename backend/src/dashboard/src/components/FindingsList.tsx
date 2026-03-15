@@ -1,5 +1,11 @@
 import type { Finding } from '../types';
 
+function formatEndpointDisplay(loc: { endpoint: string; method?: string }): string {
+  if (!loc.method) return loc.endpoint;
+  if (loc.endpoint.toUpperCase().startsWith((loc.method || '').toUpperCase() + ' ')) return loc.endpoint;
+  return `${loc.method} ${loc.endpoint}`;
+}
+
 interface Props {
   findings: Finding[];
   selectedId: string | null;
@@ -46,7 +52,7 @@ export function FindingsList({ findings, selectedId, onSelect }: Props) {
                 </span>
               </td>
               <td>{f.vuln_type}</td>
-              <td><code>{f.location.method} {f.location.endpoint}</code></td>
+              <td><code>{formatEndpointDisplay(f.location)}</code></td>
               <td><code>{f.location.file}:{f.location.line}</code></td>
               <td className={`confidence-${f.exploit_confidence}`}>{f.exploit_confidence}</td>
               <td className={`monkeypatch-${f.monkeypatch?.status || 'none'}`}>{f.monkeypatch?.status || 'n/a'}</td>

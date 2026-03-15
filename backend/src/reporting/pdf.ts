@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import type { MergedReport } from '../orchestrator/collector';
 import type { Finding } from '../schemas/finding-report';
+import { formatEndpointDisplay } from '../github/issues';
 
 // GitHub logo path
 const GITHUB_LOGO_PATH = path.resolve(__dirname, '../../../icons/github_small_logo.png');
@@ -556,7 +557,7 @@ function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: numbe
 
   // Location
   doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
-  doc.text(`${finding.location.method} ${finding.location.endpoint}`, contentX);
+  doc.text(formatEndpointDisplay(finding.location), contentX);
   doc.moveDown(0.2);
 
   const fileRef = finding.location.line > 0
@@ -703,7 +704,7 @@ function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: 
 
   // Location
   doc.font(f.regular).fontSize(9).fillColor(COLORS.text);
-  doc.text(`${finding.location.method} ${finding.location.endpoint}`, contentX);
+  doc.text(formatEndpointDisplay(finding.location), contentX);
 
   const fileRef = finding.location.line > 0
     ? `${finding.location.file}:${finding.location.line}`

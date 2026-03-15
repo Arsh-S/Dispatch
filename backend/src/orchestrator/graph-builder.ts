@@ -2,6 +2,7 @@ import type { PreReconDeliverable } from '../schemas/pre-recon-deliverable';
 import type { TaskAssignment } from '../schemas/task-assignment';
 import type { WorkerResult } from './dispatcher';
 import type { MergedReport } from './collector';
+import { formatEndpointDisplay } from '../github/issues';
 import type {
   GraphData,
   GraphNode,
@@ -115,7 +116,7 @@ export function buildGraphData(
       const workerReport = resultByWorkerId.get(assignment.worker_id)?.report ?? null;
       nodes[assignment.worker_id] = {
         id: assignment.worker_id,
-        label: `${attackType}: ${assignment.target.endpoint}`,
+        label: `${attackType}: ${formatEndpointDisplay(assignment.target)}`,
         type: 'worker',
         clusterId,
         status: workerStatus,
@@ -158,7 +159,7 @@ export function buildGraphData(
       const nodeId = finding.finding_id;
       nodes[nodeId] = {
         id: nodeId,
-        label: `${finding.vuln_type}: ${finding.location.endpoint}`,
+        label: `${finding.vuln_type}: ${formatEndpointDisplay(finding.location)}`,
         type: 'finding',
         status: finding.exploit_confidence === 'confirmed' ? 'failed' : 'warning',
         severity: finding.severity.toLowerCase() as Severity,
