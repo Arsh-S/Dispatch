@@ -2,6 +2,7 @@ import fs from 'fs';
 import type { PreReconDeliverable } from '../schemas/pre-recon-deliverable';
 import type { TaskAssignment } from '../schemas/task-assignment';
 import type { FindingReport } from '../schemas/finding-report';
+import type { AgentDiagnostics } from '../schemas/agent-diagnostics';
 import type { WorkerResult } from './dispatcher';
 import type { MergedReport } from './collector';
 import type { DispatchOutput, RunStatus, RunMetrics, TriggeredBy } from './graph-types';
@@ -23,6 +24,9 @@ export class DispatchOutputWriter {
   private assignments: TaskAssignment[] = [];
   private dispatchedWorkerIds: Set<string> = new Set();
   private completedResults: WorkerResult[] = [];
+  private workerDiagnostics: Map<string, AgentDiagnostics> = new Map();
+  private diagnosticsWriteThrottle: ReturnType<typeof setTimeout> | null = null;
+  private static readonly DIAGNOSTICS_THROTTLE_MS = 3_000;
 
   constructor(outputPath: string, dispatchRunId: string, repoName?: string, triggeredBy?: TriggeredBy) {
     this.outputPath = outputPath;
@@ -177,7 +181,41 @@ export class DispatchOutputWriter {
     this.write();
   }
 
+  onDiagnosticsUpdate(diagnostics: AgentDiagnostics): void {
+    this.workerDiagnostics.set(diagnostics.worker_id, diagnostics);
+
+    // Throttle writes to avoid excessive I/O during rapid polling
+    if (!this.diagnosticsWriteThrottle) {
+      this.diagnosticsWriteThrottle = setTimeout(() => {
+        this.diagnosticsWriteThrottle = null;
+        this.syncDiagnosticsToOutput();
+      }, DispatchOutputWriter.DIAGNOSTICS_THROTTLE_MS);
+    }
+  }
+
+  private syncDiagnosticsToOutput(): void {
+    if (this.workerDiagnostics.size === 0) return;
+
+    this.output.worker_diagnostics = Object.fromEntries(this.workerDiagnostics);
+
+    // Also inject diagnostics into graph node meta
+    if (this.output.graph_data) {
+      for (const [workerId, diag] of this.workerDiagnostics) {
+        const node = this.output.graph_data.nodes[workerId];
+        if (node) {
+          node.meta = { ...node.meta, diagnostics: diag };
+        }
+      }
+    }
+
+    this.write();
+  }
+
   getCurrentOutput(): DispatchOutput {
     return this.output;
+  }
+
+  getDiagnostics(): Map<string, AgentDiagnostics> {
+    return this.workerDiagnostics;
   }
 }

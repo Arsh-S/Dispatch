@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+// ---------------------------------------------------------------------------
+// Agent Diagnostics Schema
+// ---------------------------------------------------------------------------
+
 export const AgentDiagnosticsSchema = z.object({
   worker_id: z.string(),
   worker_type: z.enum(['pentester', 'constructor']),
@@ -19,10 +23,13 @@ export const AgentDiagnosticsSchema = z.object({
   phase: z.string(),
   findings_so_far: z.number(),
   last_action: z.string(),
-  health_status: z.enum(['healthy', 'warning', 'looping']).default('healthy'),
 });
 
 export type AgentDiagnostics = z.infer<typeof AgentDiagnosticsSchema>;
+
+// ---------------------------------------------------------------------------
+// Loop Detection Config
+// ---------------------------------------------------------------------------
 
 export const LoopDetectionConfigSchema = z.object({
   max_trace_length: z.number().default(200),
@@ -34,14 +41,17 @@ export const LoopDetectionConfigSchema = z.object({
 
 export type LoopDetectionConfig = z.infer<typeof LoopDetectionConfigSchema>;
 
-export type LoopAlertReason =
-  | 'trace_length_exceeded'
-  | 'high_repetition_ratio'
-  | 'stale_no_new_actions'
-  | 'error_spiral'
-  | 'wall_clock_exceeded';
+export const DEFAULT_LOOP_DETECTION_CONFIG: LoopDetectionConfig = {
+  max_trace_length: 200,
+  max_repetition_ratio: 0.4,
+  max_consecutive_errors: 5,
+  staleness_window_seconds: 120,
+  max_wall_clock_seconds: 600,
+};
 
-export type AlertConfidence = 'low' | 'medium' | 'high';
+// ---------------------------------------------------------------------------
+// Loop Alert Schema
+// ---------------------------------------------------------------------------
 
 export const LoopAlertSchema = z.object({
   worker_id: z.string(),
@@ -49,7 +59,6 @@ export const LoopAlertSchema = z.object({
   dispatch_run_id: z.string(),
   triggered_at: z.string(),
   reasons: z.array(z.string()),
-  confidence: z.enum(['low', 'medium', 'high']),
   diagnostics: AgentDiagnosticsSchema,
   auto_killed: z.boolean(),
 });

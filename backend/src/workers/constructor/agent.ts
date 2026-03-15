@@ -1,3 +1,5 @@
+import path from 'path';
+import os from 'os';
 import { ConstructorBootstrap, FixResult } from './types.js';
 import { parseIssueBody } from './parse.js';
 import { applyFix } from './fix.js';
@@ -6,6 +8,7 @@ import { postFixReport } from './report.js';
 import { postFixReportToLinear } from './report-linear.js';
 import { getOctokit, parseRepo } from '../../github/client.js';
 import { fetchLinearIssue, addLinearComment, updateLinearIssueState } from '../../linear/issues.js';
+import { DiagnosticsAccumulator } from '../../diagnostics/accumulator.js';
 
 /** Normalize bootstrap: resolve issue_source and github_repo from legacy or explicit format */
 export function normalizeBootstrap(b: ConstructorBootstrap): Required<Pick<ConstructorBootstrap, 'issue_source' | 'github_repo'>> & ConstructorBootstrap {
@@ -25,6 +28,18 @@ export async function runConstructionWorker(bootstrap: ConstructorBootstrap): Pr
     ? `Linear ${b.linear_issue!.id}`
     : `GitHub #${b.github_issue!.number}`;
   console.log(`[Constructor ${b.construction_worker_id}] Starting fix for ${issueDesc}`);
+
+  // Diagnostics accumulator
+  const diagDir = path.join(os.tmpdir(), 'dispatch', b.construction_worker_id);
+  const diagPath = path.join(diagDir, 'diagnostics.json');
+  const diagnostics = new DiagnosticsAccumulator(
+    b.construction_worker_id,
+    'constructor',
+    `constructor-run-${Date.now()}`,
+    diagPath,
+  );
+  diagnostics.setPhase('init');
+  diagnostics.setLastAction(`Starting fix for ${issueDesc}`);
 
   try {
     // Step 1: Fetch and parse the issue (from GitHub or Linear)
@@ -46,7 +61,10 @@ export async function runConstructionWorker(bootstrap: ConstructorBootstrap): Pr
       throw new Error('No issue source: provide github_issue or linear_issue');
     }
 
+    diagnostics.recordToolCall('fetchIssue');
     const parsed = parseIssueBody(issueBody);
+    diagnostics.setPhase('parsed');
+    diagnostics.setLastAction(`Parsed: ${parsed.vuln_type} at ${parsed.location.file}:${parsed.location.line}`);
     console.log(`[Constructor] Parsed: ${parsed.vuln_type} at ${parsed.location.file}:${parsed.location.line}`);
 
     // Step 2: Update issue status to in-progress
@@ -57,15 +75,27 @@ export async function runConstructionWorker(bootstrap: ConstructorBootstrap): Pr
     }
 
     // Step 3: Apply fix
+    diagnostics.setPhase('fix');
+    diagnostics.setLastAction('Applying fix');
+    diagnostics.recordToolCall('applyFix');
     const fixResult = await applyFix(parsed, b);
 
     // Step 4: Create PR if fix was applied (always on GitHub)
+    for (const f of fixResult.files_changed) {
+      diagnostics.recordFileTouch(f);
+    }
     if (fixResult.files_changed.length > 0) {
+      diagnostics.setPhase('pr');
+      diagnostics.setLastAction('Creating fix PR');
+      diagnostics.recordToolCall('createFixPR');
       const pr = await createFixPR(parsed, b, fixResult);
       fixResult.pr = pr;
     }
 
     // Step 5: Post fix report
+    diagnostics.setPhase('reporting');
+    diagnostics.setLastAction('Posting fix report');
+    diagnostics.recordToolCall('postFixReport');
     if (b.issue_source === 'linear' && linearIssueId) {
       await postFixReportToLinear(linearIssueId, b, parsed, fixResult);
       await postLinearStatusComment(linearIssueId, fixResult.status === 'fix_verified' ? 'fix:verified' : fixResult.status === 'fix_unverified' ? 'fix:unverified' : 'fix:failed', b.construction_worker_id);
@@ -77,10 +107,18 @@ export async function runConstructionWorker(bootstrap: ConstructorBootstrap): Pr
       await updateFixLabel(owner, repo, b.github_issue.number, finalLabel);
     }
 
+    diagnostics.setPhase('complete');
+    diagnostics.setLastAction(`Fix ${fixResult.status}`);
+    diagnostics.stop();
+
     return fixResult;
 
   } catch (err: any) {
     console.error(`[Constructor] Error: ${err.message}`);
+    diagnostics.recordError();
+    diagnostics.setPhase('error');
+    diagnostics.setLastAction(`Error: ${err.message}`);
+    diagnostics.stop();
 
     const failResult: FixResult = {
       status: 'error',

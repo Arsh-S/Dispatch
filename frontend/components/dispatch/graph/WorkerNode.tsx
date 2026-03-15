@@ -1,13 +1,14 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { NodeStatus } from "@/lib/dispatch/graphTypes";
+import type { NodeStatus, HealthStatus } from "@/lib/dispatch/graphTypes";
 
 export interface WorkerNodeProps {
   x: number;
   y: number;
   label: string;
   status: NodeStatus;
+  healthStatus?: HealthStatus;
   isSelected?: boolean;
   onClick?: () => void;
   size?: number;
@@ -30,11 +31,17 @@ export function WorkerNode({
   y,
   label,
   status,
+  healthStatus,
   isSelected,
   onClick,
   size = 14,
 }: WorkerNodeProps) {
   const fill = statusColors[status] ?? statusColors.idle;
+
+  // Health-based visual overrides
+  const isWarning = healthStatus === "warning";
+  const isLooping = healthStatus === "looping";
+
   return (
     <g
       className={cn(
@@ -43,17 +50,35 @@ export function WorkerNode({
       )}
       onClick={onClick}
     >
+      {/* Warning ring — amber pulse */}
+      {isWarning && (
+        <circle
+          r={size / 2 + 4}
+          cx={x}
+          cy={y}
+          className="fill-none stroke-amber-400 stroke-[1.5] animate-pulse"
+        />
+      )}
+      {/* Looping ring — red pulse */}
+      {isLooping && (
+        <circle
+          r={size / 2 + 4}
+          cx={x}
+          cy={y}
+          className="fill-none stroke-red-500 stroke-2 animate-pulse"
+        />
+      )}
       <circle
         r={size / 2}
         cx={x}
         cy={y}
         className={cn(
-          fill,
-          status === "running" && "animate-pulse",
+          isLooping ? "fill-red-500" : isWarning ? "fill-amber-400" : fill,
+          status === "running" && !isLooping && !isWarning && "animate-pulse",
           isSelected && "stroke-primary stroke-2"
         )}
       />
-      <title>{label}</title>
+      <title>{label}{healthStatus && healthStatus !== "healthy" ? ` [${healthStatus}]` : ""}</title>
     </g>
   );
 }
