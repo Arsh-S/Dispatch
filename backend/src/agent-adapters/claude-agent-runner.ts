@@ -12,7 +12,7 @@
  *   object is always fully-typed without undefined fields.
  */
 
-import { spawn } from 'child_process';
+import { spawn, ChildProcess } from 'child_process';
 import { z, ZodTypeAny } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
@@ -29,6 +29,12 @@ export interface ClaudeAgentOptions<TOutput extends ZodTypeAny> {
   cwd?: string;
   /** Extra environment variables forwarded to the claude subprocess. */
   env?: Record<string, string>;
+  /**
+   * Called with the ChildProcess immediately after spawn.
+   * Allows the caller (e.g. WorkerSupervisor) to register the process
+   * for monitoring and kill control before it finishes.
+   */
+  onSpawn?: (child: ChildProcess) => void;
 }
 
 export interface ClaudeAgentResult<T> {
@@ -52,7 +58,7 @@ export interface ClaudeAgentResult<T> {
 export async function runClaudeAgent<TOutput extends ZodTypeAny>(
   options: ClaudeAgentOptions<TOutput>,
 ): Promise<ClaudeAgentResult<z.infer<TOutput>>> {
-  const { systemPrompt, taskPrompt, outputSchema, timeoutMs = 120_000, cwd = process.cwd(), env } = options;
+  const { systemPrompt, taskPrompt, outputSchema, timeoutMs = 120_000, cwd = process.cwd(), env, onSpawn } = options;
 
   // Derive JSON schema for the output so Claude can format its response
   const jsonSchema = zodToJsonSchema(outputSchema, { name: 'Output', errorMessages: false });
@@ -81,6 +87,7 @@ export async function runClaudeAgent<TOutput extends ZodTypeAny>(
         [
           '--print',
           '--output-format', 'text',
+          '--max-turns', '25',
           '--system-prompt', systemPrompt,
           '-p', fullTaskPrompt,
         ],
@@ -88,8 +95,12 @@ export async function runClaudeAgent<TOutput extends ZodTypeAny>(
           cwd,
           env: mergedEnv,
           stdio: ['ignore', 'pipe', 'pipe'],
+          detached: true,
         },
       );
+
+      // Notify caller so it can register with the supervisor
+      onSpawn?.(child);
 
       const timer = setTimeout(() => {
         child.kill('SIGTERM');

@@ -3,6 +3,8 @@ import { FindingReport, FindingReportSchema } from '../schemas/finding-report';
 import { runPentesterWorker } from '../workers/pentester/agent';
 import { runClaudePentesterWorker } from '../workers/pentester/claude-agent';
 import { SandboxInstance } from '@blaxel/core';
+import { WorkerSupervisor } from '../diagnostics/worker-supervisor';
+import { LoopDetector } from '../diagnostics/loop-detector';
 import fs from 'fs';
 import path from 'path';
 
@@ -21,6 +23,13 @@ export interface WorkerResult {
 export interface DispatchCallbacks {
   onWorkerDispatched?: (assignment: TaskAssignment) => void;
   onWorkerComplete?: (result: WorkerResult) => void;
+}
+
+// Shared supervisor instance — accessible from API endpoints for diagnostics
+let activeSupervisor: WorkerSupervisor | null = null;
+
+export function getActiveSupervisor(): WorkerSupervisor | null {
+  return activeSupervisor;
 }
 
 export async function dispatchWorkers(
@@ -102,48 +111,99 @@ async function runLocalWorker(
  * Runs sequentially (same as local mode) so Claude API rate limits are
  * respected. Each worker invokes the Claude CLI in a subprocess and
  * validates output against Zod schemas.
+ *
+ * Creates a WorkerSupervisor that:
+ * - Registers each worker's child process for kill control
+ * - Runs diagnostics-based loop detection on a poll interval
+ * - Escalates kills based on confidence: low→warn, medium→poison pill, high→SIGKILL
+ * - Cleans up all workers on orchestrator shutdown (SIGINT/SIGTERM)
  */
 async function dispatchClaude(
   assignments: TaskAssignment[],
   options: DispatcherOptions,
   callbacks?: DispatchCallbacks,
 ): Promise<WorkerResult[]> {
+  const loopDetector = new LoopDetector();
+  const supervisor = new WorkerSupervisor(loopDetector);
+  activeSupervisor = supervisor;
+
+  // Ensure cleanup on process exit
+  const cleanup = () => supervisor.killAll();
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+
+  supervisor.startPolling();
+
   const results: WorkerResult[] = [];
-  for (let i = 0; i < assignments.length; i++) {
-    const assignment = assignments[i];
-    console.log(`[Dispatcher/Claude] Worker ${i + 1}/${assignments.length}`);
-    callbacks?.onWorkerDispatched?.(assignment);
-    const result = await runClaudeWorker(assignment, options.targetDir);
-    callbacks?.onWorkerComplete?.(result);
-    results.push(result);
-    if (i < assignments.length - 1) {
-      await new Promise(r => setTimeout(r, 2000));
+  try {
+    for (let i = 0; i < assignments.length; i++) {
+      const assignment = assignments[i];
+      console.log(`[Dispatcher/Claude] Worker ${i + 1}/${assignments.length}`);
+      callbacks?.onWorkerDispatched?.(assignment);
+      const result = await runClaudeWorker(assignment, options.targetDir, supervisor);
+
+      supervisor.markCompleted(assignment.worker_id);
+      callbacks?.onWorkerComplete?.(result);
+      results.push(result);
+      if (i < assignments.length - 1) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
     }
+  } finally {
+    supervisor.stopPolling();
+    process.removeListener('SIGINT', cleanup);
+    process.removeListener('SIGTERM', cleanup);
+    activeSupervisor = null;
   }
+
   return results;
 }
 
 async function runClaudeWorker(
   assignment: TaskAssignment,
   targetDir: string,
+  supervisor: WorkerSupervisor,
 ): Promise<WorkerResult> {
   console.log(`[Dispatcher/Claude] Running Claude worker ${assignment.worker_id} for ${assignment.attack_type} on ${assignment.target.endpoint}`);
 
+  const taskDir = path.join(targetDir, '.dispatch', assignment.worker_id);
+
   try {
-    const taskDir = path.join(targetDir, '.dispatch', assignment.worker_id);
     fs.mkdirSync(taskDir, { recursive: true });
     const taskAssignmentPath = path.join(taskDir, 'task-assignment.json');
     fs.writeFileSync(taskAssignmentPath, JSON.stringify(assignment, null, 2));
 
-    const report = await runClaudePentesterWorker(taskAssignmentPath, targetDir);
+    const report = await runClaudePentesterWorker(
+      taskAssignmentPath,
+      targetDir,
+      (child) => {
+        supervisor.registerClaudeWorker(
+          assignment.worker_id,
+          'pentester',
+          assignment.dispatch_run_id,
+          child,
+          taskDir,
+          assignment.timeout_seconds * 1000,
+        );
+      },
+    );
+
     console.log(`[Dispatcher/Claude] Worker ${assignment.worker_id} completed successfully`);
     return { workerId: assignment.worker_id, report };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
+
+    // Check if the supervisor killed this worker
+    const managed = supervisor.getWorker(assignment.worker_id);
+    const wasKilled = managed?.status === 'killed' || managed?.status === 'timed_out';
+    if (wasKilled) {
+      console.warn(`[Dispatcher/Claude] Worker ${assignment.worker_id} was terminated by supervisor`);
+    }
+
     return {
       workerId: assignment.worker_id,
       report: null,
-      error: message,
+      error: wasKilled ? `Terminated by supervisor: ${message}` : message,
     };
   }
 }
