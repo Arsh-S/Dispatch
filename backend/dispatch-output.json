@@ -1,7 +1,7 @@
 {
-  "dispatch_run_id": "dispatch-run-e8c03",
+  "dispatch_run_id": "dispatch-run-4fea2",
   "status": "completed",
-  "started_at": "2026-03-14T21:01:58.190Z",
+  "started_at": "2026-03-15T02:54:58.602Z",
   "repo": {
     "name": "sample-app"
   },
@@ -27,19 +27,26 @@
           "x": 400,
           "y": 300
         },
-        "size": 48
+        "size": 48,
+        "meta": {
+          "pre_recon": {
+            "route_count": 0,
+            "risk_count": 0,
+            "briefing_notes": "Codebase analysis complete. Found 0 routes and 0 risk signals. Risk patterns detected: . Database layer: unknown. Auth middleware: not found. No RULES.md found."
+          }
+        }
       }
     },
     "edges": [],
     "clusters": {}
   },
   "pre_recon": {
-    "dispatch_run_id": "dispatch-run-e8c03",
-    "completed_at": "2026-03-14T21:01:58.250Z",
+    "dispatch_run_id": "dispatch-run-4fea2",
+    "completed_at": "2026-03-15T02:54:58.606Z",
     "route_map": [],
     "risk_signals": [],
     "dependency_graph": {},
     "briefing_notes": "Codebase analysis complete. Found 0 routes and 0 risk signals. Risk patterns detected: . Database layer: unknown. Auth middleware: not found. No RULES.md found."
   },
-  "completed_at": "2026-03-14T21:01:58.255Z"
+  "completed_at": "2026-03-15T02:54:58.607Z"
 }

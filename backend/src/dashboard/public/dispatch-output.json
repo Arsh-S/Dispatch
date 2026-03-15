@@ -1,84 +1,4588 @@
 {
-  "dispatch_run_id": "dispatch-run-9c3ad",
-  "completed_at": "2026-03-14T18:42:03.101Z",
-  "duration_seconds": 10,
-  "total_workers": 4,
-  "findings": [
+  "dispatch_run_id": "dispatch-run-4ab75",
+  "status": "completed",
+  "started_at": "2026-03-15T02:51:43.897Z",
+  "repo": {
+    "name": "flask-target"
+  },
+  "task_assignments": [
     {
-      "finding_id": "finding-xss-d7fc6190",
-      "severity": "MEDIUM",
-      "cvss_score": 6.1,
-      "owasp": "A03:2021",
-      "vuln_type": "xss",
-      "exploit_confidence": "confirmed",
-      "location": {
-        "file": "src/routes/comments.ts",
-        "line": 0,
-        "endpoint": "POST /api/comments",
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-login-53b",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/login",
+        "method": "GET",
+        "parameters": [
+          "username",
+          "password"
+        ]
+      },
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is GET /login handled in app.py:31."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-login-fb9",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/login",
+        "method": "GET",
+        "parameters": [
+          "username",
+          "password"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is GET /login handled in app.py:31."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-login-c00",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/login",
         "method": "POST",
-        "parameter": "content"
+        "parameters": [
+          "username",
+          "password"
+        ]
       },
-      "description": "Basic reflected XSS. Payload: <script>alert(\"xss\")</script>",
-      "reproduction": {
-        "steps": [
-          "Send POST /api/comments with the exploit payload",
-          "Observe response status 200"
-        ],
-        "command": "curl -X POST http://localhost:3000/api/comments -H 'Content-Type: application/json' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoiYWxpY2UiLCJyb2xlIjoidXNlciIsImlhdCI6MTc3MzUxMzY0MywiZXhwIjoxNzczNjAwMDQzfQ.6dAx-PHaYJkaOouHhf1VqhRpwfhtW2_tEgExV6nLsS8' -d '{\"content\":\"<script>alert(\\\"xss\\\")</script>\"}'",
-        "expected": "Request rejected or safely handled",
-        "actual": "200 — <div class=\"comment\"><p>Comment posted: <script>alert(\"xss\")</script></p><p>By user 2</p></div>"
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
       },
-      "server_logs": [],
-      "monkeypatch": {
-        "status": "validated",
-        "diff": "--- a/src/routes/comments.ts\n+++ b/src/routes/comments.ts\nReplaced res.send with HTML to res.json",
-        "validation": {
-          "test": "Replayed reproduction payload after applying monkeypatch",
-          "result": "PASS",
-          "response": "200 {\"orders\":[],\"quantity\":null}"
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /login handled in app.py:31."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-login-66f",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/login",
+        "method": "POST",
+        "parameters": [
+          "username",
+          "password"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /login handled in app.py:31."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-query-71f",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/query",
+        "method": "GET",
+        "parameters": [
+          "filename",
+          "payload",
+          "username",
+          "target"
+        ]
+      },
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is GET /query handled in app.py:52."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-query-0f0",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/query",
+        "method": "GET",
+        "parameters": [
+          "filename",
+          "payload",
+          "username",
+          "target"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is GET /query handled in app.py:52."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-ping-9e1",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/ping",
+        "method": "GET",
+        "parameters": [
+          "filename",
+          "payload",
+          "id",
+          "target"
+        ]
+      },
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is GET /ping handled in app.py:62."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-ping-891",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/ping",
+        "method": "GET",
+        "parameters": [
+          "filename",
+          "payload",
+          "id",
+          "target"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is GET /ping handled in app.py:62."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-upload-63c",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/upload",
+        "method": "POST",
+        "parameters": [
+          "filename",
+          "payload",
+          "id"
+        ]
+      },
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /upload handled in app.py:69."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-upload-ef1",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/upload",
+        "method": "POST",
+        "parameters": [
+          "filename",
+          "payload",
+          "id"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /upload handled in app.py:69."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-deserialize-7a4",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/deserialize",
+        "method": "POST",
+        "parameters": [
+          "payload",
+          "id"
+        ]
+      },
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /deserialize handled in app.py:76."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-deserialize-300",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/deserialize",
+        "method": "POST",
+        "parameters": [
+          "payload",
+          "id"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /deserialize handled in app.py:76."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-allocate-307",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/allocate",
+        "method": "POST",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /allocate handled in app.py:90."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-allocate-78f",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/allocate",
+        "method": "POST",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /allocate handled in app.py:90."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-free-45a",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/free",
+        "method": "POST",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /free handled in app.py:96."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-free-3e2",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/free",
+        "method": "POST",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /free handled in app.py:96."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-use-184",
+      "assigned_at": "2026-03-15T02:51:43.955Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/use",
+        "method": "GET",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "sql-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is GET /use handled in app.py:105."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-use-966",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/use",
+        "method": "GET",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "command-injection",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is GET /use handled in app.py:105."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-login-0d8",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/login",
+        "method": "GET",
+        "parameters": [
+          "username",
+          "password"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is GET /login handled in app.py:31."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-login-d3b",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/login",
+        "method": "POST",
+        "parameters": [
+          "username",
+          "password"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /login handled in app.py:31."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-query-772",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/query",
+        "method": "GET",
+        "parameters": [
+          "filename",
+          "payload",
+          "username",
+          "target"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is GET /query handled in app.py:52."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-ping-5f3",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/ping",
+        "method": "GET",
+        "parameters": [
+          "filename",
+          "payload",
+          "id",
+          "target"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is GET /ping handled in app.py:62."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-upload-34f",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/upload",
+        "method": "POST",
+        "parameters": [
+          "filename",
+          "payload",
+          "id"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /upload handled in app.py:69."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-deserialize-886",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/deserialize",
+        "method": "POST",
+        "parameters": [
+          "payload",
+          "id"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /deserialize handled in app.py:76."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-allocate-17f",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/allocate",
+        "method": "POST",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /allocate handled in app.py:90."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-free-b38",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/free",
+        "method": "POST",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /free handled in app.py:96."
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-use-eff",
+      "assigned_at": "2026-03-15T02:51:43.956Z",
+      "timeout_seconds": 300,
+      "target": {
+        "file": "app.py",
+        "endpoint": "/use",
+        "method": "GET",
+        "parameters": [
+          "id"
+        ]
+      },
+      "attack_type": "secrets-exposure",
+      "context": {
+        "relevant_files": [],
+        "rules_md": []
+      },
+      "app_config": {
+        "runtime": "python",
+        "install": "pip3 install -r requirements.txt",
+        "start": "python3 app.py",
+        "port": 5000,
+        "seed": "pnpm db:seed",
+        "env": {}
+      },
+      "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is GET /use handled in app.py:105."
+    }
+  ],
+  "finding_reports": [
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-login-53b",
+      "completed_at": "2026-03-15T02:51:46.566Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /login",
+          "parameter": "username",
+          "attack_type": "sql-injection",
+          "notes": "Parameter username tested and found safe"
         },
-        "post_patch_logs": []
-      },
-      "recommended_fix": "Sanitize all user input before rendering in HTML. Use a template engine with auto-escaping or return JSON instead of HTML.",
-      "rules_violated": [
-        "Payment endpoints are critical priority"
+        {
+          "endpoint": "GET /login",
+          "parameter": "password",
+          "attack_type": "sql-injection",
+          "notes": "Parameter password tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-login-fb9",
+      "completed_at": "2026-03-15T02:51:51.382Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /login",
+          "parameter": "username",
+          "attack_type": "command-injection",
+          "notes": "Parameter username tested and found safe"
+        },
+        {
+          "endpoint": "GET /login",
+          "parameter": "password",
+          "attack_type": "command-injection",
+          "notes": "Parameter password tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-login-c00",
+      "completed_at": "2026-03-15T02:51:56.261Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [
+        {
+          "finding_id": "finding-sql-injection-3524acc4",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "POST /login",
+            "method": "POST",
+            "parameter": "username"
+          },
+          "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+          "reproduction": {
+            "steps": [
+              "Send POST /login with the exploit payload",
+              "Observe response status 500"
+            ],
+            "command": "curl -X POST http://localhost:5000/login -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"username\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+            "expected": "Request rejected or safely handled",
+            "actual": "500 — <!doctype html>\n<html lang=en>\n  <head>\n    <title>sqlite3.OperationalError: SELECTs to the left and"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-3524acc4",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "POST /login",
+            "method": "POST",
+            "parameter": "username"
+          },
+          "description": "Time-based blind SQL injection. Payload: 1'; WAITFOR DELAY '0:0:5';--",
+          "reproduction": {
+            "steps": [
+              "Send POST /login with the exploit payload",
+              "Observe response status 500"
+            ],
+            "command": "curl -X POST http://localhost:5000/login -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"username\":\"1'; WAITFOR DELAY '0:0:5';--\"}'",
+            "expected": "Request rejected or safely handled",
+            "actual": "500 — <!doctype html>\n<html lang=en>\n  <head>\n    <title>sqlite3.ProgrammingError: You can only execute on"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        }
+      ],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /login",
+          "parameter": "password",
+          "attack_type": "sql-injection",
+          "notes": "Parameter password tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-login-66f",
+      "completed_at": "2026-03-15T02:52:01.159Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /login",
+          "parameter": "username",
+          "attack_type": "command-injection",
+          "notes": "Parameter username tested and found safe"
+        },
+        {
+          "endpoint": "POST /login",
+          "parameter": "password",
+          "attack_type": "command-injection",
+          "notes": "Parameter password tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-query-71f",
+      "completed_at": "2026-03-15T02:52:06.158Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [
+        {
+          "finding_id": "finding-sql-injection-c7e58a9f",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "filename"
+          },
+          "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-c7e58a9f",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "filename"
+          },
+          "description": "SQL injection with DROP TABLE. Payload: 1; DROP TABLE orders;--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-c7e58a9f",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "filename"
+          },
+          "description": "Time-based blind SQL injection. Payload: 1'; WAITFOR DELAY '0:0:5';--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-c7e58a9f",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "filename"
+          },
+          "description": "Simple OR bypass. Payload: ' OR 1=1--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-21521913",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "payload"
+          },
+          "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-21521913",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "payload"
+          },
+          "description": "SQL injection with DROP TABLE. Payload: 1; DROP TABLE orders;--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-21521913",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "payload"
+          },
+          "description": "Time-based blind SQL injection. Payload: 1'; WAITFOR DELAY '0:0:5';--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-21521913",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "payload"
+          },
+          "description": "Simple OR bypass. Payload: ' OR 1=1--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-baed987e",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "username"
+          },
+          "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": [\n    [\n      \"admin\",\n      \"admin123\",\n      \"admin\"\n    ],\n    [\n      \"user1\",\n   "
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-baed987e",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "username"
+          },
+          "description": "SQL injection with DROP TABLE. Payload: 1; DROP TABLE orders;--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-baed987e",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "username"
+          },
+          "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 500"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "500 — <!doctype html>\n<html lang=en>\n  <head>\n    <title>sqlite3.OperationalError: SELECTs to the left and"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-baed987e",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "username"
+          },
+          "description": "Time-based blind SQL injection. Payload: 1'; WAITFOR DELAY '0:0:5';--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 500"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "500 — <!doctype html>\n<html lang=en>\n  <head>\n    <title>sqlite3.ProgrammingError: You can only execute on"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-baed987e",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "username"
+          },
+          "description": "Simple OR bypass. Payload: ' OR 1=1--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": [\n    [\n      \"admin\",\n      \"admin123\",\n      \"admin\"\n    ],\n    [\n      \"user1\",\n   "
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-382c9b68",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "target"
+          },
+          "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-382c9b68",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "target"
+          },
+          "description": "SQL injection with DROP TABLE. Payload: 1; DROP TABLE orders;--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-382c9b68",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "target"
+          },
+          "description": "Time-based blind SQL injection. Payload: 1'; WAITFOR DELAY '0:0:5';--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        },
+        {
+          "finding_id": "finding-sql-injection-382c9b68",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /query",
+            "method": "GET",
+            "parameter": "target"
+          },
+          "description": "Simple OR bypass. Payload: ' OR 1=1--",
+          "reproduction": {
+            "steps": [
+              "Send GET /query with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"result\": []\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        }
+      ],
+      "clean_endpoints": []
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-query-0f0",
+      "completed_at": "2026-03-15T02:52:11.259Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /query",
+          "parameter": "filename",
+          "attack_type": "command-injection",
+          "notes": "Parameter filename tested and found safe"
+        },
+        {
+          "endpoint": "GET /query",
+          "parameter": "payload",
+          "attack_type": "command-injection",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "GET /query",
+          "parameter": "username",
+          "attack_type": "command-injection",
+          "notes": "Parameter username tested and found safe"
+        },
+        {
+          "endpoint": "GET /query",
+          "parameter": "target",
+          "attack_type": "command-injection",
+          "notes": "Parameter target tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-ping-9e1",
+      "completed_at": "2026-03-15T02:52:27.159Z",
+      "status": "completed",
+      "duration_seconds": 14,
+      "error_detail": null,
+      "findings": [
+        {
+          "finding_id": "finding-sql-injection-9a998a04",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "GET /ping",
+            "method": "GET",
+            "parameter": "target"
+          },
+          "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+          "reproduction": {
+            "steps": [
+              "Send GET /ping with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X GET http://localhost:5000/ping -H 'Authorization: <token>'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"message\": \"Pinging 1' UNION SELECT null,null,null,null,null--\"\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        }
+      ],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /ping",
+          "parameter": "filename",
+          "attack_type": "sql-injection",
+          "notes": "Parameter filename tested and found safe"
+        },
+        {
+          "endpoint": "GET /ping",
+          "parameter": "payload",
+          "attack_type": "sql-injection",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "GET /ping",
+          "parameter": "id",
+          "attack_type": "sql-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-ping-891",
+      "completed_at": "2026-03-15T02:52:32.986Z",
+      "status": "completed",
+      "duration_seconds": 4,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /ping",
+          "parameter": "filename",
+          "attack_type": "command-injection",
+          "notes": "Parameter filename tested and found safe"
+        },
+        {
+          "endpoint": "GET /ping",
+          "parameter": "payload",
+          "attack_type": "command-injection",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "GET /ping",
+          "parameter": "id",
+          "attack_type": "command-injection",
+          "notes": "Parameter id tested and found safe"
+        },
+        {
+          "endpoint": "GET /ping",
+          "parameter": "target",
+          "attack_type": "command-injection",
+          "notes": "Parameter target tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-upload-63c",
+      "completed_at": "2026-03-15T02:52:38.061Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [
+        {
+          "finding_id": "finding-sql-injection-11ac52c2",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "POST /upload",
+            "method": "POST",
+            "parameter": "filename"
+          },
+          "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+          "reproduction": {
+            "steps": [
+              "Send POST /upload with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X POST http://localhost:5000/upload -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"filename\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"bucket\": \"public-bucket-simulation\",\n  \"message\": \"File 1' UNION SELECT null,null,null,null,nul"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        }
+      ],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /upload",
+          "parameter": "payload",
+          "attack_type": "sql-injection",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "POST /upload",
+          "parameter": "id",
+          "attack_type": "sql-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-upload-ef1",
+      "completed_at": "2026-03-15T02:52:43.083Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /upload",
+          "parameter": "filename",
+          "attack_type": "command-injection",
+          "notes": "Parameter filename tested and found safe"
+        },
+        {
+          "endpoint": "POST /upload",
+          "parameter": "payload",
+          "attack_type": "command-injection",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "POST /upload",
+          "parameter": "id",
+          "attack_type": "command-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-deserialize-7a4",
+      "completed_at": "2026-03-15T02:52:48.109Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /deserialize",
+          "parameter": "payload",
+          "attack_type": "sql-injection",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "POST /deserialize",
+          "parameter": "id",
+          "attack_type": "sql-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-deserialize-300",
+      "completed_at": "2026-03-15T02:52:53.132Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /deserialize",
+          "parameter": "payload",
+          "attack_type": "command-injection",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "POST /deserialize",
+          "parameter": "id",
+          "attack_type": "command-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-allocate-307",
+      "completed_at": "2026-03-15T02:52:58.066Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [
+        {
+          "finding_id": "finding-sql-injection-cb23de7e",
+          "severity": "HIGH",
+          "cvss_score": 8.1,
+          "owasp": "A03:2021",
+          "vuln_type": "sql-injection",
+          "exploit_confidence": "confirmed",
+          "location": {
+            "file": "app.py",
+            "line": 0,
+            "endpoint": "POST /allocate",
+            "method": "POST",
+            "parameter": "id"
+          },
+          "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+          "reproduction": {
+            "steps": [
+              "Send POST /allocate with the exploit payload",
+              "Observe response status 200"
+            ],
+            "command": "curl -X POST http://localhost:5000/allocate -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"id\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+            "expected": "Request rejected or safely handled",
+            "actual": "200 — {\n  \"message\": \"Object 1' UNION SELECT null,null,null,null,null-- allocated.\"\n}\n"
+          },
+          "server_logs": [],
+          "monkeypatch": {
+            "status": "failed",
+            "diff": null,
+            "validation": {
+              "test": "Could not generate patch",
+              "result": "SKIP"
+            },
+            "post_patch_logs": []
+          },
+          "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+          "rules_violated": []
+        }
+      ],
+      "clean_endpoints": []
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-allocate-78f",
+      "completed_at": "2026-03-15T02:53:03.087Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /allocate",
+          "parameter": "id",
+          "attack_type": "command-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-free-45a",
+      "completed_at": "2026-03-15T02:53:07.941Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /free",
+          "parameter": "id",
+          "attack_type": "sql-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-free-3e2",
+      "completed_at": "2026-03-15T02:53:12.870Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /free",
+          "parameter": "id",
+          "attack_type": "command-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-sql-injection-use-184",
+      "completed_at": "2026-03-15T02:53:18.051Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /use",
+          "parameter": "id",
+          "attack_type": "sql-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-command-injection-use-966",
+      "completed_at": "2026-03-15T02:53:23.049Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /use",
+          "parameter": "id",
+          "attack_type": "command-injection",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-login-0d8",
+      "completed_at": "2026-03-15T02:53:28.023Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /login",
+          "parameter": "username",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter username tested and found safe"
+        },
+        {
+          "endpoint": "GET /login",
+          "parameter": "password",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter password tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-login-d3b",
+      "completed_at": "2026-03-15T02:53:33.031Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /login",
+          "parameter": "username",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter username tested and found safe"
+        },
+        {
+          "endpoint": "POST /login",
+          "parameter": "password",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter password tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-query-772",
+      "completed_at": "2026-03-15T02:53:37.990Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /query",
+          "parameter": "filename",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter filename tested and found safe"
+        },
+        {
+          "endpoint": "GET /query",
+          "parameter": "payload",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "GET /query",
+          "parameter": "username",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter username tested and found safe"
+        },
+        {
+          "endpoint": "GET /query",
+          "parameter": "target",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter target tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-ping-5f3",
+      "completed_at": "2026-03-15T02:53:43.177Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /ping",
+          "parameter": "filename",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter filename tested and found safe"
+        },
+        {
+          "endpoint": "GET /ping",
+          "parameter": "payload",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "GET /ping",
+          "parameter": "id",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter id tested and found safe"
+        },
+        {
+          "endpoint": "GET /ping",
+          "parameter": "target",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter target tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-upload-34f",
+      "completed_at": "2026-03-15T02:53:48.220Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /upload",
+          "parameter": "filename",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter filename tested and found safe"
+        },
+        {
+          "endpoint": "POST /upload",
+          "parameter": "payload",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "POST /upload",
+          "parameter": "id",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-deserialize-886",
+      "completed_at": "2026-03-15T02:53:53.179Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /deserialize",
+          "parameter": "payload",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter payload tested and found safe"
+        },
+        {
+          "endpoint": "POST /deserialize",
+          "parameter": "id",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-allocate-17f",
+      "completed_at": "2026-03-15T02:53:58.152Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /allocate",
+          "parameter": "id",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-free-b38",
+      "completed_at": "2026-03-15T02:54:03.032Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "POST /free",
+          "parameter": "id",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter id tested and found safe"
+        }
+      ]
+    },
+    {
+      "dispatch_run_id": "dispatch-run-4ab75",
+      "worker_id": "worker-secrets-exposure-use-eff",
+      "completed_at": "2026-03-15T02:54:08.002Z",
+      "status": "completed",
+      "duration_seconds": 3,
+      "error_detail": null,
+      "findings": [],
+      "clean_endpoints": [
+        {
+          "endpoint": "GET /use",
+          "parameter": "id",
+          "attack_type": "secrets-exposure",
+          "notes": "Parameter id tested and found safe"
+        }
       ]
     }
   ],
-  "clean_endpoints": [
+  "findings": [
     {
-      "endpoint": "GET /api/orders",
-      "parameter": "order_id",
-      "attack_type": "open-debug",
-      "notes": "Parameter order_id tested and found safe"
+      "finding_id": "finding-sql-injection-3524acc4",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "app.py",
+        "line": 0,
+        "endpoint": "POST /login",
+        "method": "POST",
+        "parameter": "username"
+      },
+      "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+      "reproduction": {
+        "steps": [
+          "Send POST /login with the exploit payload",
+          "Observe response status 500"
+        ],
+        "command": "curl -X POST http://localhost:5000/login -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"username\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+        "expected": "Request rejected or safely handled",
+        "actual": "500 — <!doctype html>\n<html lang=en>\n  <head>\n    <title>sqlite3.OperationalError: SELECTs to the left and"
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "failed",
+        "diff": null,
+        "validation": {
+          "test": "Could not generate patch",
+          "result": "SKIP"
+        },
+        "post_patch_logs": []
+      },
+      "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+      "rules_violated": []
     },
     {
-      "endpoint": "GET /api/orders",
-      "parameter": "quantity",
-      "attack_type": "open-debug",
-      "notes": "Parameter quantity tested and found safe"
+      "finding_id": "finding-sql-injection-c7e58a9f",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "app.py",
+        "line": 0,
+        "endpoint": "GET /query",
+        "method": "GET",
+        "parameter": "filename"
+      },
+      "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+      "reproduction": {
+        "steps": [
+          "Send GET /query with the exploit payload",
+          "Observe response status 200"
+        ],
+        "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+        "expected": "Request rejected or safely handled",
+        "actual": "200 — {\n  \"result\": []\n}\n"
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "failed",
+        "diff": null,
+        "validation": {
+          "test": "Could not generate patch",
+          "result": "SKIP"
+        },
+        "post_patch_logs": []
+      },
+      "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+      "rules_violated": []
     },
     {
-      "endpoint": "POST /api/orders",
-      "parameter": "order_id",
-      "attack_type": "open-debug",
-      "notes": "Parameter order_id tested and found safe"
+      "finding_id": "finding-sql-injection-21521913",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "app.py",
+        "line": 0,
+        "endpoint": "GET /query",
+        "method": "GET",
+        "parameter": "payload"
+      },
+      "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+      "reproduction": {
+        "steps": [
+          "Send GET /query with the exploit payload",
+          "Observe response status 200"
+        ],
+        "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+        "expected": "Request rejected or safely handled",
+        "actual": "200 — {\n  \"result\": []\n}\n"
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "failed",
+        "diff": null,
+        "validation": {
+          "test": "Could not generate patch",
+          "result": "SKIP"
+        },
+        "post_patch_logs": []
+      },
+      "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+      "rules_violated": []
     },
     {
-      "endpoint": "POST /api/orders",
-      "parameter": "quantity",
-      "attack_type": "open-debug",
-      "notes": "Parameter quantity tested and found safe"
+      "finding_id": "finding-sql-injection-baed987e",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "app.py",
+        "line": 0,
+        "endpoint": "GET /query",
+        "method": "GET",
+        "parameter": "username"
+      },
+      "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+      "reproduction": {
+        "steps": [
+          "Send GET /query with the exploit payload",
+          "Observe response status 200"
+        ],
+        "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+        "expected": "Request rejected or safely handled",
+        "actual": "200 — {\n  \"result\": [\n    [\n      \"admin\",\n      \"admin123\",\n      \"admin\"\n    ],\n    [\n      \"user1\",\n   "
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "failed",
+        "diff": null,
+        "validation": {
+          "test": "Could not generate patch",
+          "result": "SKIP"
+        },
+        "post_patch_logs": []
+      },
+      "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+      "rules_violated": []
+    },
+    {
+      "finding_id": "finding-sql-injection-382c9b68",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "app.py",
+        "line": 0,
+        "endpoint": "GET /query",
+        "method": "GET",
+        "parameter": "target"
+      },
+      "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+      "reproduction": {
+        "steps": [
+          "Send GET /query with the exploit payload",
+          "Observe response status 200"
+        ],
+        "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+        "expected": "Request rejected or safely handled",
+        "actual": "200 — {\n  \"result\": []\n}\n"
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "failed",
+        "diff": null,
+        "validation": {
+          "test": "Could not generate patch",
+          "result": "SKIP"
+        },
+        "post_patch_logs": []
+      },
+      "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+      "rules_violated": []
+    },
+    {
+      "finding_id": "finding-sql-injection-9a998a04",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "app.py",
+        "line": 0,
+        "endpoint": "GET /ping",
+        "method": "GET",
+        "parameter": "target"
+      },
+      "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+      "reproduction": {
+        "steps": [
+          "Send GET /ping with the exploit payload",
+          "Observe response status 200"
+        ],
+        "command": "curl -X GET http://localhost:5000/ping -H 'Authorization: <token>'",
+        "expected": "Request rejected or safely handled",
+        "actual": "200 — {\n  \"message\": \"Pinging 1' UNION SELECT null,null,null,null,null--\"\n}\n"
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "failed",
+        "diff": null,
+        "validation": {
+          "test": "Could not generate patch",
+          "result": "SKIP"
+        },
+        "post_patch_logs": []
+      },
+      "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+      "rules_violated": []
+    },
+    {
+      "finding_id": "finding-sql-injection-11ac52c2",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "app.py",
+        "line": 0,
+        "endpoint": "POST /upload",
+        "method": "POST",
+        "parameter": "filename"
+      },
+      "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+      "reproduction": {
+        "steps": [
+          "Send POST /upload with the exploit payload",
+          "Observe response status 200"
+        ],
+        "command": "curl -X POST http://localhost:5000/upload -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"filename\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+        "expected": "Request rejected or safely handled",
+        "actual": "200 — {\n  \"bucket\": \"public-bucket-simulation\",\n  \"message\": \"File 1' UNION SELECT null,null,null,null,nul"
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "failed",
+        "diff": null,
+        "validation": {
+          "test": "Could not generate patch",
+          "result": "SKIP"
+        },
+        "post_patch_logs": []
+      },
+      "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+      "rules_violated": []
+    },
+    {
+      "finding_id": "finding-sql-injection-cb23de7e",
+      "severity": "HIGH",
+      "cvss_score": 8.1,
+      "owasp": "A03:2021",
+      "vuln_type": "sql-injection",
+      "exploit_confidence": "confirmed",
+      "location": {
+        "file": "app.py",
+        "line": 0,
+        "endpoint": "POST /allocate",
+        "method": "POST",
+        "parameter": "id"
+      },
+      "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+      "reproduction": {
+        "steps": [
+          "Send POST /allocate with the exploit payload",
+          "Observe response status 200"
+        ],
+        "command": "curl -X POST http://localhost:5000/allocate -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"id\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+        "expected": "Request rejected or safely handled",
+        "actual": "200 — {\n  \"message\": \"Object 1' UNION SELECT null,null,null,null,null-- allocated.\"\n}\n"
+      },
+      "server_logs": [],
+      "monkeypatch": {
+        "status": "failed",
+        "diff": null,
+        "validation": {
+          "test": "Could not generate patch",
+          "result": "SKIP"
+        },
+        "post_patch_logs": []
+      },
+      "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+      "rules_violated": []
     }
   ],
-  "worker_errors": [],
-  "summary": {
-    "critical": 0,
-    "high": 0,
-    "medium": 1,
-    "low": 0,
-    "total_endpoints": 3,
-    "vulnerable_endpoints": 1,
-    "clean_endpoints": 2
-  }
+  "metrics": {
+    "routesDiscovered": 17,
+    "workersActive": 0,
+    "findingsFound": 22,
+    "ticketsCreated": 0,
+    "prsOpened": 0,
+    "retestsPassed": 0
+  },
+  "graph_data": {
+    "nodes": {
+      "orchestrator": {
+        "id": "orchestrator",
+        "label": "Orchestrator",
+        "type": "orchestrator",
+        "status": "running",
+        "position": {
+          "x": 400,
+          "y": 300
+        },
+        "size": 48,
+        "meta": {
+          "pre_recon": {
+            "route_count": 17,
+            "risk_count": 4,
+            "briefing_notes": "Codebase analysis complete. Found 17 routes and 4 risk signals. Risk patterns detected: raw-sql-concatenation, command-injection, hardcoded-secret, dangerous-function. Database layer: app.py. Auth middleware: not found. No RULES.md found."
+          }
+        }
+      },
+      "sql-injection": {
+        "id": "sql-injection",
+        "label": "Sql Injection Workers",
+        "type": "cluster",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 400,
+          "y": 120
+        },
+        "size": 28,
+        "meta": {
+          "attack_type": "sql-injection",
+          "worker_ids": [
+            "worker-sql-injection-login-53b",
+            "worker-sql-injection-login-c00",
+            "worker-sql-injection-query-71f",
+            "worker-sql-injection-ping-9e1",
+            "worker-sql-injection-upload-63c",
+            "worker-sql-injection-deserialize-7a4",
+            "worker-sql-injection-allocate-307",
+            "worker-sql-injection-free-45a",
+            "worker-sql-injection-use-184"
+          ],
+          "endpoint_count": 9
+        }
+      },
+      "worker-sql-injection-login-53b": {
+        "id": "worker-sql-injection-login-53b",
+        "label": "sql-injection: /login",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 400,
+          "y": 50
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is GET /login handled in app.py:31.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/login",
+              "method": "GET",
+              "parameters": [
+                "username",
+                "password"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-sql-injection-login-c00": {
+        "id": "worker-sql-injection-login-c00",
+        "label": "sql-injection: /login",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 444.99513267805776,
+          "y": 66.37688898167154
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /login handled in app.py:31.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/login",
+              "method": "POST",
+              "parameters": [
+                "username",
+                "password"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 2,
+            "clean_count": 1
+          }
+        }
+      },
+      "worker-sql-injection-query-71f": {
+        "id": "worker-sql-injection-query-71f",
+        "label": "sql-injection: /query",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 468.93654271085455,
+          "y": 107.84462756331487
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is GET /query handled in app.py:52.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/query",
+              "method": "GET",
+              "parameters": [
+                "filename",
+                "payload",
+                "username",
+                "target"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 17,
+            "clean_count": 0
+          }
+        }
+      },
+      "worker-sql-injection-ping-9e1": {
+        "id": "worker-sql-injection-ping-9e1",
+        "label": "sql-injection: /ping",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 460.6217782649107,
+          "y": 155
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is GET /ping handled in app.py:62.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/ping",
+              "method": "GET",
+              "parameters": [
+                "filename",
+                "payload",
+                "id",
+                "target"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 14,
+            "findings_count": 1,
+            "clean_count": 3
+          }
+        }
+      },
+      "worker-sql-injection-upload-63c": {
+        "id": "worker-sql-injection-upload-63c",
+        "label": "sql-injection: /upload",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 423.9414100327968,
+          "y": 185.7784834550136
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /upload handled in app.py:69.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/upload",
+              "method": "POST",
+              "parameters": [
+                "filename",
+                "payload",
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 1,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-sql-injection-deserialize-7a4": {
+        "id": "worker-sql-injection-deserialize-7a4",
+        "label": "sql-injection: /deserialize",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 376.0585899672032,
+          "y": 185.7784834550136
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /deserialize handled in app.py:76.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/deserialize",
+              "method": "POST",
+              "parameters": [
+                "payload",
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-sql-injection-allocate-307": {
+        "id": "worker-sql-injection-allocate-307",
+        "label": "sql-injection: /allocate",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 339.3782217350893,
+          "y": 155.00000000000003
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /allocate handled in app.py:90.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/allocate",
+              "method": "POST",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 1,
+            "clean_count": 0
+          }
+        }
+      },
+      "worker-sql-injection-free-45a": {
+        "id": "worker-sql-injection-free-45a",
+        "label": "sql-injection: /free",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 331.06345728914545,
+          "y": 107.8446275633149
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is POST /free handled in app.py:96.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/free",
+              "method": "POST",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 1
+          }
+        }
+      },
+      "worker-sql-injection-use-184": {
+        "id": "worker-sql-injection-use-184",
+        "label": "sql-injection: /use",
+        "type": "worker",
+        "clusterId": "sql-injection",
+        "status": "success",
+        "position": {
+          "x": 355.00486732194224,
+          "y": 66.37688898167156
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "sql-injection",
+            "briefing": "raw-sql-concatenation detected at app.py:37 — \"cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")\". The target endpoint is GET /use handled in app.py:105.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/use",
+              "method": "GET",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 1
+          }
+        }
+      },
+      "command-injection": {
+        "id": "command-injection",
+        "label": "Command Injection Workers",
+        "type": "cluster",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 555.884572681199,
+          "y": 390
+        },
+        "size": 28,
+        "meta": {
+          "attack_type": "command-injection",
+          "worker_ids": [
+            "worker-command-injection-login-fb9",
+            "worker-command-injection-login-66f",
+            "worker-command-injection-query-0f0",
+            "worker-command-injection-ping-891",
+            "worker-command-injection-upload-ef1",
+            "worker-command-injection-deserialize-300",
+            "worker-command-injection-allocate-78f",
+            "worker-command-injection-free-3e2",
+            "worker-command-injection-use-966"
+          ],
+          "endpoint_count": 9
+        }
+      },
+      "worker-command-injection-login-fb9": {
+        "id": "worker-command-injection-login-fb9",
+        "label": "command-injection: /login",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 555.884572681199,
+          "y": 320
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is GET /login handled in app.py:31.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/login",
+              "method": "GET",
+              "parameters": [
+                "username",
+                "password"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-command-injection-login-66f": {
+        "id": "worker-command-injection-login-66f",
+        "label": "command-injection: /login",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 600.8797053592567,
+          "y": 336.3768889816715
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /login handled in app.py:31.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/login",
+              "method": "POST",
+              "parameters": [
+                "username",
+                "password"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-command-injection-query-0f0": {
+        "id": "worker-command-injection-query-0f0",
+        "label": "command-injection: /query",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 624.8211153920536,
+          "y": 377.8446275633149
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is GET /query handled in app.py:52.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/query",
+              "method": "GET",
+              "parameters": [
+                "filename",
+                "payload",
+                "username",
+                "target"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 4
+          }
+        }
+      },
+      "worker-command-injection-ping-891": {
+        "id": "worker-command-injection-ping-891",
+        "label": "command-injection: /ping",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 616.5063509461097,
+          "y": 425
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is GET /ping handled in app.py:62.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/ping",
+              "method": "GET",
+              "parameters": [
+                "filename",
+                "payload",
+                "id",
+                "target"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 4,
+            "findings_count": 0,
+            "clean_count": 4
+          }
+        }
+      },
+      "worker-command-injection-upload-ef1": {
+        "id": "worker-command-injection-upload-ef1",
+        "label": "command-injection: /upload",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 579.8259827139958,
+          "y": 455.7784834550136
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /upload handled in app.py:69.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/upload",
+              "method": "POST",
+              "parameters": [
+                "filename",
+                "payload",
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 3
+          }
+        }
+      },
+      "worker-command-injection-deserialize-300": {
+        "id": "worker-command-injection-deserialize-300",
+        "label": "command-injection: /deserialize",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 531.9431626484021,
+          "y": 455.7784834550136
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /deserialize handled in app.py:76.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/deserialize",
+              "method": "POST",
+              "parameters": [
+                "payload",
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-command-injection-allocate-78f": {
+        "id": "worker-command-injection-allocate-78f",
+        "label": "command-injection: /allocate",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 495.2627944162883,
+          "y": 425
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /allocate handled in app.py:90.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/allocate",
+              "method": "POST",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 1
+          }
+        }
+      },
+      "worker-command-injection-free-3e2": {
+        "id": "worker-command-injection-free-3e2",
+        "label": "command-injection: /free",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 486.9480299703444,
+          "y": 377.8446275633149
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is POST /free handled in app.py:96.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/free",
+              "method": "POST",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 1
+          }
+        }
+      },
+      "worker-command-injection-use-966": {
+        "id": "worker-command-injection-use-966",
+        "label": "command-injection: /use",
+        "type": "worker",
+        "clusterId": "command-injection",
+        "status": "success",
+        "position": {
+          "x": 510.8894400031412,
+          "y": 336.3768889816715
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "command-injection",
+            "briefing": "command-injection detected at app.py:65 — \"os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command\". dangerous-function detected at app.py:80 — \"obj = eval(data)  # CAUTION: Only for demo/testing\". The target endpoint is GET /use handled in app.py:105.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/use",
+              "method": "GET",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 1
+          }
+        }
+      },
+      "secrets-exposure": {
+        "id": "secrets-exposure",
+        "label": "Secrets Exposure Workers",
+        "type": "cluster",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 244.11542731880107,
+          "y": 390.00000000000006
+        },
+        "size": 28,
+        "meta": {
+          "attack_type": "secrets-exposure",
+          "worker_ids": [
+            "worker-secrets-exposure-login-0d8",
+            "worker-secrets-exposure-login-d3b",
+            "worker-secrets-exposure-query-772",
+            "worker-secrets-exposure-ping-5f3",
+            "worker-secrets-exposure-upload-34f",
+            "worker-secrets-exposure-deserialize-886",
+            "worker-secrets-exposure-allocate-17f",
+            "worker-secrets-exposure-free-b38",
+            "worker-secrets-exposure-use-eff"
+          ],
+          "endpoint_count": 9
+        }
+      },
+      "worker-secrets-exposure-login-0d8": {
+        "id": "worker-secrets-exposure-login-0d8",
+        "label": "secrets-exposure: /login",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 244.11542731880107,
+          "y": 320.00000000000006
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is GET /login handled in app.py:31.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/login",
+              "method": "GET",
+              "parameters": [
+                "username",
+                "password"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-secrets-exposure-login-d3b": {
+        "id": "worker-secrets-exposure-login-d3b",
+        "label": "secrets-exposure: /login",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 289.1105599968588,
+          "y": 336.3768889816716
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /login handled in app.py:31.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/login",
+              "method": "POST",
+              "parameters": [
+                "username",
+                "password"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-secrets-exposure-query-772": {
+        "id": "worker-secrets-exposure-query-772",
+        "label": "secrets-exposure: /query",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 313.05197002965565,
+          "y": 377.84462756331493
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is GET /query handled in app.py:52.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/query",
+              "method": "GET",
+              "parameters": [
+                "filename",
+                "payload",
+                "username",
+                "target"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 4
+          }
+        }
+      },
+      "worker-secrets-exposure-ping-5f3": {
+        "id": "worker-secrets-exposure-ping-5f3",
+        "label": "secrets-exposure: /ping",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 304.7372055837118,
+          "y": 425.00000000000006
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is GET /ping handled in app.py:62.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/ping",
+              "method": "GET",
+              "parameters": [
+                "filename",
+                "payload",
+                "id",
+                "target"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 4
+          }
+        }
+      },
+      "worker-secrets-exposure-upload-34f": {
+        "id": "worker-secrets-exposure-upload-34f",
+        "label": "secrets-exposure: /upload",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 268.0568373515979,
+          "y": 455.77848345501366
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /upload handled in app.py:69.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/upload",
+              "method": "POST",
+              "parameters": [
+                "filename",
+                "payload",
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 3
+          }
+        }
+      },
+      "worker-secrets-exposure-deserialize-886": {
+        "id": "worker-secrets-exposure-deserialize-886",
+        "label": "secrets-exposure: /deserialize",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 220.17401728600424,
+          "y": 455.77848345501366
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /deserialize handled in app.py:76.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/deserialize",
+              "method": "POST",
+              "parameters": [
+                "payload",
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 2
+          }
+        }
+      },
+      "worker-secrets-exposure-allocate-17f": {
+        "id": "worker-secrets-exposure-allocate-17f",
+        "label": "secrets-exposure: /allocate",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 183.49364905389038,
+          "y": 425.00000000000006
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /allocate handled in app.py:90.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/allocate",
+              "method": "POST",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 1
+          }
+        }
+      },
+      "worker-secrets-exposure-free-b38": {
+        "id": "worker-secrets-exposure-free-b38",
+        "label": "secrets-exposure: /free",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 175.1788846079465,
+          "y": 377.84462756331493
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is POST /free handled in app.py:96.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/free",
+              "method": "POST",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 1
+          }
+        }
+      },
+      "worker-secrets-exposure-use-eff": {
+        "id": "worker-secrets-exposure-use-eff",
+        "label": "secrets-exposure: /use",
+        "type": "worker",
+        "clusterId": "secrets-exposure",
+        "status": "success",
+        "position": {
+          "x": 199.1202946407433,
+          "y": 336.3768889816716
+        },
+        "size": 14,
+        "meta": {
+          "assignment": {
+            "attack_type": "secrets-exposure",
+            "briefing": "hardcoded-secret detected at app.py:12 — \"AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"\". The target endpoint is GET /use handled in app.py:105.",
+            "target": {
+              "file": "app.py",
+              "endpoint": "/use",
+              "method": "GET",
+              "parameters": [
+                "id"
+              ]
+            }
+          },
+          "report": {
+            "status": "completed",
+            "duration_seconds": 3,
+            "findings_count": 0,
+            "clean_count": 1
+          }
+        }
+      },
+      "finding-sql-injection-3524acc4": {
+        "id": "finding-sql-injection-3524acc4",
+        "label": "sql-injection: POST /login",
+        "type": "finding",
+        "status": "failed",
+        "severity": "high",
+        "meta": {
+          "finding": {
+            "finding_id": "finding-sql-injection-3524acc4",
+            "severity": "HIGH",
+            "cvss_score": 8.1,
+            "owasp": "A03:2021",
+            "vuln_type": "sql-injection",
+            "exploit_confidence": "confirmed",
+            "location": {
+              "file": "app.py",
+              "line": 0,
+              "endpoint": "POST /login",
+              "method": "POST",
+              "parameter": "username"
+            },
+            "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+            "reproduction": {
+              "steps": [
+                "Send POST /login with the exploit payload",
+                "Observe response status 500"
+              ],
+              "command": "curl -X POST http://localhost:5000/login -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"username\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+              "expected": "Request rejected or safely handled",
+              "actual": "500 — <!doctype html>\n<html lang=en>\n  <head>\n    <title>sqlite3.OperationalError: SELECTs to the left and"
+            },
+            "server_logs": [],
+            "monkeypatch": {
+              "status": "failed",
+              "diff": null,
+              "validation": {
+                "test": "Could not generate patch",
+                "result": "SKIP"
+              },
+              "post_patch_logs": []
+            },
+            "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+            "rules_violated": []
+          }
+        },
+        "position": {
+          "x": 700,
+          "y": 120
+        },
+        "size": 18
+      },
+      "finding-sql-injection-c7e58a9f": {
+        "id": "finding-sql-injection-c7e58a9f",
+        "label": "sql-injection: GET /query",
+        "type": "finding",
+        "status": "failed",
+        "severity": "high",
+        "meta": {
+          "finding": {
+            "finding_id": "finding-sql-injection-c7e58a9f",
+            "severity": "HIGH",
+            "cvss_score": 8.1,
+            "owasp": "A03:2021",
+            "vuln_type": "sql-injection",
+            "exploit_confidence": "confirmed",
+            "location": {
+              "file": "app.py",
+              "line": 0,
+              "endpoint": "GET /query",
+              "method": "GET",
+              "parameter": "filename"
+            },
+            "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+            "reproduction": {
+              "steps": [
+                "Send GET /query with the exploit payload",
+                "Observe response status 200"
+              ],
+              "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+              "expected": "Request rejected or safely handled",
+              "actual": "200 — {\n  \"result\": []\n}\n"
+            },
+            "server_logs": [],
+            "monkeypatch": {
+              "status": "failed",
+              "diff": null,
+              "validation": {
+                "test": "Could not generate patch",
+                "result": "SKIP"
+              },
+              "post_patch_logs": []
+            },
+            "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+            "rules_violated": []
+          }
+        },
+        "position": {
+          "x": 700,
+          "y": 200
+        },
+        "size": 18
+      },
+      "finding-sql-injection-21521913": {
+        "id": "finding-sql-injection-21521913",
+        "label": "sql-injection: GET /query",
+        "type": "finding",
+        "status": "failed",
+        "severity": "high",
+        "meta": {
+          "finding": {
+            "finding_id": "finding-sql-injection-21521913",
+            "severity": "HIGH",
+            "cvss_score": 8.1,
+            "owasp": "A03:2021",
+            "vuln_type": "sql-injection",
+            "exploit_confidence": "confirmed",
+            "location": {
+              "file": "app.py",
+              "line": 0,
+              "endpoint": "GET /query",
+              "method": "GET",
+              "parameter": "payload"
+            },
+            "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+            "reproduction": {
+              "steps": [
+                "Send GET /query with the exploit payload",
+                "Observe response status 200"
+              ],
+              "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+              "expected": "Request rejected or safely handled",
+              "actual": "200 — {\n  \"result\": []\n}\n"
+            },
+            "server_logs": [],
+            "monkeypatch": {
+              "status": "failed",
+              "diff": null,
+              "validation": {
+                "test": "Could not generate patch",
+                "result": "SKIP"
+              },
+              "post_patch_logs": []
+            },
+            "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+            "rules_violated": []
+          }
+        },
+        "position": {
+          "x": 700,
+          "y": 280
+        },
+        "size": 18
+      },
+      "finding-sql-injection-baed987e": {
+        "id": "finding-sql-injection-baed987e",
+        "label": "sql-injection: GET /query",
+        "type": "finding",
+        "status": "failed",
+        "severity": "high",
+        "meta": {
+          "finding": {
+            "finding_id": "finding-sql-injection-baed987e",
+            "severity": "HIGH",
+            "cvss_score": 8.1,
+            "owasp": "A03:2021",
+            "vuln_type": "sql-injection",
+            "exploit_confidence": "confirmed",
+            "location": {
+              "file": "app.py",
+              "line": 0,
+              "endpoint": "GET /query",
+              "method": "GET",
+              "parameter": "username"
+            },
+            "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+            "reproduction": {
+              "steps": [
+                "Send GET /query with the exploit payload",
+                "Observe response status 200"
+              ],
+              "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+              "expected": "Request rejected or safely handled",
+              "actual": "200 — {\n  \"result\": [\n    [\n      \"admin\",\n      \"admin123\",\n      \"admin\"\n    ],\n    [\n      \"user1\",\n   "
+            },
+            "server_logs": [],
+            "monkeypatch": {
+              "status": "failed",
+              "diff": null,
+              "validation": {
+                "test": "Could not generate patch",
+                "result": "SKIP"
+              },
+              "post_patch_logs": []
+            },
+            "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+            "rules_violated": []
+          }
+        },
+        "position": {
+          "x": 700,
+          "y": 360
+        },
+        "size": 18
+      },
+      "finding-sql-injection-382c9b68": {
+        "id": "finding-sql-injection-382c9b68",
+        "label": "sql-injection: GET /query",
+        "type": "finding",
+        "status": "failed",
+        "severity": "high",
+        "meta": {
+          "finding": {
+            "finding_id": "finding-sql-injection-382c9b68",
+            "severity": "HIGH",
+            "cvss_score": 8.1,
+            "owasp": "A03:2021",
+            "vuln_type": "sql-injection",
+            "exploit_confidence": "confirmed",
+            "location": {
+              "file": "app.py",
+              "line": 0,
+              "endpoint": "GET /query",
+              "method": "GET",
+              "parameter": "target"
+            },
+            "description": "Basic SQL injection with OR bypass. Payload: 1' OR '1'='1",
+            "reproduction": {
+              "steps": [
+                "Send GET /query with the exploit payload",
+                "Observe response status 200"
+              ],
+              "command": "curl -X GET http://localhost:5000/query -H 'Authorization: <token>'",
+              "expected": "Request rejected or safely handled",
+              "actual": "200 — {\n  \"result\": []\n}\n"
+            },
+            "server_logs": [],
+            "monkeypatch": {
+              "status": "failed",
+              "diff": null,
+              "validation": {
+                "test": "Could not generate patch",
+                "result": "SKIP"
+              },
+              "post_patch_logs": []
+            },
+            "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+            "rules_violated": []
+          }
+        },
+        "position": {
+          "x": 700,
+          "y": 440
+        },
+        "size": 18
+      },
+      "finding-sql-injection-9a998a04": {
+        "id": "finding-sql-injection-9a998a04",
+        "label": "sql-injection: GET /ping",
+        "type": "finding",
+        "status": "failed",
+        "severity": "high",
+        "meta": {
+          "finding": {
+            "finding_id": "finding-sql-injection-9a998a04",
+            "severity": "HIGH",
+            "cvss_score": 8.1,
+            "owasp": "A03:2021",
+            "vuln_type": "sql-injection",
+            "exploit_confidence": "confirmed",
+            "location": {
+              "file": "app.py",
+              "line": 0,
+              "endpoint": "GET /ping",
+              "method": "GET",
+              "parameter": "target"
+            },
+            "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+            "reproduction": {
+              "steps": [
+                "Send GET /ping with the exploit payload",
+                "Observe response status 200"
+              ],
+              "command": "curl -X GET http://localhost:5000/ping -H 'Authorization: <token>'",
+              "expected": "Request rejected or safely handled",
+              "actual": "200 — {\n  \"message\": \"Pinging 1' UNION SELECT null,null,null,null,null--\"\n}\n"
+            },
+            "server_logs": [],
+            "monkeypatch": {
+              "status": "failed",
+              "diff": null,
+              "validation": {
+                "test": "Could not generate patch",
+                "result": "SKIP"
+              },
+              "post_patch_logs": []
+            },
+            "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+            "rules_violated": []
+          }
+        },
+        "position": {
+          "x": 700,
+          "y": 520
+        },
+        "size": 18
+      },
+      "finding-sql-injection-11ac52c2": {
+        "id": "finding-sql-injection-11ac52c2",
+        "label": "sql-injection: POST /upload",
+        "type": "finding",
+        "status": "failed",
+        "severity": "high",
+        "meta": {
+          "finding": {
+            "finding_id": "finding-sql-injection-11ac52c2",
+            "severity": "HIGH",
+            "cvss_score": 8.1,
+            "owasp": "A03:2021",
+            "vuln_type": "sql-injection",
+            "exploit_confidence": "confirmed",
+            "location": {
+              "file": "app.py",
+              "line": 0,
+              "endpoint": "POST /upload",
+              "method": "POST",
+              "parameter": "filename"
+            },
+            "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+            "reproduction": {
+              "steps": [
+                "Send POST /upload with the exploit payload",
+                "Observe response status 200"
+              ],
+              "command": "curl -X POST http://localhost:5000/upload -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"filename\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+              "expected": "Request rejected or safely handled",
+              "actual": "200 — {\n  \"bucket\": \"public-bucket-simulation\",\n  \"message\": \"File 1' UNION SELECT null,null,null,null,nul"
+            },
+            "server_logs": [],
+            "monkeypatch": {
+              "status": "failed",
+              "diff": null,
+              "validation": {
+                "test": "Could not generate patch",
+                "result": "SKIP"
+              },
+              "post_patch_logs": []
+            },
+            "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+            "rules_violated": []
+          }
+        },
+        "position": {
+          "x": 700,
+          "y": 600
+        },
+        "size": 18
+      },
+      "finding-sql-injection-cb23de7e": {
+        "id": "finding-sql-injection-cb23de7e",
+        "label": "sql-injection: POST /allocate",
+        "type": "finding",
+        "status": "failed",
+        "severity": "high",
+        "meta": {
+          "finding": {
+            "finding_id": "finding-sql-injection-cb23de7e",
+            "severity": "HIGH",
+            "cvss_score": 8.1,
+            "owasp": "A03:2021",
+            "vuln_type": "sql-injection",
+            "exploit_confidence": "confirmed",
+            "location": {
+              "file": "app.py",
+              "line": 0,
+              "endpoint": "POST /allocate",
+              "method": "POST",
+              "parameter": "id"
+            },
+            "description": "UNION-based SQL injection. Payload: 1' UNION SELECT null,null,null,null,null--",
+            "reproduction": {
+              "steps": [
+                "Send POST /allocate with the exploit payload",
+                "Observe response status 200"
+              ],
+              "command": "curl -X POST http://localhost:5000/allocate -H 'Content-Type: application/json' -H 'Authorization: <token>' -d '{\"id\":\"1' UNION SELECT null,null,null,null,null--\"}'",
+              "expected": "Request rejected or safely handled",
+              "actual": "200 — {\n  \"message\": \"Object 1' UNION SELECT null,null,null,null,null-- allocated.\"\n}\n"
+            },
+            "server_logs": [],
+            "monkeypatch": {
+              "status": "failed",
+              "diff": null,
+              "validation": {
+                "test": "Could not generate patch",
+                "result": "SKIP"
+              },
+              "post_patch_logs": []
+            },
+            "recommended_fix": "Use parameterized queries or an ORM query builder instead of string concatenation. If the codebase has an ORM, refactor to use it consistently.",
+            "rules_violated": []
+          }
+        },
+        "position": {
+          "x": 700,
+          "y": 680
+        },
+        "size": 18
+      }
+    },
+    "edges": [
+      {
+        "id": "e-orchestrator-sql-injection",
+        "from": "orchestrator",
+        "to": "sql-injection",
+        "kind": "orchestrator"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-login-53b",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-login-53b",
+        "kind": "worker"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-login-c00",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-login-c00",
+        "kind": "worker"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-query-71f",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-query-71f",
+        "kind": "worker"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-ping-9e1",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-ping-9e1",
+        "kind": "worker"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-upload-63c",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-upload-63c",
+        "kind": "worker"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-deserialize-7a4",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-deserialize-7a4",
+        "kind": "worker"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-allocate-307",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-allocate-307",
+        "kind": "worker"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-free-45a",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-free-45a",
+        "kind": "worker"
+      },
+      {
+        "id": "e-sql-injection-worker-sql-injection-use-184",
+        "from": "sql-injection",
+        "to": "worker-sql-injection-use-184",
+        "kind": "worker"
+      },
+      {
+        "id": "e-orchestrator-command-injection",
+        "from": "orchestrator",
+        "to": "command-injection",
+        "kind": "orchestrator"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-login-fb9",
+        "from": "command-injection",
+        "to": "worker-command-injection-login-fb9",
+        "kind": "worker"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-login-66f",
+        "from": "command-injection",
+        "to": "worker-command-injection-login-66f",
+        "kind": "worker"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-query-0f0",
+        "from": "command-injection",
+        "to": "worker-command-injection-query-0f0",
+        "kind": "worker"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-ping-891",
+        "from": "command-injection",
+        "to": "worker-command-injection-ping-891",
+        "kind": "worker"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-upload-ef1",
+        "from": "command-injection",
+        "to": "worker-command-injection-upload-ef1",
+        "kind": "worker"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-deserialize-300",
+        "from": "command-injection",
+        "to": "worker-command-injection-deserialize-300",
+        "kind": "worker"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-allocate-78f",
+        "from": "command-injection",
+        "to": "worker-command-injection-allocate-78f",
+        "kind": "worker"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-free-3e2",
+        "from": "command-injection",
+        "to": "worker-command-injection-free-3e2",
+        "kind": "worker"
+      },
+      {
+        "id": "e-command-injection-worker-command-injection-use-966",
+        "from": "command-injection",
+        "to": "worker-command-injection-use-966",
+        "kind": "worker"
+      },
+      {
+        "id": "e-orchestrator-secrets-exposure",
+        "from": "orchestrator",
+        "to": "secrets-exposure",
+        "kind": "orchestrator"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-login-0d8",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-login-0d8",
+        "kind": "worker"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-login-d3b",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-login-d3b",
+        "kind": "worker"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-query-772",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-query-772",
+        "kind": "worker"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-ping-5f3",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-ping-5f3",
+        "kind": "worker"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-upload-34f",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-upload-34f",
+        "kind": "worker"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-deserialize-886",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-deserialize-886",
+        "kind": "worker"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-allocate-17f",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-allocate-17f",
+        "kind": "worker"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-free-b38",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-free-b38",
+        "kind": "worker"
+      },
+      {
+        "id": "e-secrets-exposure-worker-secrets-exposure-use-eff",
+        "from": "secrets-exposure",
+        "to": "worker-secrets-exposure-use-eff",
+        "kind": "worker"
+      },
+      {
+        "id": "e-worker-sql-injection-login-c00-finding-sql-injection-3524acc4",
+        "from": "worker-sql-injection-login-c00",
+        "to": "finding-sql-injection-3524acc4",
+        "kind": "finding"
+      },
+      {
+        "id": "e-worker-sql-injection-query-71f-finding-sql-injection-c7e58a9f",
+        "from": "worker-sql-injection-query-71f",
+        "to": "finding-sql-injection-c7e58a9f",
+        "kind": "finding"
+      },
+      {
+        "id": "e-worker-sql-injection-query-71f-finding-sql-injection-21521913",
+        "from": "worker-sql-injection-query-71f",
+        "to": "finding-sql-injection-21521913",
+        "kind": "finding"
+      },
+      {
+        "id": "e-worker-sql-injection-query-71f-finding-sql-injection-baed987e",
+        "from": "worker-sql-injection-query-71f",
+        "to": "finding-sql-injection-baed987e",
+        "kind": "finding"
+      },
+      {
+        "id": "e-worker-sql-injection-query-71f-finding-sql-injection-382c9b68",
+        "from": "worker-sql-injection-query-71f",
+        "to": "finding-sql-injection-382c9b68",
+        "kind": "finding"
+      },
+      {
+        "id": "e-worker-sql-injection-ping-9e1-finding-sql-injection-9a998a04",
+        "from": "worker-sql-injection-ping-9e1",
+        "to": "finding-sql-injection-9a998a04",
+        "kind": "finding"
+      },
+      {
+        "id": "e-worker-sql-injection-upload-63c-finding-sql-injection-11ac52c2",
+        "from": "worker-sql-injection-upload-63c",
+        "to": "finding-sql-injection-11ac52c2",
+        "kind": "finding"
+      },
+      {
+        "id": "e-worker-sql-injection-allocate-307-finding-sql-injection-cb23de7e",
+        "from": "worker-sql-injection-allocate-307",
+        "to": "finding-sql-injection-cb23de7e",
+        "kind": "finding"
+      }
+    ],
+    "clusters": {
+      "sql-injection": {
+        "id": "sql-injection",
+        "label": "Sql Injection Workers",
+        "type": "cluster",
+        "status": "success"
+      },
+      "command-injection": {
+        "id": "command-injection",
+        "label": "Command Injection Workers",
+        "type": "cluster",
+        "status": "success"
+      },
+      "secrets-exposure": {
+        "id": "secrets-exposure",
+        "label": "Secrets Exposure Workers",
+        "type": "cluster",
+        "status": "success"
+      }
+    }
+  },
+  "pre_recon": {
+    "dispatch_run_id": "dispatch-run-4ab75",
+    "completed_at": "2026-03-15T02:51:43.945Z",
+    "route_map": [
+      {
+        "endpoint": "POST /login",
+        "method": "POST",
+        "handler_file": "app_remediated.py",
+        "handler_line": 35,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "username",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "target",
+            "source": "query",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "GET /query",
+        "method": "GET",
+        "handler_file": "app_remediated.py",
+        "handler_line": 50,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "filename",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "username",
+            "source": "query",
+            "type": "string"
+          },
+          {
+            "name": "target",
+            "source": "query",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "GET /ping",
+        "method": "GET",
+        "handler_file": "app_remediated.py",
+        "handler_line": 58,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "filename",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "target",
+            "source": "query",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /upload",
+        "method": "POST",
+        "handler_file": "app_remediated.py",
+        "handler_line": 66,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "filename",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /deserialize",
+        "method": "POST",
+        "handler_file": "app_remediated.py",
+        "handler_line": 74,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "payload",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /allocate",
+        "method": "POST",
+        "handler_file": "app_remediated.py",
+        "handler_line": 83,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /free",
+        "method": "POST",
+        "handler_file": "app_remediated.py",
+        "handler_line": 91,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "GET /use",
+        "method": "GET",
+        "handler_file": "app_remediated.py",
+        "handler_line": 99,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "id",
+            "source": "query",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "GET /login",
+        "method": "GET",
+        "handler_file": "app.py",
+        "handler_line": 31,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "username",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /login",
+        "method": "POST",
+        "handler_file": "app.py",
+        "handler_line": 31,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "username",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "GET /query",
+        "method": "GET",
+        "handler_file": "app.py",
+        "handler_line": 52,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "filename",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "username",
+            "source": "query",
+            "type": "string"
+          },
+          {
+            "name": "target",
+            "source": "query",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "GET /ping",
+        "method": "GET",
+        "handler_file": "app.py",
+        "handler_line": 62,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "filename",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "target",
+            "source": "query",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /upload",
+        "method": "POST",
+        "handler_file": "app.py",
+        "handler_line": 69,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "filename",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "payload",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /deserialize",
+        "method": "POST",
+        "handler_file": "app.py",
+        "handler_line": 76,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "payload",
+            "source": "body",
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /allocate",
+        "method": "POST",
+        "handler_file": "app.py",
+        "handler_line": 90,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "POST /free",
+        "method": "POST",
+        "handler_file": "app.py",
+        "handler_line": 96,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "id",
+            "source": "body",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "endpoint": "GET /use",
+        "method": "GET",
+        "handler_file": "app.py",
+        "handler_line": 105,
+        "middleware": [],
+        "parameters": [
+          {
+            "name": "id",
+            "source": "query",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "risk_signals": [
+      {
+        "file": "app.py",
+        "line": 37,
+        "pattern": "raw-sql-concatenation",
+        "snippet": "cursor.execute(f\"SELECT * FROM users WHERE username='{username}'\")",
+        "suggested_attack_types": [
+          "sql-injection"
+        ]
+      },
+      {
+        "file": "app.py",
+        "line": 65,
+        "pattern": "command-injection",
+        "snippet": "os.system(f\"ping -c 1 {target}\")  # BAD: user input directly in OS command",
+        "suggested_attack_types": [
+          "command-injection"
+        ]
+      },
+      {
+        "file": "app.py",
+        "line": 12,
+        "pattern": "hardcoded-secret",
+        "snippet": "AWS_ACCESS_KEY = \"AKIAEXAMPLEACCESSKEY\"",
+        "suggested_attack_types": [
+          "secrets-exposure"
+        ]
+      },
+      {
+        "file": "app.py",
+        "line": 80,
+        "pattern": "dangerous-function",
+        "snippet": "obj = eval(data)  # CAUTION: Only for demo/testing",
+        "suggested_attack_types": [
+          "command-injection"
+        ]
+      }
+    ],
+    "dependency_graph": {
+      "db_layer": "app.py"
+    },
+    "briefing_notes": "Codebase analysis complete. Found 17 routes and 4 risk signals. Risk patterns detected: raw-sql-concatenation, command-injection, hardcoded-secret, dangerous-function. Database layer: app.py. Auth middleware: not found. No RULES.md found."
+  },
+  "completed_at": "2026-03-15T02:54:08.165Z"
 }
