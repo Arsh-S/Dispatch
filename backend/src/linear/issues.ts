@@ -13,10 +13,11 @@ export async function createLinearIssueFromFinding(
   teamId: string,
   finding: FindingForIssue,
   dispatchFixUrl?: string,
+  githubRepo?: string,
 ): Promise<CreatedLinearIssue> {
   const client = getLinearClient();
   const title = formatTitle(finding);
-  let description = formatBody(finding);
+  let description = formatBody(finding, githubRepo ? { github_repo: githubRepo } : undefined);
 
   const payload = await client.createIssue({
     teamId,
@@ -71,6 +72,15 @@ function getIdentifierFallbacks(id: string): string[] {
   return ids;
 }
 
+/**
+ * Extract github_repo from a Linear/GitHub issue body metadata block.
+ * Used when fixing Linear issues so we know which repo to target.
+ */
+export function parseGithubRepoFromIssueBody(body: string): string | null {
+  const match = body.match(/github_repo:\s*([^\s\n]+)/);
+  return match ? match[1].trim() : null;
+}
+
 export async function fetchLinearIssue(issueIdOrIdentifier: string): Promise<{ id: string; identifier: string; title: string; description: string }> {
   const client = getLinearClient();
   const toTry = getIdentifierFallbacks(issueIdOrIdentifier);
@@ -115,11 +125,12 @@ export async function createLinearIssuesFromReport(
   teamId: string,
   findings: FindingForIssue[],
   dispatchFixUrl?: string,
+  githubRepo?: string,
 ): Promise<CreatedLinearIssue[]> {
   const issues: CreatedLinearIssue[] = [];
 
   for (const finding of findings) {
-    const issue = await createLinearIssueFromFinding(teamId, finding, dispatchFixUrl);
+    const issue = await createLinearIssueFromFinding(teamId, finding, dispatchFixUrl, githubRepo);
     issues.push(issue);
   }
 

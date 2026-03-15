@@ -86,7 +86,7 @@ async function main() {
         console.log(`\nCreating Linear Issues...`);
         try {
           const dispatchFixUrl = process.env.DISPATCH_FIX_URL;
-          const linearIssues = await createLinearIssuesFromReport(linearTeamId, issueFindings, dispatchFixUrl);
+          const linearIssues = await createLinearIssuesFromReport(linearTeamId, issueFindings, dispatchFixUrl, process.env.GITHUB_REPO);
           console.log(`Created ${linearIssues.length} Linear issues:`);
           linearIssues.forEach(i => console.log(`  ${i.identifier}: ${i.title} — ${i.url}`));
         } catch (err: any) {

@@ -51,13 +51,14 @@ export function formatTitle(finding: FindingForIssue): string {
   return `[${severity}] ${vulnType}: ${endpoint} — ${desc.length > 60 ? desc.substring(0, 57) + '...' : desc}`;
 }
 
-export function formatBody(finding: FindingForIssue): string {
+export function formatBody(finding: FindingForIssue, options?: { github_repo?: string }): string {
   const sections: string[] = [];
 
   // Metadata block
   const memoryLines = [
     finding.consecutive_count ? `consecutive_count: ${finding.consecutive_count}` : '',
     finding.escalated_from ? `escalated_from: ${finding.escalated_from}` : '',
+    options?.github_repo ? `github_repo: ${options.github_repo}` : '',
   ].filter(Boolean).join('\n');
 
   sections.push(`---

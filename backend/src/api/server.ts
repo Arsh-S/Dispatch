@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { runBlaxelConstructor } from '../orchestrator/constructor-dispatcher.js';
 import type { ConstructorBootstrap } from '../workers/constructor/types.js';
+import { fetchLinearIssue, parseGithubRepoFromIssueBody } from '../linear/issues.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { DiagnosticsAggregator } from '../diagnostics/aggregator.js';
@@ -25,14 +26,29 @@ export const diagnosticsAggregator = new DiagnosticsAggregator();
  */
 app.post('/api/fix', async (req, res) => {
   try {
-    const { linear_issue_id, github_repo, app_config, pr_config } = req.body;
+    let { linear_issue_id, github_repo, app_config, pr_config } = req.body;
 
-    if (!linear_issue_id || !github_repo) {
+    if (!linear_issue_id) {
       res.status(400).json({
-        error: 'Missing required fields',
-        required: ['linear_issue_id', 'github_repo'],
+        error: 'Missing required field: linear_issue_id',
       });
       return;
+    }
+
+    // Resolve github_repo: use from request, or fetch Linear issue and parse from body
+    if (!github_repo) {
+      try {
+        const linear = await fetchLinearIssue(linear_issue_id);
+        github_repo = parseGithubRepoFromIssueBody(linear.description);
+      } catch (err: any) {
+        console.warn(`[API /api/fix] Could not fetch Linear issue: ${err.message}`);
+      }
+      if (!github_repo) {
+        res.status(400).json({
+          error: 'Could not determine target repo. Either pass github_repo in the request body, or ensure the Linear issue was created by Dispatch (it embeds github_repo in the metadata).',
+        });
+        return;
+      }
     }
 
     const bootstrap: ConstructorBootstrap = {
@@ -70,11 +86,27 @@ app.post('/api/fix', async (req, res) => {
 app.get('/fix', async (req, res) => {
   try {
     const linear = req.query.linear as string;
-    const github_repo = req.query.github_repo as string;
+    let github_repo = req.query.github_repo as string;
 
-    if (!linear || !github_repo) {
-      res.status(400).send('Missing query params: linear (issue id) and github_repo');
+    if (!linear) {
+      res.status(400).send('Missing query param: linear (issue id)');
       return;
+    }
+
+    // Resolve github_repo from Linear issue body if not provided
+    if (!github_repo) {
+      try {
+        const linearIssue = await fetchLinearIssue(linear);
+        github_repo = parseGithubRepoFromIssueBody(linearIssue.description) ?? '';
+      } catch (err: any) {
+        console.warn(`[API /fix] Could not fetch Linear issue: ${err.message}`);
+      }
+      if (!github_repo) {
+        res.status(400).send(
+          'Could not determine target repo. Add ?github_repo=owner/repo to the URL, or ensure the Linear issue was created by Dispatch (it embeds github_repo in the metadata).'
+        );
+        return;
+      }
     }
 
     const bootstrap: ConstructorBootstrap = {

@@ -272,6 +272,8 @@ async function handleSecurityScan(command: string, agentConfig: AgentConfig): Pr
         const linearIssues = await createLinearIssuesFromReport(
           agentConfig.linearTeamId,
           issueFindings,
+          process.env.DISPATCH_FIX_URL,
+          agentConfig.githubRepo,
         );
         linearIssueCount = linearIssues.length;
         console.log(`[Slack] Created ${linearIssueCount} Linear issues`);
@@ -383,42 +385,36 @@ async function handleGitHubCommand(command: string, agentConfig: AgentConfig): P
  * Handle fix command — triggers the constructor worker for a Linear issue.
  *
  * Usage: @Dispatch fix DISP-123
+ *        @Dispatch fix DISP-123 owner/repo  (override repo for issues without embedded metadata)
  */
 async function handleFixCommand(command: string, agentConfig: AgentConfig): Promise<AgentProcessingResult> {
   const startTime = Date.now();
 
-  // Extract issue identifier (e.g. "DISP-123" or a Linear UUID)
-  const match = command.match(/fix\s+(\S+)/i);
+  // Extract issue identifier and optional repo override (e.g. "fix DISP-123" or "fix DISP-123 owner/repo")
+  const match = command.match(/fix\s+(\S+)(?:\s+([^\s]+))?/i);
   const issueId = match?.[1];
+  const repoOverride = match?.[2];
 
   if (!issueId) {
     return {
       success: false,
       response: '',
-      error: 'Usage: `fix DISP-123` — provide a Linear issue identifier.',
+      error: 'Usage: `fix DISP-123` or `fix DISP-123 owner/repo` — provide a Linear issue identifier.',
       executionTimeMs: Date.now() - startTime,
     };
   }
 
-  if (!agentConfig.githubRepo) {
-    return {
-      success: false,
-      response: '',
-      error: 'GITHUB_REPO not configured. Required for the constructor to create PRs.',
-      executionTimeMs: Date.now() - startTime,
-    };
-  }
-
+  // github_repo: pass only when user explicitly overrides (e.g. "fix DISP-123 owner/repo").
+  // Otherwise API fetches the Linear issue and parses repo from body (issues created by Dispatch embed it).
   try {
-    // Call the fix API endpoint (same one the "Run Dispatch Fixer" link uses)
     const apiBase = process.env.DISPATCH_API_URL || 'http://localhost:3333';
+    const body: Record<string, string> = { linear_issue_id: issueId };
+    if (repoOverride) body.github_repo = repoOverride;
+
     const res = await fetch(`${apiBase}/api/fix`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        linear_issue_id: issueId,
-        github_repo: agentConfig.githubRepo,
-      }),
+      body: JSON.stringify(body),
     });
 
     const data = await res.json();
