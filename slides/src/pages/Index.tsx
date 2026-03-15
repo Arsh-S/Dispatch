@@ -309,6 +309,7 @@ const marketCards = [
     title: 'TAM',
     value: '$13.6B',
     description: 'Every company worldwide that buys security testing tools',
+    methodology: '$13.64B global AppSec market (Mordor Intelligence, 2025)',
     bullets: [
       'Any industry, any size, any geography',
       'SAST, DAST, and penetration-testing budgets',
@@ -322,6 +323,7 @@ const marketCards = [
     title: 'SAM',
     value: '$1.5B',
     description: 'SaaS companies with a GitHub repo and 5-500 engineers',
+    methodology: '$13.64B × 40% (English-first markets) × 28% (SME/startup segment) = $1.53B',
     bullets: [
       'Cloud-native, English-first markets (US, UK, CA, AU)',
       'Teams shipping continuously under compliance pressure',
@@ -335,6 +337,7 @@ const marketCards = [
     title: 'SOM - Year 3',
     value: '$0.75M-$2.5M',
     description: 'Series A-B startups finding Dispatch via GitHub or dev communities',
+    methodology: '1.5M reachable devs × 0.1% sign-up × 17% paid convert × $3,000 ACV',
     bullets: [
       '10-100 engineers, hitting a SOC 2 or fundraise deadline',
       'Teams that outgrow the Free tier and need auto-fix PRs',
@@ -496,6 +499,8 @@ const APPENDIX_NAV_ITEMS = [
   { label: 'Five Forces', id: 'five-forces' },
   { label: 'Summary', id: 'summary' },
   { label: 'Business', id: 'business-model' },
+  { label: 'Timeline', id: 'timeline' },
+  { label: 'EVA', id: 'eva' },
   { label: 'Pre-Recon', id: 'clinical' },
   { label: 'Architecture', id: 'solution' },
   { label: 'Outputs', id: 'dashboard' },
@@ -1278,6 +1283,169 @@ const Index = () => {
                 </LinesPatternCardBody>
               </LinesPatternCard>
             </div>
+          </div>
+        </Section>
+
+        <Section id="timeline" className="bg-transparent" contentClassName="max-w-7xl py-6">
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground">Timeline Comparison</h1>
+              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
+                Traditional pentest workflow vs. Dispatch automation.
+              </p>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <LinesPatternCard className="rounded-[1.5rem] shadow-2xl border-destructive/30">
+                <LinesPatternCardBody className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-destructive">Traditional Workflow</h3>
+                    <span className="text-3xl font-black text-destructive">4-10 weeks</span>
+                  </div>
+                  <div className="space-y-2">
+                    {traditionalWorkflowRows.map((row) => (
+                      <div key={row.label} className="flex items-center gap-3">
+                        <span className={`h-3 w-3 rounded-full shrink-0 ${row.dotClassName}`} />
+                        <div className="flex-1 flex items-center justify-between gap-2">
+                          <span className="text-sm text-foreground/90">{row.label}</span>
+                          {row.barLabel && (
+                            <span className="text-xs text-muted-foreground bg-white/5 px-2 py-0.5 rounded">{row.barLabel}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Citation text="(Triaxiom Security, 2025; Invicti, 2025)." className="!mt-4" />
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+
+              <LinesPatternCard className="rounded-[1.5rem] shadow-2xl border-primary/30">
+                <LinesPatternCardBody className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-primary">With Dispatch</h3>
+                    <span className="text-3xl font-black text-primary">1-3 days</span>
+                  </div>
+                  <div className="space-y-2">
+                    {dispatchWorkflowRows.map((row) => (
+                      <div key={row.label} className="flex items-center gap-3">
+                        <span className={`h-3 w-3 rounded-full shrink-0 ${row.dotClassName}`} />
+                        <span className="text-sm text-foreground/90">{row.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Citation text="(Estimate based on automation of manual steps)." className="!mt-4" />
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+            </div>
+
+            <LinesPatternCard className="max-w-4xl mx-auto rounded-2xl shadow-xl border-[#7fb0ff]/30">
+              <LinesPatternCardBody className="p-5 text-center">
+                <p className="text-4xl md:text-5xl font-black text-[#7fb0ff]">~90% faster</p>
+                <p className="mt-2 text-lg text-muted-foreground">From weeks of vendor coordination to days of developer review</p>
+              </LinesPatternCardBody>
+            </LinesPatternCard>
+          </div>
+        </Section>
+
+        <Section id="eva" className="bg-transparent" contentClassName="max-w-7xl py-6">
+          <div className="space-y-5">
+            <div className="text-center space-y-2">
+              <p className="text-sm font-semibold tracking-[0.24em] uppercase text-primary">EVA — Economic Value Added</p>
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground">Unit Economics per Customer</h1>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="rounded-xl border border-primary/25 bg-card/90 p-4 text-center">
+                <p className="text-sm text-muted-foreground">Avg. Revenue / Customer (blended)</p>
+                <p className="text-3xl md:text-4xl font-black text-primary mt-1">$1,800</p>
+                <p className="text-xs text-muted-foreground mt-1">/year — weighted Startup/Team mix</p>
+              </div>
+              <div className="rounded-xl border border-[#e4b24d]/25 bg-card/90 p-4 text-center">
+                <p className="text-sm text-muted-foreground">Est. Gross Margin (SaaS infra)</p>
+                <p className="text-3xl md:text-4xl font-black text-[#e4b24d] mt-1">72%</p>
+                <p className="text-xs text-muted-foreground mt-1">AI inference costs deducted</p>
+              </div>
+              <div className="rounded-xl border border-[#7fb0ff]/25 bg-card/90 p-4 text-center">
+                <p className="text-sm text-muted-foreground">CAC (bottom-up PLG)</p>
+                <p className="text-3xl md:text-4xl font-black text-[#7fb0ff] mt-1">$420</p>
+                <p className="text-xs text-muted-foreground mt-1">Assuming PLG + content flywheel</p>
+              </div>
+              <div className="rounded-xl border border-foreground/15 bg-card/90 p-4 text-center">
+                <p className="text-sm text-muted-foreground">Target LTV:CAC</p>
+                <p className="text-3xl md:text-4xl font-black text-foreground mt-1">3.4×</p>
+                <p className="text-xs text-muted-foreground mt-1">Industry healthy: {'>'}3×</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <LinesPatternCard className="rounded-[1.5rem] shadow-xl border-white/10">
+                <LinesPatternCardBody className="p-5">
+                  <h3 className="text-xl font-bold text-foreground mb-4">EVA per Customer (3-year horizon)</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">Annual revenue (blended)</span>
+                      <span className="font-semibold text-foreground">$1,800</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">Gross profit (72%)</span>
+                      <span className="font-semibold text-foreground">$1,296</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">3-year LTV (8% annual churn)</span>
+                      <span className="font-semibold text-foreground">$3,596</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">CAC (PLG model)</span>
+                      <span className="font-semibold text-destructive">-$420</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">Allocated S&M (20% rev)</span>
+                      <span className="font-semibold text-destructive">-$1,080</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="font-bold text-foreground">Net EVA / Customer (3yr)</span>
+                      <span className="font-black text-xl text-primary">$2,096</span>
+                    </div>
+                  </div>
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+
+              <LinesPatternCard className="rounded-[1.5rem] shadow-xl border-white/10">
+                <LinesPatternCardBody className="p-5">
+                  <h3 className="text-xl font-bold text-foreground mb-4">Value created vs. traditional pentest</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">Traditional pentest cost (annual)</span>
+                      <span className="font-semibold text-destructive">$25,000</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">Dispatch Team plan (annual)</span>
+                      <span className="font-semibold text-foreground">$3,588</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">Developer time saved (17 hrs/wk × $80)</span>
+                      <span className="font-semibold text-primary">$70,720/yr</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-border/40 pb-2">
+                      <span className="text-muted-foreground">Breach cost avoided (% reduction est.)</span>
+                      <span className="font-semibold text-primary">~$133K/event</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="font-bold text-foreground">Customer ROI multiplier</span>
+                      <span className="font-black text-xl text-primary">~20-25×</span>
+                    </div>
+                  </div>
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+            </div>
+
+            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-xl border-[#e4b24d]/25">
+              <LinesPatternCardBody className="p-5">
+                <p className="text-foreground leading-relaxed">
+                  <span className="font-bold text-[#e4b24d]">Key risk to EVA:</span> AI inference costs (Claude API + workers running per scan) could compress gross margin significantly at scale. A cap on worker runtime per scan or tiered compute pricing is critical to protect unit economics at the Startup tier ($99/mo, 50 scans).
+                </p>
+              </LinesPatternCardBody>
+            </LinesPatternCard>
           </div>
         </Section>
 
