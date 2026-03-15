@@ -3,6 +3,7 @@
 import { DispatchWorkspaceProvider, useDispatchWorkspace } from "@/lib/dispatch/state";
 import { GraphWorkspace } from "./graph/GraphWorkspace";
 import { NodeInspectorSidebar } from "./inspector/NodeInspectorSidebar";
+import { LeftPanel } from "./left/LeftPanel";
 import { Terminal } from "lucide-react";
 
 function EmptyScanState() {
@@ -42,6 +43,9 @@ function DispatchWorkspaceInner() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+      <aside className="flex w-[360px] shrink-0 flex-col bg-card/50 border-r border-border">
+        <LeftPanel />
+      </aside>
       <main className="relative flex flex-1 min-w-0">
         <GraphWorkspace />
       </main>
