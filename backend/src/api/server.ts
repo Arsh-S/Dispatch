@@ -44,10 +44,10 @@ app.post('/api/fix', async (req, res) => {
       linear_issue: { id: linear_issue_id },
       github_repo,
       app_config: app_config ?? {
-        runtime: 'node',
-        install: 'pnpm install',
-        start: 'pnpm start',
-        port: 3000,
+        runtime: 'python',
+        install: 'pip install -r requirements.txt',
+        start: 'python3 app.py',
+        port: 5000,
       },
       pr_config: pr_config ?? {
         base_branch: 'main',
@@ -86,10 +86,10 @@ app.get('/fix', async (req, res) => {
       linear_issue: { id: linear },
       github_repo,
       app_config: {
-        runtime: 'node',
-        install: 'pnpm install',
-        start: 'pnpm start',
-        port: 3000,
+        runtime: 'python',
+        install: 'pip install -r requirements.txt',
+        start: 'python3 app.py',
+        port: 5000,
       },
       pr_config: {
         base_branch: 'main',
