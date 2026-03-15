@@ -76,18 +76,52 @@ export function getStrategy(exploit: string, monkeypatch: string): string {
 }
 
 export function fixSqlInjection(content: string, _parsed: ParsedIssue): string {
-  // Replace template literal SQL with parameterized queries
-  return content.replace(
-    /\.prepare\(`[^`]*\$\{[^}]*\}[^`]*`\)/g,
-    (match) => {
-      // Extract the param reference
-      const paramMatch = match.match(/\$\{([^}]+)\}/);
-      if (paramMatch) {
-        return `.prepare('SELECT * FROM orders WHERE id = ?').all(${paramMatch[1]})`;
-      }
-      return match;
+  let fixed = content;
+
+  // Python: replace f-string cursor.execute with parameterized queries
+  // Handles double-quoted f-strings that may contain single quotes inside
+  // e.g. cursor.execute(f"SELECT * FROM users WHERE username='{username}'")
+  //   -> cursor.execute("SELECT * FROM users WHERE username=?", (username,))
+  fixed = fixed.replace(
+    /cursor\.execute\s*\(\s*f"([^"]*\{([^}]+)\}[^"]*)"\s*\)/g,
+    (_match, template, param) => {
+      const sqlTemplate = template.replace(/\{[^}]+\}/g, '?').replace(/'/g, '');
+      return `cursor.execute("${sqlTemplate}", (${param},))`;
     }
   );
+  // Same for single-quoted f-strings
+  fixed = fixed.replace(
+    /cursor\.execute\s*\(\s*f'([^']*\{([^}]+)\}[^']*)'\s*\)/g,
+    (_match, template, param) => {
+      const sqlTemplate = template.replace(/\{[^}]+\}/g, '?').replace(/"/g, '');
+      return `cursor.execute("${sqlTemplate}", (${param},))`;
+    }
+  );
+
+  // Python: replace % string formatting in cursor.execute
+  fixed = fixed.replace(
+    /cursor\.execute\s*\(\s*"([^"]*%s[^"]*)"\s*%\s*([^)]+)\)/g,
+    (_match, sql, param) => {
+      const sqlTemplate = sql.replace(/%s/g, '?');
+      return `cursor.execute("${sqlTemplate}", (${param.trim()},))`;
+    }
+  );
+
+  // Node/JS: replace .prepare() template literals
+  if (fixed === content) {
+    fixed = fixed.replace(
+      /\.prepare\(`[^`]*\$\{[^}]*\}[^`]*`\)/g,
+      (match) => {
+        const paramMatch = match.match(/\$\{([^}]+)\}/);
+        if (paramMatch) {
+          return `.prepare('SELECT * FROM orders WHERE id = ?').all(${paramMatch[1]})`;
+        }
+        return match;
+      }
+    );
+  }
+
+  return fixed;
 }
 
 export function fixBrokenAuth(content: string, _parsed: ParsedIssue): string {
