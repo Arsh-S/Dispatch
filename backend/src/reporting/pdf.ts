@@ -286,16 +286,18 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
     { label: 'Clean', value: report.summary.clean_endpoints, color: COLORS.success },
   ];
 
+  const statsRowY = doc.y;
   let epX = x;
   for (const stat of endpointStats) {
     doc.font(fonts.bold).fontSize(20).fillColor(stat.color);
-    doc.text(`${stat.value}`, epX, doc.y, { lineBreak: false, continued: false });
+    doc.text(`${stat.value}`, epX, statsRowY, { lineBreak: false, continued: false });
     const numWidth = doc.widthOfString(`${stat.value}`);
     doc.font(fonts.regular).fontSize(9).fillColor(COLORS.muted);
-    doc.text(` ${stat.label}`, epX + numWidth + 4, doc.y + 6, { lineBreak: false });
-    epX += 130;
+    doc.text(stat.label, epX + numWidth + 6, statsRowY + 6, { lineBreak: false, continued: false });
+    epX += 140;
   }
-  doc.moveDown(2);
+  doc.y = statsRowY + 30;
+  doc.moveDown(1);
 
   // Finding summary table
   if (report.findings.length > 0) {
@@ -328,19 +330,21 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
         doc.rect(x, rowY, CONTENT_WIDTH, 22).fill('#FAFAFA');
       }
 
-      // Row content
+      // Row content - use absolute positioning for each cell
+      const cellY = rowY + 6;
+
       doc.font(fonts.regular).fontSize(8).fillColor(COLORS.text);
-      doc.text(`${i + 1}`, x + 8, rowY + 6, { lineBreak: false });
+      doc.text(`${i + 1}`, x + 8, cellY, { lineBreak: false, continued: false });
 
       // Severity badge
       const sevColor = COLORS[f.severity as keyof typeof COLORS] || COLORS.MEDIUM;
       doc.font(fonts.bold).fontSize(7).fillColor(sevColor);
-      doc.text(f.severity, x + 30, rowY + 6, { lineBreak: false });
+      doc.text(f.severity, x + 30, cellY, { lineBreak: false, continued: false });
 
       // Vuln type
       doc.font(fonts.regular).fontSize(8).fillColor(COLORS.text);
       const vulnType = f.vuln_type.length > 18 ? f.vuln_type.slice(0, 16) + '…' : f.vuln_type;
-      doc.text(vulnType.toUpperCase(), x + 95, rowY + 6, { lineBreak: false });
+      doc.text(vulnType.toUpperCase(), x + 95, cellY, { lineBreak: false, continued: false });
 
       // Location
       const locDisplay = f.location.line > 0
@@ -350,23 +354,17 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
         ? '…' + locDisplay.slice(-33)
         : locDisplay;
 
-      if (options?.githubRepo) {
-        const fileUrl = githubFileUrl(options.githubRepo, ref, f.location.file, f.location.line);
-        doc.font(fonts.mono).fontSize(7).fillColor(COLORS.link);
-        doc.text(locTruncated, x + 200, rowY + 6, { link: fileUrl, underline: true, lineBreak: false });
-      } else {
-        doc.font(fonts.mono).fontSize(7).fillColor(COLORS.text);
-        doc.text(locTruncated, x + 200, rowY + 6, { lineBreak: false });
-      }
+      doc.font(fonts.mono).fontSize(7).fillColor(options?.githubRepo ? COLORS.link : COLORS.text);
+      doc.text(locTruncated, x + 200, cellY, { lineBreak: false, continued: false });
 
       // Issue link
       const issue = options?.createdIssues?.get(f.finding_id);
       if (issue) {
         doc.font(fonts.regular).fontSize(8).fillColor(COLORS.link);
-        doc.text(`#${issue.number}`, x + 420, rowY + 6, { link: issue.url, underline: true, lineBreak: false });
+        doc.text(`#${issue.number}`, x + 420, cellY, { lineBreak: false, continued: false });
       } else {
         doc.font(fonts.regular).fontSize(8).fillColor(COLORS.light);
-        doc.text('—', x + 420, rowY + 6, { lineBreak: false });
+        doc.text('—', x + 420, cellY, { lineBreak: false, continued: false });
       }
 
       doc.y = rowY + 22;
