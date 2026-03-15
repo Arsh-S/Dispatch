@@ -5,9 +5,10 @@ interface SectionProps {
   id: string;
   children: ReactNode;
   className?: string;
+  contentClassName?: string;
 }
 
-export const Section = ({ id, children, className = '' }: SectionProps) => {
+export const Section = ({ id, children, className = '', contentClassName }: SectionProps) => {
   return (
     <section
       id={id}
@@ -26,7 +27,7 @@ export const Section = ({ id, children, className = '' }: SectionProps) => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           viewport={{ once: false, amount: 0.3 }}
-          className="w-full max-w-6xl mx-auto px-6 py-20"
+          className={`w-full mx-auto px-6 ${contentClassName || 'max-w-6xl py-20'}`}
         >
           {children}
         </motion.div>

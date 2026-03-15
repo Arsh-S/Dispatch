@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Section } from '@/components/Section';
 import { PillBase } from '@/components/ui/3d-adaptive-navigation-bar';
@@ -221,7 +221,7 @@ const businessTiers = [
     ],
     borderClassName: 'border-white/10',
     dotClassName: 'bg-primary',
-    priceClassName: 'text-6xl md:text-7xl text-foreground',
+    priceClassName: 'text-4xl md:text-5xl text-foreground',
     shadowClassName: 'shadow-[0_24px_70px_rgba(0,0,0,0.22)]',
   },
   {
@@ -238,7 +238,7 @@ const businessTiers = [
     ],
     borderClassName: 'border-secondary/30',
     dotClassName: 'bg-secondary',
-    priceClassName: 'text-6xl md:text-7xl text-secondary',
+    priceClassName: 'text-4xl md:text-5xl text-secondary',
     shadowClassName: 'shadow-[0_24px_70px_rgba(33,166,103,0.12)]',
   },
   {
@@ -255,7 +255,7 @@ const businessTiers = [
     ],
     borderClassName: 'border-primary/70',
     dotClassName: 'bg-primary',
-    priceClassName: 'text-6xl md:text-7xl text-primary',
+    priceClassName: 'text-4xl md:text-5xl text-primary',
     shadowClassName: 'shadow-[0_32px_90px_rgba(62,207,142,0.18)]',
     badge: 'Most popular',
   },
@@ -273,7 +273,7 @@ const businessTiers = [
     ],
     borderClassName: 'border-accent/35',
     dotClassName: 'bg-accent',
-    priceClassName: 'text-5xl md:text-6xl text-accent',
+    priceClassName: 'text-3xl md:text-4xl text-accent',
     shadowClassName: 'shadow-[0_24px_70px_rgba(20,141,120,0.12)]',
   },
 ];
@@ -343,9 +343,12 @@ const Citation = ({ text, className = '' }: { text: string; className?: string }
   </p>
 );
 
+const SECTION_IDS = ['home', 'problem', 'clinical', 'solution', 'how-it-works', 'dashboard', 'muscle', 'summary', 'business-model', 'market-size'];
+
 const Index = () => {
   const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState('home');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const teamMembers = [
     { name: 'Arsh', detail: 'Team Member', initials: 'A', image: '/arsh.jpeg' },
@@ -355,15 +358,19 @@ const Index = () => {
   ];
 
   useEffect(() => {
-    const handleScroll = () => {
-      const sections = ['home', 'problem', 'clinical', 'solution', 'how-it-works', 'dashboard', 'muscle', 'summary', 'business-model', 'market-size'];
-      const scrollPosition = window.scrollY + window.innerHeight / 2;
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-      for (const sectionId of sections) {
-        const element = document.getElementById(sectionId);
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const viewportH = container.clientHeight;
+      const scrollMid = scrollTop + viewportH / 2;
+
+      for (const sectionId of SECTION_IDS) {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          const top = el.offsetTop;
+          if (scrollMid >= top && scrollMid < top + el.offsetHeight) {
             setActiveSection(sectionId);
             break;
           }
@@ -371,14 +378,12 @@ const Index = () => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollToSection = (sectionId: string) => {
-    setActiveSection(sectionId);
-
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -393,7 +398,7 @@ const Index = () => {
         <PillBase activeSection={activeSection} onSectionClick={scrollToSection} />
       </div>
 
-      <div className="snap-y snap-mandatory h-screen overflow-y-scroll relative">
+      <div ref={scrollContainerRef} className="snap-y snap-mandatory h-screen overflow-y-scroll relative">
         <Section id="home" className="bg-transparent">
           <div className="space-y-12">
             <motion.div
@@ -445,28 +450,28 @@ const Index = () => {
           </div>
         </Section>
 
-        <Section id="problem" className="bg-transparent">
-          <div className="space-y-8">
+        <Section id="problem" className="bg-transparent" contentClassName="max-w-7xl py-8">
+          <div className="space-y-5">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               viewport={{ once: false, amount: 0.45 }}
-              className="max-w-6xl mx-auto text-center space-y-4"
+              className="max-w-6xl mx-auto text-center space-y-2"
             >
-              <h2 className="text-4xl md:text-6xl xl:text-7xl font-black tracking-tight leading-[1.05] text-foreground">
+              <h2 className="text-3xl md:text-5xl xl:text-6xl font-black tracking-tight leading-[1.05] text-foreground">
                 A pentest finds your vulnerabilities... but it still costs
               </h2>
-              <div className="text-6xl md:text-8xl font-black tracking-tight text-destructive">
+              <div className="text-5xl md:text-7xl font-black tracking-tight text-destructive">
                 $5K-$100K+
               </div>
               <Citation
                 text={'(Invicti, 2025).'}
-                className="text-center max-w-3xl mx-auto"
+                className="text-center max-w-3xl mx-auto !mt-2"
               />
             </motion.div>
 
-            <div className="grid max-w-7xl mx-auto gap-6 lg:grid-cols-3">
+            <div className="grid max-w-7xl mx-auto gap-4 lg:grid-cols-3">
               {problemCards.map((card, index) => (
                 <motion.div
                   key={card.number}
@@ -474,15 +479,15 @@ const Index = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.55, delay: 0.12 * index }}
                   viewport={{ once: false, amount: 0.35 }}
-                  className={`h-full rounded-[2rem] border bg-card/90 px-8 py-10 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}
+                  className={`h-full rounded-[2rem] border bg-card/90 px-6 py-6 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}
                 >
-                  <div className={`text-6xl md:text-7xl font-black tracking-tight ${card.numberClassName}`}>
+                  <div className={`text-5xl md:text-6xl font-black tracking-tight ${card.numberClassName}`}>
                     {card.number}
                   </div>
-                  <p className="mt-6 text-xl md:text-2xl leading-relaxed text-muted-foreground">
+                  <p className="mt-3 text-base md:text-lg leading-relaxed text-muted-foreground">
                     {card.text}
                   </p>
-                  <Citation text={card.citation} />
+                  <Citation text={card.citation} className="!mt-2" />
                 </motion.div>
               ))}
             </div>
@@ -492,18 +497,18 @@ const Index = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.35 }}
               viewport={{ once: false, amount: 0.35 }}
-              className="relative max-w-7xl mx-auto pt-4"
+              className="relative max-w-7xl mx-auto pt-2"
             >
-              <div className="rounded-[2rem] border border-primary/20 bg-card/90 px-8 py-10 text-center shadow-[0_30px_90px_rgba(33,117,78,0.22)] backdrop-blur-md">
-                <p className="mx-auto max-w-6xl text-2xl font-bold leading-snug text-foreground md:text-4xl">
+              <div className="rounded-[2rem] border border-primary/20 bg-card/90 px-6 py-6 text-center shadow-[0_30px_90px_rgba(33,117,78,0.22)] backdrop-blur-md">
+                <p className="mx-auto max-w-6xl text-xl font-bold leading-snug text-foreground md:text-2xl">
                   How do we turn security testing into tickets, fixes, and verified PRs instead of yet another PDF?
                 </p>
                 <Citation
                   text={'(Invicti, 2025; IBM, 2025).'}
-                  className="text-center"
+                  className="text-center !mt-2"
                 />
               </div>
-              <div className="absolute left-1/2 top-full flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#183126] text-4xl text-foreground/90 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
+              <div className="absolute left-1/2 top-full flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#183126] text-2xl text-foreground/90 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
                 ↓
               </div>
             </motion.div>
@@ -552,16 +557,16 @@ const Index = () => {
           </div>
         </Section>
 
-        <Section id="solution" className="bg-transparent">
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Dispatch Architecture</h1>
-              <p className="text-2xl md:text-3xl text-muted-foreground font-light max-w-4xl mx-auto">
+        <Section id="solution" className="bg-transparent" contentClassName="max-w-6xl py-12">
+          <div className="space-y-6">
+            <div className="text-center space-y-3">
+              <h1 className="text-5xl md:text-6xl font-bold text-foreground">Dispatch Architecture</h1>
+              <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-4xl mx-auto">
                 Security tools give you a PDF. Dispatch gives you a pull request.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-5 max-w-6xl mx-auto">
               {architectureCards.map((card, index) => (
                 <motion.div
                   key={card.title}
@@ -570,10 +575,10 @@ const Index = () => {
                   transition={{ duration: 0.55, delay: 0.12 * index }}
                 >
                   <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
-                    <LinesPatternCardBody className="p-8 text-center">
-                      <h3 className={`text-3xl font-bold mb-4 ${card.accentClassName}`}>{card.title}</h3>
-                      <p className="text-foreground text-xl leading-relaxed">{card.text}</p>
-                      <Citation text={card.citation} className="text-center" />
+                    <LinesPatternCardBody className="p-6 text-center">
+                      <h3 className={`text-2xl font-bold mb-3 ${card.accentClassName}`}>{card.title}</h3>
+                      <p className="text-foreground text-lg leading-relaxed">{card.text}</p>
+                      <Citation text={card.citation} className="text-center !mt-2" />
                     </LinesPatternCardBody>
                   </LinesPatternCard>
                 </motion.div>
@@ -581,16 +586,16 @@ const Index = () => {
             </div>
 
             <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-accent/30">
-              <LinesPatternCardBody className="text-center p-10">
-                <div className="text-4xl md:text-5xl font-bold text-accent mb-4">
+              <LinesPatternCardBody className="text-center p-7">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">
                   Triggered from chat, your terminal, or the dashboard
                 </div>
-                <p className="text-2xl text-foreground font-semibold mb-3">
+                <p className="text-xl text-foreground font-semibold mb-1">
                   Findings become tracked remediation work. Remediation work becomes validated code changes.
                 </p>
                 <Citation
                   text={'(Souppaya et al., 2022; OWASP Foundation, 2025).'}
-                  className="text-center"
+                  className="text-center !mt-2"
                 />
               </LinesPatternCardBody>
             </LinesPatternCard>
@@ -653,16 +658,16 @@ const Index = () => {
           </div>
         </Section>
 
-        <Section id="dashboard" className="bg-transparent">
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Outputs Developers Actually Use</h1>
-              <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
+        <Section id="dashboard" className="bg-transparent" contentClassName="max-w-7xl py-8">
+          <div className="space-y-5">
+            <div className="text-center space-y-2">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground">Outputs Developers Actually Use</h1>
+              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
                 Dispatch is designed around operational outputs developers can act on immediately, not another dead-end report.
               </p>
             </div>
 
-            <div className="grid gap-6 max-w-7xl mx-auto md:grid-cols-2">
+            <div className="grid gap-4 max-w-7xl mx-auto md:grid-cols-2">
               {outputCards.map((card, index) => (
                 <motion.div
                   key={card.title}
@@ -671,10 +676,10 @@ const Index = () => {
                   transition={{ duration: 0.55, delay: 0.1 * index }}
                 >
                   <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
-                    <LinesPatternCardBody className="p-8">
-                      <h3 className={`text-3xl font-bold mb-4 ${card.accentClassName}`}>{card.title}</h3>
-                      <p className="text-foreground text-xl leading-relaxed">{card.text}</p>
-                      <Citation text={card.citation} />
+                    <LinesPatternCardBody className="p-5">
+                      <h3 className={`text-2xl font-bold mb-2 ${card.accentClassName}`}>{card.title}</h3>
+                      <p className="text-foreground text-base leading-relaxed">{card.text}</p>
+                      <Citation text={card.citation} className="!mt-2" />
                     </LinesPatternCardBody>
                   </LinesPatternCard>
                 </motion.div>
@@ -682,29 +687,29 @@ const Index = () => {
             </div>
 
             <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-secondary/30">
-              <LinesPatternCardBody className="p-8 text-center">
-                <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug">
+              <LinesPatternCardBody className="p-6 text-center">
+                <p className="text-lg md:text-xl font-semibold text-foreground leading-snug">
                   The barrier to running a security test drops to zero: no separate workflow, no manual triage spreadsheet, just the tools the team already uses.
                 </p>
                 <Citation
                   text={'(Souppaya et al., 2022).'}
-                  className="text-center"
+                  className="text-center !mt-2"
                 />
               </LinesPatternCardBody>
             </LinesPatternCard>
           </div>
         </Section>
 
-        <Section id="muscle" className="bg-transparent">
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground">GitHub Issue = The Contract</h1>
-              <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
+        <Section id="muscle" className="bg-transparent" contentClassName="max-w-7xl py-12">
+          <div className="space-y-6">
+            <div className="text-center space-y-3">
+              <h1 className="text-5xl md:text-6xl font-bold text-foreground">GitHub Issue = The Contract</h1>
+              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
                 Dispatch keeps the fix loop explicit by making the issue itself the machine-readable handoff between pentesting and remediation.
               </p>
             </div>
 
-            <div className="grid gap-6 max-w-7xl mx-auto md:grid-cols-3">
+            <div className="grid gap-5 max-w-7xl mx-auto md:grid-cols-3">
               {fixLoopCards.map((card, index) => (
                 <motion.div
                   key={card.title}
@@ -713,11 +718,11 @@ const Index = () => {
                   transition={{ duration: 0.55, delay: 0.1 * index }}
                 >
                   <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
-                    <LinesPatternCardBody className="p-8">
+                    <LinesPatternCardBody className="p-6">
                       <p className={`text-sm font-semibold tracking-[0.18em] uppercase ${card.accentClassName}`}>{card.badge}</p>
-                      <h3 className="mt-4 text-3xl font-bold text-foreground">{card.title}</h3>
-                      <p className="mt-5 text-xl leading-relaxed text-muted-foreground">{card.text}</p>
-                      <Citation text={card.citation} />
+                      <h3 className="mt-3 text-2xl font-bold text-foreground">{card.title}</h3>
+                      <p className="mt-3 text-lg leading-relaxed text-muted-foreground">{card.text}</p>
+                      <Citation text={card.citation} className="!mt-2" />
                     </LinesPatternCardBody>
                   </LinesPatternCard>
                 </motion.div>
@@ -725,29 +730,29 @@ const Index = () => {
             </div>
 
             <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-accent/30">
-              <LinesPatternCardBody className="p-8">
-                <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug text-center">
+              <LinesPatternCardBody className="p-6">
+                <p className="text-xl md:text-2xl font-semibold text-foreground leading-snug text-center">
                   The issue body carries metadata, reproduction steps, server logs, monkeypatch diff, RULES.md violations, and the recommended fix. The issue thread becomes the audit trail: finding, fix attempt, and PR all live in one place.
                 </p>
                 <Citation
                   text={'(OWASP Foundation, 2025; Scarfone et al., 2008).'}
-                  className="text-center"
+                  className="text-center !mt-2"
                 />
               </LinesPatternCardBody>
             </LinesPatternCard>
           </div>
         </Section>
 
-        <Section id="summary" className="bg-transparent">
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Why Dispatch Stands Out</h1>
+        <Section id="summary" className="bg-transparent" contentClassName="max-w-6xl py-12">
+          <div className="space-y-6">
+            <div className="text-center space-y-3">
+              <h1 className="text-5xl md:text-6xl font-bold text-foreground">Why Dispatch Stands Out</h1>
               <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
                 Dispatch is not just another scanner. It is a developer-native remediation workflow built on top of code-aware security testing.
               </p>
             </div>
 
-            <div className="grid gap-6 max-w-7xl mx-auto md:grid-cols-3">
+            <div className="grid gap-5 max-w-7xl mx-auto md:grid-cols-3">
               {summaryCards.map((card, index) => (
                 <motion.div
                   key={card.title}
@@ -756,10 +761,10 @@ const Index = () => {
                   transition={{ duration: 0.55, delay: 0.1 * index }}
                 >
                   <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
-                    <LinesPatternCardBody className="p-8">
-                      <h3 className={`text-3xl font-bold mb-4 ${card.accentClassName}`}>{card.title}</h3>
-                      <p className="text-foreground text-xl leading-relaxed">{card.text}</p>
-                      <Citation text={card.citation} />
+                    <LinesPatternCardBody className="p-6">
+                      <h3 className={`text-2xl font-bold mb-3 ${card.accentClassName}`}>{card.title}</h3>
+                      <p className="text-foreground text-lg leading-relaxed">{card.text}</p>
+                      <Citation text={card.citation} className="!mt-2" />
                     </LinesPatternCardBody>
                   </LinesPatternCard>
                 </motion.div>
@@ -767,36 +772,36 @@ const Index = () => {
             </div>
 
             <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-primary/30">
-              <LinesPatternCardBody className="p-10 text-center">
-                <p className="text-3xl md:text-5xl font-bold text-foreground leading-tight">
+              <LinesPatternCardBody className="p-7 text-center">
+                <p className="text-3xl md:text-4xl font-bold text-foreground leading-tight">
                   Security tools give you a PDF. Dispatch gives you a pull request.
                 </p>
-                <p className="mt-5 text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+                <p className="mt-3 text-lg md:text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
                   The next step is obvious: run this on every push, prioritize by real-world runtime risk, and keep the fix loop inside the developer workflow from start to finish.
                 </p>
                 <Citation
                   text={'(Souppaya et al., 2022; Lewis et al., 2020).'}
-                  className="text-center"
+                  className="text-center !mt-2"
                 />
               </LinesPatternCardBody>
             </LinesPatternCard>
           </div>
         </Section>
 
-        <Section id="business-model" className="bg-transparent">
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Dispatch Business Model</h1>
-              <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
+        <Section id="business-model" className="bg-transparent" contentClassName="max-w-7xl py-6">
+          <div className="space-y-4">
+            <div className="text-center space-y-1">
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground">Dispatch Business Model</h1>
+              <p className="max-w-5xl mx-auto text-base md:text-lg text-muted-foreground">
                 Self-serve pricing for developers, expansion revenue from teams, and enterprise upsell when compliance and sign-off matter.
               </p>
               <Citation
                 text={'(Snyk, 2026; Semgrep, 2026; Detectify, 2026).'}
-                className="text-center"
+                className="text-center !mt-1"
               />
             </div>
 
-            <div className="grid max-w-7xl mx-auto gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid max-w-7xl mx-auto gap-4 md:grid-cols-2 xl:grid-cols-4">
               {businessTiers.map((tier, index) => (
                 <motion.div
                   key={tier.name}
@@ -806,25 +811,25 @@ const Index = () => {
                   className="relative"
                 >
                   {tier.badge ? (
-                    <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-[0_18px_40px_rgba(62,207,142,0.25)]">
+                    <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground shadow-[0_18px_40px_rgba(62,207,142,0.25)]">
                       {tier.badge}
                     </div>
                   ) : null}
-                  <div className={`h-full rounded-[2rem] border bg-card/90 px-8 py-10 backdrop-blur-md ${tier.borderClassName} ${tier.shadowClassName}`}>
-                    <p className="text-3xl font-bold text-foreground">{tier.name}</p>
-                    <div className="mt-6 flex items-end gap-2">
+                  <div className={`h-full rounded-[1.5rem] border bg-card/90 px-5 py-5 backdrop-blur-md ${tier.borderClassName} ${tier.shadowClassName}`}>
+                    <p className="text-xl font-bold text-foreground">{tier.name}</p>
+                    <div className="mt-2 flex items-end gap-1">
                       <span className={`font-black tracking-tight ${tier.priceClassName}`}>{tier.price}</span>
                       {tier.period ? (
-                        <span className="pb-2 text-3xl font-semibold text-muted-foreground">{tier.period}</span>
+                        <span className="pb-1 text-xl font-semibold text-muted-foreground">{tier.period}</span>
                       ) : null}
                     </div>
-                    <p className="mt-3 text-xl leading-relaxed text-muted-foreground">{tier.subtitle}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{tier.subtitle}</p>
 
-                    <div className="mt-8 border-t border-border/60 pt-6">
-                      <ul className="space-y-4">
+                    <div className="mt-3 border-t border-border/60 pt-3">
+                      <ul className="space-y-1.5">
                         {tier.features.map((feature) => (
-                          <li key={feature} className="flex items-start gap-3 text-lg md:text-xl">
-                            <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${tier.dotClassName}`} />
+                          <li key={feature} className="flex items-start gap-2 text-sm">
+                            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${tier.dotClassName}`} />
                             <span className="text-foreground/90">{feature}</span>
                           </li>
                         ))}
@@ -835,46 +840,47 @@ const Index = () => {
               ))}
             </div>
 
-            <div className="grid max-w-7xl mx-auto gap-6 lg:grid-cols-2">
-              <LinesPatternCard className="rounded-[2rem] shadow-2xl border-primary/25">
-                <LinesPatternCardBody className="p-8">
-                  <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-8">How Dispatch makes money</h3>
-                  <div className="space-y-4">
+            <div className="grid max-w-7xl mx-auto gap-4 lg:grid-cols-2">
+              <LinesPatternCard className="rounded-[1.5rem] shadow-2xl border-primary/25">
+                <LinesPatternCardBody className="p-5">
+                  <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">How Dispatch makes money</h3>
+                  <div className="space-y-1.5">
                     {businessModelRows.map((row) => (
                       <div
                         key={row.label}
-                        className="flex flex-col gap-2 border-b border-border/60 pb-4 md:flex-row md:items-center md:justify-between"
+                        className="flex flex-col gap-1 border-b border-border/60 pb-1.5 md:flex-row md:items-center md:justify-between"
                       >
-                        <span className="text-xl md:text-2xl text-muted-foreground">{row.label}</span>
-                        <span className="text-xl md:text-2xl font-semibold text-foreground md:text-right">{row.value}</span>
+                        <span className="text-sm md:text-base text-muted-foreground">{row.label}</span>
+                        <span className="text-sm md:text-base font-semibold text-foreground md:text-right">{row.value}</span>
                       </div>
                     ))}
                   </div>
                 </LinesPatternCardBody>
               </LinesPatternCard>
 
-              <LinesPatternCard className="rounded-[2rem] shadow-2xl border-secondary/30">
-                <LinesPatternCardBody className="p-8">
-                  <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-8">Upgrade triggers and market anchors</h3>
-                  <div className="space-y-4">
+              <LinesPatternCard className="rounded-[1.5rem] shadow-2xl border-secondary/30">
+                <LinesPatternCardBody className="p-5">
+                  <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">Upgrade triggers and market anchors</h3>
+                  <div className="space-y-1.5">
                     {upgradeRows.map((row) => (
                       <div
                         key={row.label}
-                        className="flex flex-col gap-2 border-b border-border/60 pb-4 md:flex-row md:items-center md:justify-between"
+                        className="flex flex-col gap-1 border-b border-border/60 pb-1.5 md:flex-row md:items-center md:justify-between"
                       >
-                        <span className="text-xl md:text-2xl text-muted-foreground">{row.label}</span>
+                        <span className="text-sm md:text-base text-muted-foreground">{row.label}</span>
                         {row.isBadge ? (
-                          <span className="inline-flex items-center rounded-full bg-primary/15 px-4 py-2 text-lg font-semibold text-primary md:text-xl">
+                          <span className="inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
                             {row.value}
                           </span>
                         ) : (
-                          <span className="text-xl md:text-2xl font-semibold text-foreground md:text-right">{row.value}</span>
+                          <span className="text-sm md:text-base font-semibold text-foreground md:text-right">{row.value}</span>
                         )}
                       </div>
                     ))}
                   </div>
                   <Citation
                     text={'(Snyk, 2026; Semgrep, 2026; Detectify, 2026; Vanta, 2026).'}
+                    className="!mt-2"
                   />
                 </LinesPatternCardBody>
               </LinesPatternCard>
@@ -903,7 +909,7 @@ const Index = () => {
                     <p className={`text-2xl md:text-3xl font-semibold tracking-[0.12em] uppercase ${card.accentClassName}`}>
                       {card.title}
                     </p>
-                    <div className={`mt-6 text-6xl md:text-7xl font-black tracking-tight ${card.accentClassName}`}>
+                    <div className={`mt-6 text-3xl md:text-4xl font-black tracking-tight ${card.accentClassName}`}>
                       {card.value}
                     </div>
                     <p className="mt-6 text-xl md:text-2xl leading-relaxed text-muted-foreground">
@@ -928,7 +934,6 @@ const Index = () => {
         </Section>
       </div>
 
-      <LanguageSwitcher />
     </div>
   );
 };
