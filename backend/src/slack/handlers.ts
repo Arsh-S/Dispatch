@@ -185,8 +185,8 @@ export async function processAgentCommand(
   }
 }
 
-/** Map orchestrator Finding to Slack Finding */
-function toSlackFinding(f: OrchestratorFinding): Finding {
+/** Map orchestrator Finding to Slack Finding (preserves memory fields when present) */
+function toSlackFinding(f: OrchestratorFinding & { consecutive_count?: number; escalated_from?: string }): Finding {
   const severity = f.severity.toLowerCase() as Finding['severity'];
   return {
     type: f.vuln_type,
@@ -194,6 +194,8 @@ function toSlackFinding(f: OrchestratorFinding): Finding {
     description: f.description,
     endpoint: f.location?.endpoint,
     recommendation: f.recommended_fix,
+    ...(f.consecutive_count && { consecutive_count: f.consecutive_count }),
+    ...(f.escalated_from && { escalated_from: f.escalated_from }),
   };
 }
 
@@ -282,6 +284,16 @@ async function handleSecurityScan(command: string, agentConfig: AgentConfig): Pr
     const parts = [
       `Security scan completed. Found ${mergedReport.findings.length} findings (${summary.critical} critical, ${summary.high} high, ${summary.medium} medium, ${summary.low} low).`,
     ];
+
+    const recurring = slackFindings.filter(f => f.consecutive_count && f.consecutive_count >= 2);
+    if (recurring.length > 0) {
+      const lines = recurring.map(f => {
+        const esc = f.escalated_from ? ` — escalated from ${f.escalated_from}` : '';
+        return `\`${f.endpoint ?? f.type}\` flagged in *${f.consecutive_count} consecutive scans*${esc}`;
+      });
+      parts.push(`*Recurring:* ${lines.join('; ')}.`);
+    }
+
     if (issueUrls.length > 0) parts.push(`Created ${issueUrls.length} GitHub issues.`);
     if (linearIssueCount > 0) parts.push(`Created ${linearIssueCount} Linear issues.`);
     const response = parts.join(' ');

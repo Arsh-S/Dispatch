@@ -30,13 +30,22 @@ export async function createIssueFromFinding(
   };
 }
 
+/** Returns "METHOD /path" — avoids duplication when endpoint already includes method (legacy data). */
+export function formatEndpointDisplay(location: { endpoint: string; method: string }): string {
+  if (!location.method) return location.endpoint;
+  if (location.endpoint.toUpperCase().startsWith(location.method.toUpperCase() + ' ')) {
+    return location.endpoint;
+  }
+  return `${location.method} ${location.endpoint}`;
+}
+
 export function formatTitle(finding: FindingForIssue): string {
   const severity = finding.severity;
   const vulnType = finding.vuln_type
     .split('-')
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
-  const endpoint = `${finding.location.method} ${finding.location.endpoint}`;
+  const endpoint = formatEndpointDisplay(finding.location);
   const desc = finding.description.split('.')[0]; // First sentence
 
   return `[${severity}] ${vulnType}: ${endpoint} — ${desc.length > 60 ? desc.substring(0, 57) + '...' : desc}`;
@@ -46,6 +55,11 @@ export function formatBody(finding: FindingForIssue): string {
   const sections: string[] = [];
 
   // Metadata block
+  const memoryLines = [
+    finding.consecutive_count ? `consecutive_count: ${finding.consecutive_count}` : '',
+    finding.escalated_from ? `escalated_from: ${finding.escalated_from}` : '',
+  ].filter(Boolean).join('\n');
+
   sections.push(`---
 dispatch_run_id: ${finding.dispatch_run_id}
 dispatch_worker_id: ${finding.dispatch_worker_id}
@@ -57,6 +71,7 @@ vuln_type: ${finding.vuln_type}
 exploit_confidence: ${finding.exploit_confidence}
 monkeypatch_status: ${finding.monkeypatch_status}
 fix_status: ${finding.fix_status}
+${memoryLines}
 ---`);
 
   // Vulnerability section
@@ -177,6 +192,15 @@ export function getLabels(finding: FindingForIssue): string[] {
   labels.push(`dispatch-run:${finding.dispatch_run_id.replace('dispatch-run-', '')}`);
   labels.push(`dispatch-worker:${finding.dispatch_worker_id}`);
 
+  // Axis 6: Memory / escalation
+  if (finding.escalated_from) {
+    labels.push('escalated');
+    labels.push(`escalated-from:${finding.escalated_from.toLowerCase()}`);
+  }
+  if (finding.consecutive_count && finding.consecutive_count >= 2) {
+    labels.push('recurring');
+  }
+
   return labels;
 }
 
@@ -215,6 +239,8 @@ export function convertFindingToIssueFormat(finding: Finding, dispatchRunId: str
       : undefined,
     recommended_fix: finding.recommended_fix,
     rules_violated: finding.rules_violated,
+    ...((finding as any).consecutive_count && { consecutive_count: (finding as any).consecutive_count }),
+    ...((finding as any).escalated_from && { escalated_from: (finding as any).escalated_from }),
   };
 }
 

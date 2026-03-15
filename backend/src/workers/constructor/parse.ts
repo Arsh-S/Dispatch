@@ -58,6 +58,8 @@ export function parseIssueBody(body: string): ParsedIssue {
     monkeypatch_diff: monkeypatchDiff,
     recommended_fix: recommendedFix,
     rules_violated: rulesViolated,
+    consecutive_count: metadata.consecutive_count ? parseInt(metadata.consecutive_count, 10) : undefined,
+    escalated_from: metadata.escalated_from || undefined,
   };
 }
 

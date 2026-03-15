@@ -58,6 +58,8 @@ export interface Finding {
   description: string;
   endpoint?: string;
   recommendation?: string;
+  consecutive_count?: number;
+  escalated_from?: string;
 }
 
 // Slack Handler Context

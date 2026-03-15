@@ -3,6 +3,8 @@ import { buildAttackMatrix, createTaskAssignments } from './attack-matrix';
 import { dispatchWorkers, WorkerResult } from './dispatcher';
 import { mergeReports, MergedReport, forwardToDatadog } from './collector';
 import { DispatchOutputWriter } from './dispatch-output-writer';
+import { getMemoryStore, generateFindingFingerprint, resolveTargetId } from '../memory/index.js';
+import { applyEscalation } from '../memory/escalation.js';
 import type { PreReconDeliverable } from '../schemas/pre-recon-deliverable';
 import type { TaskAssignment } from '../schemas/task-assignment';
 import type { FindingReport } from '../schemas/finding-report';
@@ -100,6 +102,28 @@ export async function runOrchestrator(options: OrchestratorOptions): Promise<Orc
   if (completedReports.length > 0) {
     console.log('[Orchestrator] Merging reports...');
     mergedReport = mergeReports(completedReports);
+
+    // Memory layer: record run and apply escalation
+    try {
+      const targetId = resolveTargetId(options.targetDir);
+      const memoryStore = getMemoryStore(options.targetDir);
+      if (memoryStore && mergedReport) {
+        await memoryStore.recordRun(targetId, dispatchRunId, mergedReport);
+        console.log(`[Memory] Recorded run ${dispatchRunId} for target "${targetId}"`);
+
+        const fingerprints = mergedReport.findings.map(f => generateFindingFingerprint(f));
+        const consecutiveCounts = await memoryStore.getConsecutiveCounts(targetId, fingerprints);
+        mergedReport = applyEscalation(mergedReport, consecutiveCounts);
+
+        const escalated = mergedReport.findings.filter((f: any) => f.escalated_from);
+        if (escalated.length > 0) {
+          console.log(`[Memory] Escalated ${escalated.length} finding(s) based on recurrence.`);
+        }
+      }
+    } catch (e) {
+      console.warn('[Memory] Error during memory integration (continuing without):', e);
+    }
+
     await forwardToDatadog(mergedReport);
     console.log(`[Orchestrator] Merged: ${mergedReport.findings.length} findings (${mergedReport.summary.critical} critical, ${mergedReport.summary.high} high).`);
   } else {

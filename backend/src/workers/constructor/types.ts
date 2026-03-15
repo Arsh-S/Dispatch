@@ -76,6 +76,8 @@ export interface ParsedIssue {
   monkeypatch_diff?: string;
   recommended_fix: string;
   rules_violated: string[];
+  consecutive_count?: number;
+  escalated_from?: string;
 }
 
 export interface FixResult {

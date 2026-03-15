@@ -9,6 +9,7 @@
     "scan:blaxel": "tsx src/cli.ts scan ../sample-app --blaxel",
     "report": "tsx src/cli.ts report",
     "report:linear": "tsx scripts/report-to-linear.ts",
+    "setup:github-app": "tsx src/scripts/setup-github-app.ts",
     "dashboard": "cd src/dashboard && pnpm dev",
     "api": "tsx src/api/server.ts",
     "slack": "tsx src/slack/index.ts",
@@ -21,6 +22,7 @@
   "packageManager": "pnpm@10.32.1",
   "devDependencies": {
     "@slack/bolt": "^4.6.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
     "@types/glob": "^9.0.0",
     "@types/node": "^25.5.0",
@@ -32,16 +34,19 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "esbuild",
+      "better-sqlite3"
     ]
   },
   "dependencies": {
     "@blaxel/core": "^0.2.74",
     "@linear/sdk": "^77.0.0",
+    "@octokit/auth-app": "^8.2.0",
     "@octokit/rest": "^22.0.1",
     "@sentry/node": "^7.84.0",
     "@slack/web-api": "^6.10.0",
     "@types/pdfkit": "^0.17.5",
+    "better-sqlite3": "^12.8.0",
     "crypto-js": "^4.2.0",
     "dd-trace": "^5.9.0",
     "dotenv": "^17.3.1",

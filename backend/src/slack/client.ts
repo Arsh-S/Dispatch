@@ -132,11 +132,15 @@ export function formatFindingsResponse(findings: any[], issueUrls?: string[]): a
 
   // Add each finding
   findings.forEach((finding, index) => {
+    const recurrenceLine = finding.consecutive_count && finding.consecutive_count >= 2
+      ? `\n:repeat: _Flagged in ${finding.consecutive_count} consecutive scans${finding.escalated_from ? ` — escalated from ${finding.escalated_from}` : ''}_`
+      : '';
+
     blocks.push({
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*${index + 1}. ${finding.type}* (${finding.severity.toUpperCase()})\n${finding.description}${
+        text: `*${index + 1}. ${finding.type}* (${finding.severity.toUpperCase()})${recurrenceLine}\n${finding.description}${
           finding.recommendation ? `\n_Recommendation: ${finding.recommendation}_` : ''
         }`,
       },
