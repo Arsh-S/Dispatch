@@ -439,7 +439,24 @@ const Citation = ({ text, className = '' }: { text: string; className?: string }
   </p>
 );
 
-const SECTION_IDS = ['home', 'problem', 'clinical', 'solution', 'how-it-works', 'dashboard', 'muscle', 'summary', 'business-model', 'market-size', 'competition'];
+const MAIN_NAV_ITEMS = [
+  { label: 'Home', id: 'home' },
+  { label: 'Problem', id: 'problem' },
+  { label: 'Workflow', id: 'how-it-works' },
+  { label: 'Summary', id: 'summary' },
+  { label: 'Business', id: 'business-model' },
+  { label: 'Market', id: 'market-size' },
+  { label: 'Competition', id: 'competition' },
+];
+
+const APPENDIX_NAV_ITEMS = [
+  { label: 'Pre-Recon', id: 'clinical' },
+  { label: 'Architecture', id: 'solution' },
+  { label: 'Outputs', id: 'dashboard' },
+  { label: 'Fix Loop', id: 'muscle' },
+];
+
+const SECTION_IDS = [...MAIN_NAV_ITEMS.map((item) => item.id), ...APPENDIX_NAV_ITEMS.map((item) => item.id)];
 
 const Index = () => {
   const { t } = useLanguage();
@@ -499,10 +516,37 @@ const Index = () => {
       </div>
 
       <div className="fixed top-8 left-1/2 z-50 -translate-x-1/2">
-        <PillBase activeSection={activeSection} onSectionClick={scrollToSection} />
+        <PillBase activeSection={activeSection} navItems={MAIN_NAV_ITEMS} onSectionClick={scrollToSection} />
       </div>
 
-      <div ref={scrollContainerRef} className="snap-y snap-mandatory h-screen overflow-y-scroll relative">
+      <div className="fixed bottom-6 right-6 z-[70]">
+        <LinesPatternCard className="w-44 rounded-2xl border border-primary/35 bg-card/95 shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-md">
+          <LinesPatternCardBody className="p-3">
+            <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary">Appendix</p>
+            <div className="mt-2 flex flex-col gap-1.5">
+              {APPENDIX_NAV_ITEMS.map((item) => {
+                const isActive = activeSection === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => scrollToSection(item.id)}
+                    className={`rounded-md px-2 py-1 text-left text-sm transition ${
+                      isActive
+                        ? 'bg-primary/25 text-primary'
+                        : 'text-muted-foreground hover:bg-primary/15 hover:text-foreground'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </LinesPatternCardBody>
+        </LinesPatternCard>
+      </div>
+
+      <div ref={scrollContainerRef} className="snap-y snap-mandatory h-screen overflow-y-scroll scrollbar-hide relative">
         <Section id="home" className="bg-transparent" contentClassName="max-w-7xl py-16 lg:py-20">
           <div className="space-y-12">
             <motion.div
@@ -637,93 +681,6 @@ const Index = () => {
           </div>
         </Section>
 
-        <Section id="clinical" className="bg-transparent">
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Pre-Recon Intelligence</h1>
-              <p className="max-w-4xl mx-auto text-xl md:text-2xl text-muted-foreground">
-                Dispatch does not start by attacking blindly. It plans from the codebase first.
-              </p>
-            </div>
-
-            <div className="grid max-w-7xl mx-auto gap-6 md:grid-cols-3">
-              {preReconCards.map((card, index) => (
-                <motion.div
-                  key={card.title}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: 0.1 * index }}
-                >
-                  <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
-                    <LinesPatternCardBody className="p-8">
-                      <h3 className={`text-3xl font-bold mb-5 ${card.accentClassName}`}>{card.title}</h3>
-                      <p className="text-foreground text-xl leading-relaxed">{card.text}</p>
-                      <Citation text={card.citation} />
-                    </LinesPatternCardBody>
-                  </LinesPatternCard>
-                </motion.div>
-              ))}
-            </div>
-
-            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-primary/25">
-              <LinesPatternCardBody className="p-8 text-center">
-                <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug">
-                  Before any live testing, the orchestrator runs a code-analysis-only pass to produce a route map, dependency graph, risk signals, and the attack matrix that drives worker assignment.
-                </p>
-                <Citation
-                  text={'(Scarfone et al., 2008; OWASP Foundation, 2020).'}
-                  className="text-center"
-                />
-              </LinesPatternCardBody>
-            </LinesPatternCard>
-          </div>
-        </Section>
-
-        <Section id="solution" className="bg-transparent" contentClassName="max-w-6xl py-12">
-          <div className="space-y-6">
-            <div className="text-center space-y-3">
-              <h1 className="text-5xl md:text-6xl font-bold text-foreground">Dispatch Architecture</h1>
-              <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-4xl mx-auto">
-                Security tools give you a PDF. Dispatch gives you a pull request.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-5 max-w-6xl mx-auto">
-              {architectureCards.map((card, index) => (
-                <motion.div
-                  key={card.title}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: 0.12 * index }}
-                >
-                  <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
-                    <LinesPatternCardBody className="p-6 text-center">
-                      <h3 className={`text-2xl font-bold mb-3 ${card.accentClassName}`}>{card.title}</h3>
-                      <p className="text-foreground text-lg leading-relaxed">{card.text}</p>
-                      <Citation text={card.citation} className="text-center !mt-2" />
-                    </LinesPatternCardBody>
-                  </LinesPatternCard>
-                </motion.div>
-              ))}
-            </div>
-
-            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-accent/30">
-              <LinesPatternCardBody className="text-center p-7">
-                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">
-                  Triggered from chat, your terminal, or the dashboard
-                </div>
-                <p className="text-xl text-foreground font-semibold mb-1">
-                  Findings become tracked remediation work. Remediation work becomes validated code changes.
-                </p>
-                <Citation
-                  text={'(Souppaya et al., 2022; OWASP Foundation, 2025).'}
-                  className="text-center !mt-2"
-                />
-              </LinesPatternCardBody>
-            </LinesPatternCard>
-          </div>
-        </Section>
-
         <Section id="how-it-works" className="bg-transparent">
           <div className="space-y-8">
             <div className="text-center space-y-4">
@@ -777,91 +734,6 @@ const Index = () => {
                 </LinesPatternCardBody>
               </LinesPatternCard>
             </motion.div>
-          </div>
-        </Section>
-
-        <Section id="dashboard" className="bg-transparent" contentClassName="max-w-7xl py-8">
-          <div className="space-y-5">
-            <div className="text-center space-y-2">
-              <h1 className="text-4xl md:text-6xl font-bold text-foreground">Outputs Developers Actually Use</h1>
-              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
-                Dispatch is designed around operational outputs developers can act on immediately, not another dead-end report.
-              </p>
-            </div>
-
-            <div className="grid gap-4 max-w-7xl mx-auto md:grid-cols-2">
-              {outputCards.map((card, index) => (
-                <motion.div
-                  key={card.title}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: 0.1 * index }}
-                >
-                  <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
-                    <LinesPatternCardBody className="p-5">
-                      <h3 className={`text-2xl font-bold mb-2 ${card.accentClassName}`}>{card.title}</h3>
-                      <p className="text-foreground text-base leading-relaxed">{card.text}</p>
-                      <Citation text={card.citation} className="!mt-2" />
-                    </LinesPatternCardBody>
-                  </LinesPatternCard>
-                </motion.div>
-              ))}
-            </div>
-
-            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-secondary/30">
-              <LinesPatternCardBody className="p-6 text-center">
-                <p className="text-lg md:text-xl font-semibold text-foreground leading-snug">
-                  The barrier to running a security test drops to zero: no separate workflow, no manual triage spreadsheet, just the tools the team already uses.
-                </p>
-                <Citation
-                  text={'(Souppaya et al., 2022).'}
-                  className="text-center !mt-2"
-                />
-              </LinesPatternCardBody>
-            </LinesPatternCard>
-          </div>
-        </Section>
-
-        <Section id="muscle" className="bg-transparent" contentClassName="max-w-7xl py-12">
-          <div className="space-y-6">
-            <div className="text-center space-y-3">
-              <h1 className="text-5xl md:text-6xl font-bold text-foreground">GitHub Issue = The Contract</h1>
-              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
-                Dispatch keeps the fix loop explicit by making the issue itself the machine-readable handoff between pentesting and remediation.
-              </p>
-            </div>
-
-            <div className="grid gap-5 max-w-7xl mx-auto md:grid-cols-3">
-              {fixLoopCards.map((card, index) => (
-                <motion.div
-                  key={card.title}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: 0.1 * index }}
-                >
-                  <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
-                    <LinesPatternCardBody className="p-6">
-                      <p className={`text-sm font-semibold tracking-[0.18em] uppercase ${card.accentClassName}`}>{card.badge}</p>
-                      <h3 className="mt-3 text-2xl font-bold text-foreground">{card.title}</h3>
-                      <p className="mt-3 text-lg leading-relaxed text-muted-foreground">{card.text}</p>
-                      <Citation text={card.citation} className="!mt-2" />
-                    </LinesPatternCardBody>
-                  </LinesPatternCard>
-                </motion.div>
-              ))}
-            </div>
-
-            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-accent/30">
-              <LinesPatternCardBody className="p-6">
-                <p className="text-xl md:text-2xl font-semibold text-foreground leading-snug text-center">
-                  The issue body carries metadata, reproduction steps, server logs, monkeypatch diff, RULES.md violations, and the recommended fix. The issue thread becomes the audit trail: finding, fix attempt, and PR all live in one place.
-                </p>
-                <Citation
-                  text={'(OWASP Foundation, 2025; Scarfone et al., 2008).'}
-                  className="text-center !mt-2"
-                />
-              </LinesPatternCardBody>
-            </LinesPatternCard>
           </div>
         </Section>
 
@@ -1175,6 +1047,178 @@ const Index = () => {
                 </LinesPatternCardBody>
               </LinesPatternCard>
             ))}
+          </div>
+        </Section>
+
+        <Section id="clinical" className="bg-transparent">
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Pre-Recon Intelligence</h1>
+              <p className="max-w-4xl mx-auto text-xl md:text-2xl text-muted-foreground">
+                Dispatch does not start by attacking blindly. It plans from the codebase first.
+              </p>
+            </div>
+
+            <div className="grid max-w-7xl mx-auto gap-6 md:grid-cols-3">
+              {preReconCards.map((card, index) => (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.1 * index }}
+                >
+                  <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
+                    <LinesPatternCardBody className="p-8">
+                      <h3 className={`text-3xl font-bold mb-5 ${card.accentClassName}`}>{card.title}</h3>
+                      <p className="text-foreground text-xl leading-relaxed">{card.text}</p>
+                      <Citation text={card.citation} />
+                    </LinesPatternCardBody>
+                  </LinesPatternCard>
+                </motion.div>
+              ))}
+            </div>
+
+            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-primary/25">
+              <LinesPatternCardBody className="p-8 text-center">
+                <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug">
+                  Before any live testing, the orchestrator runs a code-analysis-only pass to produce a route map, dependency graph, risk signals, and the attack matrix that drives worker assignment.
+                </p>
+                <Citation
+                  text={'(Scarfone et al., 2008; OWASP Foundation, 2020).'}
+                  className="text-center"
+                />
+              </LinesPatternCardBody>
+            </LinesPatternCard>
+          </div>
+        </Section>
+
+        <Section id="solution" className="bg-transparent" contentClassName="max-w-6xl py-12">
+          <div className="space-y-6">
+            <div className="text-center space-y-3">
+              <h1 className="text-5xl md:text-6xl font-bold text-foreground">Dispatch Architecture</h1>
+              <p className="text-xl md:text-2xl text-muted-foreground font-light max-w-4xl mx-auto">
+                Security tools give you a PDF. Dispatch gives you a pull request.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-5 max-w-6xl mx-auto">
+              {architectureCards.map((card, index) => (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.12 * index }}
+                >
+                  <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
+                    <LinesPatternCardBody className="p-6 text-center">
+                      <h3 className={`text-2xl font-bold mb-3 ${card.accentClassName}`}>{card.title}</h3>
+                      <p className="text-foreground text-lg leading-relaxed">{card.text}</p>
+                      <Citation text={card.citation} className="text-center !mt-2" />
+                    </LinesPatternCardBody>
+                  </LinesPatternCard>
+                </motion.div>
+              ))}
+            </div>
+
+            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-accent/30">
+              <LinesPatternCardBody className="text-center p-7">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">
+                  Triggered from chat, your terminal, or the dashboard
+                </div>
+                <p className="text-xl text-foreground font-semibold mb-1">
+                  Findings become tracked remediation work. Remediation work becomes validated code changes.
+                </p>
+                <Citation
+                  text={'(Souppaya et al., 2022; OWASP Foundation, 2025).'}
+                  className="text-center !mt-2"
+                />
+              </LinesPatternCardBody>
+            </LinesPatternCard>
+          </div>
+        </Section>
+
+        <Section id="dashboard" className="bg-transparent" contentClassName="max-w-7xl py-8">
+          <div className="space-y-5">
+            <div className="text-center space-y-2">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground">Outputs Developers Actually Use</h1>
+              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
+                Dispatch is designed around operational outputs developers can act on immediately, not another dead-end report.
+              </p>
+            </div>
+
+            <div className="grid gap-4 max-w-7xl mx-auto md:grid-cols-2">
+              {outputCards.map((card, index) => (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.1 * index }}
+                >
+                  <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
+                    <LinesPatternCardBody className="p-5">
+                      <h3 className={`text-2xl font-bold mb-2 ${card.accentClassName}`}>{card.title}</h3>
+                      <p className="text-foreground text-base leading-relaxed">{card.text}</p>
+                      <Citation text={card.citation} className="!mt-2" />
+                    </LinesPatternCardBody>
+                  </LinesPatternCard>
+                </motion.div>
+              ))}
+            </div>
+
+            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-secondary/30">
+              <LinesPatternCardBody className="p-6 text-center">
+                <p className="text-lg md:text-xl font-semibold text-foreground leading-snug">
+                  The barrier to running a security test drops to zero: no separate workflow, no manual triage spreadsheet, just the tools the team already uses.
+                </p>
+                <Citation
+                  text={'(Souppaya et al., 2022).'}
+                  className="text-center !mt-2"
+                />
+              </LinesPatternCardBody>
+            </LinesPatternCard>
+          </div>
+        </Section>
+
+        <Section id="muscle" className="bg-transparent" contentClassName="max-w-7xl py-12">
+          <div className="space-y-6">
+            <div className="text-center space-y-3">
+              <h1 className="text-5xl md:text-6xl font-bold text-foreground">GitHub Issue = The Contract</h1>
+              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
+                Dispatch keeps the fix loop explicit by making the issue itself the machine-readable handoff between pentesting and remediation.
+              </p>
+            </div>
+
+            <div className="grid gap-5 max-w-7xl mx-auto md:grid-cols-3">
+              {fixLoopCards.map((card, index) => (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.1 * index }}
+                >
+                  <LinesPatternCard className={`rounded-2xl shadow-xl h-full ${card.borderClassName}`}>
+                    <LinesPatternCardBody className="p-6">
+                      <p className={`text-sm font-semibold tracking-[0.18em] uppercase ${card.accentClassName}`}>{card.badge}</p>
+                      <h3 className="mt-3 text-2xl font-bold text-foreground">{card.title}</h3>
+                      <p className="mt-3 text-lg leading-relaxed text-muted-foreground">{card.text}</p>
+                      <Citation text={card.citation} className="!mt-2" />
+                    </LinesPatternCardBody>
+                  </LinesPatternCard>
+                </motion.div>
+              ))}
+            </div>
+
+            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-accent/30">
+              <LinesPatternCardBody className="p-6">
+                <p className="text-xl md:text-2xl font-semibold text-foreground leading-snug text-center">
+                  The issue body carries metadata, reproduction steps, server logs, monkeypatch diff, RULES.md violations, and the recommended fix. The issue thread becomes the audit trail: finding, fix attempt, and PR all live in one place.
+                </p>
+                <Citation
+                  text={'(OWASP Foundation, 2025; Scarfone et al., 2008).'}
+                  className="text-center !mt-2"
+                />
+              </LinesPatternCardBody>
+            </LinesPatternCard>
           </div>
         </Section>
       </div>

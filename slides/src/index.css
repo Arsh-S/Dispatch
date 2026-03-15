@@ -104,6 +104,15 @@ All colors MUST be HSL.
     scroll-behavior: smooth;
   }
 
+  /* Hide scrollbar while keeping scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Enhanced text readability over animated backgrounds */
   h1, h2, h3, h4, h5, h6 {
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8), 0 4px 24px rgba(0, 0, 0, 0.6);
