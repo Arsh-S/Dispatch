@@ -1,13 +1,27 @@
 import fs from 'fs';
 import path from 'path';
 import { ParsedIssue, FixResult, ConstructorBootstrap } from './types.js';
+import { applyFixWithLLM } from './llm-fix.js';
 
-export async function applyFix(parsed: ParsedIssue, _bootstrap: ConstructorBootstrap): Promise<FixResult> {
+export async function applyFix(parsed: ParsedIssue, bootstrap: ConstructorBootstrap): Promise<FixResult> {
+  // Attempt LLM-based fix first
+  try {
+    const llmResult = await applyFixWithLLM(parsed, bootstrap);
+    if (llmResult.status !== 'fix_failed' && llmResult.files_changed.length > 0) {
+      console.log(`[Constructor Fix] LLM fix succeeded`);
+      return llmResult;
+    }
+    console.warn(`[Constructor Fix] LLM produced no changes, falling back to regex`);
+  } catch (err: any) {
+    console.warn(`[Constructor Fix] LLM failed (${err.message}), falling back to regex`);
+  }
+
   const strategy = getStrategy(parsed.exploit_confidence, parsed.monkeypatch_status);
   console.log(`[Constructor Fix] Strategy: ${strategy}`);
 
   const repoDir = process.env.REPO_DIR || process.cwd();
   const targetFile = path.resolve(repoDir, parsed.location.file);
+
 
   if (!fs.existsSync(targetFile)) {
     return { status: 'fix_failed', files_changed: [], notes: `Target file not found: ${targetFile}` };
