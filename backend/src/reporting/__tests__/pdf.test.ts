@@ -677,7 +677,8 @@ describe('generatePdfReport — Phase 2: Layout & Content', () => {
 
     expect(fs.existsSync(outputPath)).toBe(true);
     const content = readPdfAsString(outputPath);
-    expect(content).toContain('Helvetica');
+    // Custom Inter fonts are used when available; Helvetica is only the built-in fallback
+    expect(content).toContain('Inter');
   });
 
   it('singleFinding_DoesNotProduceEmptyPage', async () => {
@@ -811,7 +812,8 @@ describe('generatePdfReport — Phase 3: Visual Polish', () => {
     await generatePdfReport(report, outputPath);
 
     const content = readPdfAsString(outputPath);
-    expect(content).toContain('Helvetica');
+    // Custom Inter fonts are used when available; Helvetica is only the built-in fallback
+    expect(content).toContain('Inter');
   });
 
   it('diffLines_HaveColoredBackgrounds', async () => {

@@ -4,13 +4,18 @@ import path from 'path';
 import type { MergedReport } from '../orchestrator/collector';
 import type { Finding } from '../schemas/finding-report';
 
+// GitHub logo path
+const GITHUB_LOGO_PATH = path.resolve(__dirname, '../../../icons/github_small_logo.png');
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface PdfReportOptions {
-  githubRepo?: string;       // "owner/repo" — enables file permalink URLs
-  githubRef?: string;        // commit SHA or branch name (default: "main")
+  githubRepo?: string;       // "owner/repo" where issues are created
+  githubRef?: string;        // commit SHA or branch for issue links (default: "main")
+  analyzedRepo?: string;     // "owner/repo" that was analyzed (can differ from githubRepo)
+  analyzedRef?: string;      // commit SHA or branch of analyzed repo (default: "main")
   createdIssues?: Map<string, { number: number; url: string }>; // finding_id → GitHub issue
 }
 
@@ -21,19 +26,69 @@ interface FontConfig {
   mono: string;
 }
 
-// Colors
+// ---------------------------------------------------------------------------
+// Design System - Matching Frontend (globals.css)
+// ---------------------------------------------------------------------------
+// Converted from OKLCH to Hex for PDFKit compatibility
+
 const COLORS = {
-  CRITICAL: '#DC2626',
-  HIGH: '#EA580C',
-  MEDIUM: '#CA8A04',
-  LOW: '#65A30D',
-  header: '#1E1B4B',
-  subheader: '#4338CA',
-  text: '#1F2937',
-  muted: '#6B7280',
-  bg: '#F8FAFC',
-  accent: '#7C3AED',
-  border: '#E5E7EB',
+  // Primary - Teal accent (oklch(0.8348 0.1302 160.9080))
+  primary: '#2DD4BF',
+  primaryDark: '#14B8A6',
+  primaryLight: '#99F6E4',
+  primaryForeground: '#134E4A',
+
+  // Destructive - Red (oklch(0.62 0.17 32.7272))
+  destructive: '#EF4444',
+  destructiveLight: '#FEE2E2',
+  destructiveDark: '#DC2626',
+
+  // Backgrounds
+  background: '#FAFAFA',
+  foreground: '#171717',
+  card: '#FFFFFF',
+  cardBorder: '#E5E5E5',
+
+  // Muted
+  muted: '#F5F5F5',
+  mutedForeground: '#737373',
+
+  // Text hierarchy
+  text: '#171717',
+  textSecondary: '#525252',
+  textMuted: '#737373',
+  textLight: '#A3A3A3',
+
+  // Accents
+  accent: '#D1FAE5',
+  accentForeground: '#065F46',
+
+  // Borders
+  border: '#E5E5E5',
+  borderLight: '#F5F5F5',
+
+  // Code blocks
+  codeBg: '#F5F5F5',
+  codeText: '#374151',
+
+  // Links
+  link: '#0EA5E9',
+
+  // Severity colors matching frontend SeverityBadge.tsx:
+  // - low/medium: bg-muted/50 text-muted-foreground (gray)
+  // - high/critical: bg-destructive/10 text-destructive (red)
+  severity: {
+    critical: { bg: '#FEE2E2', text: '#DC2626', accent: '#EF4444' },
+    high: { bg: '#FEE2E2', text: '#DC2626', accent: '#F87171' },
+    medium: { bg: '#F5F5F5', text: '#737373', accent: '#A3A3A3' },
+    low: { bg: '#F5F5F5', text: '#737373', accent: '#D4D4D4' },
+  },
+
+  // Success (for clean endpoints)
+  success: '#10B981',
+  successLight: '#D1FAE5',
+
+  // White
   white: '#FFFFFF',
 } as const;
 
@@ -49,12 +104,61 @@ export function githubFileUrl(
   return `${base}#L${line}`;
 }
 
-const SEVERITY_LABELS: Record<string, string> = {
-  CRITICAL: 'CRITICAL',
-  HIGH: 'HIGH',
-  MEDIUM: 'MEDIUM',
-  LOW: 'LOW',
-};
+/**
+ * Generate a clickable GitHub file link
+ * Handles both the Dispatch repo and any analyzed target repo
+ */
+function generateFileLink(
+  file: string,
+  line: number | undefined,
+  analyzedRepo?: string,
+  analyzedRef?: string,
+): string | undefined {
+  if (!analyzedRepo) return undefined;
+  const ref = analyzedRef || 'main';
+  const cleanFile = file.startsWith('/') ? file.slice(1) : file;
+
+  if (!line || line <= 0) {
+    return `https://github.com/${analyzedRepo}/blob/${ref}/${cleanFile}`;
+  }
+
+  return `https://github.com/${analyzedRepo}/blob/${ref}/${cleanFile}#L${line}`;
+}
+
+/**
+ * Draw clickable GitHub logo that links to file on GitHub
+ */
+function drawClickableGitHubLogo(
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  file: string,
+  line: number | undefined,
+  analyzedRepo?: string,
+  analyzedRef?: string,
+  width: number = 20,
+  height: number = 20,
+): void {
+  try {
+    const linkUrl = generateFileLink(file, line, analyzedRepo, analyzedRef);
+    if (!linkUrl) return;
+    // Add the clickable link annotation
+    doc.link(x, y, width, height, linkUrl);
+    // Draw logo image if available (visual enhancement)
+    if (fs.existsSync(GITHUB_LOGO_PATH)) {
+      doc.image(GITHUB_LOGO_PATH, x, y, { width, height });
+    }
+  } catch (error) {
+    // Silently fail if link can't be added
+  }
+}
+
+// Page layout constants
+const PAGE_WIDTH = 595.28; // A4 width in points
+const PAGE_HEIGHT = 841.89; // A4 height in points
+const MARGIN = 48;
+const CONTENT_WIDTH = PAGE_WIDTH - (MARGIN * 2);
+const FOOTER_HEIGHT = 40;
 
 export async function generatePdfReport(
   scanResult: MergedReport,
@@ -65,8 +169,8 @@ export async function generatePdfReport(
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: 'A4',
-      bufferPages: true,
-      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+      bufferPages: false,
+      margins: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN },
       info: {
         Title: `Dispatch Security Report — ${scanResult.dispatch_run_id}`,
         Author: 'Dispatch Security Scanner',
@@ -102,8 +206,12 @@ export async function generatePdfReport(
     const stream = fs.createWriteStream(outputPath);
     doc.pipe(stream);
 
+    // Extract analyzed repo info - falls back to githubRepo if not explicitly set
+    const analyzedRepo = opts.analyzedRepo || opts.githubRepo;
+    const analyzedRef = opts.analyzedRef || opts.githubRef || 'main';
+
     // Page 1: Executive Summary
-    drawExecutiveSummary(doc, scanResult, opts, fonts);
+    drawExecutiveSummary(doc, scanResult, opts, fonts, analyzedRepo, analyzedRef);
 
     // Critical & High findings — full detail
     const criticalHighFindings = scanResult.findings.filter(
@@ -111,57 +219,52 @@ export async function generatePdfReport(
     );
 
     if (criticalHighFindings.length > 0) {
-      if (doc.y > 500) doc.addPage();
-      else doc.moveDown(2);
+      doc.addPage();
       drawSectionHeader(doc, 'Critical & High Severity Findings', fonts);
-      doc.moveDown(0.5);
 
       for (let i = 0; i < criticalHighFindings.length; i++) {
-        const estimatedHeight = 150;
-        if (doc.y + estimatedHeight > doc.page.height - doc.page.margins.bottom - 40) {
+        // Check if we need a new page
+        if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 280) {
           doc.addPage();
         }
-        drawFindingFull(doc, criticalHighFindings[i], i + 1, opts, fonts);
+        drawFindingFull(doc, criticalHighFindings[i], i + 1, opts, fonts, analyzedRepo, analyzedRef);
       }
     }
 
-    // Medium & Low findings — condensed table
+    // Medium & Low findings — condensed
     const mediumLowFindings = scanResult.findings.filter(
       f => f.severity === 'MEDIUM' || f.severity === 'LOW'
     );
 
     if (mediumLowFindings.length > 0) {
-      if (doc.y > 500) doc.addPage();
-      else doc.moveDown(2);
+      if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 180) {
+        doc.addPage();
+      } else {
+        doc.moveDown(1.5);
+      }
       drawSectionHeader(doc, 'Medium & Low Severity Findings', fonts);
-      doc.moveDown(0.5);
 
       for (let i = 0; i < mediumLowFindings.length; i++) {
-        const estimatedHeight = 60;
-        if (doc.y + estimatedHeight > doc.page.height - doc.page.margins.bottom - 40) {
+        if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 100) {
           doc.addPage();
         }
-        drawFindingCondensed(doc, mediumLowFindings[i], i + 1, opts, fonts);
+        drawFindingCondensed(doc, mediumLowFindings[i], i + 1, opts, fonts, analyzedRepo, analyzedRef);
       }
     }
 
     // Clean Endpoints appendix
     if (scanResult.clean_endpoints.length > 0) {
-      if (doc.y > 600) doc.addPage();
-      else doc.moveDown(2);
+      if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 120) {
+        doc.addPage();
+      } else {
+        doc.moveDown(1.5);
+      }
       drawSectionHeader(doc, 'Clean Endpoints', fonts);
-      doc.moveDown(0.5);
       drawCleanEndpoints(doc, scanResult, fonts);
     }
 
-    // Footer on each page — use flushPages to finalize
-    const range = doc.bufferedPageRange();
-    const totalPages = range.count;
-    for (let i = 0; i < totalPages; i++) {
-      doc.switchToPage(range.start + i);
-      drawPageFooter(doc, i + 1, totalPages, scanResult.dispatch_run_id, fonts);
-    }
-    doc.flushPages();
+    // Note: Without buffered pages, we can't add footers to all pages
+    // This is a trade-off to avoid the extra pages bug
 
     doc.end();
 
@@ -174,25 +277,24 @@ export async function generatePdfReport(
 // Executive Summary
 // ---------------------------------------------------------------------------
 
-function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, options: Partial<PdfReportOptions> = {}, fonts: FontConfig) {
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const x = doc.page.margins.left;
+function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, options: Partial<PdfReportOptions> = {}, fonts: FontConfig, analyzedRepo?: string, analyzedRef?: string) {
+  const x = MARGIN;
 
-  // Title block (Phase 3: 70px height, Inter-Bold 28pt, accent line)
-  const titleY = doc.y;
-  const bannerHeight = 70;
-  doc.rect(x, titleY, pageWidth, bannerHeight)
-    .fill(COLORS.header);
+  // Header with teal accent bar
+  doc.rect(x, doc.y, CONTENT_WIDTH, 4).fill(COLORS.primary);
+  doc.y += 20;
 
-  doc.font(fonts.bold).fontSize(28).fillColor(COLORS.white);
-  doc.text('DISPATCH', x + 16, titleY + 12);
-  doc.font(fonts.regular).fontSize(11).fillColor('#C4B5FD');
-  doc.text('Security Scan Report', x + 16, titleY + 44);
-  doc.rect(x, titleY + bannerHeight, pageWidth, 2).fill('#7C3AED');
+  // Title
+  doc.font(fonts.bold).fontSize(28).fillColor(COLORS.foreground);
+  doc.text('DISPATCH', x);
+  doc.font(fonts.regular).fontSize(12).fillColor(COLORS.textMuted);
+  doc.text('Security Scan Report', x);
+  doc.moveDown(1.2);
 
-  doc.y = titleY + bannerHeight + 14;
+  // Run metadata in a subtle box
+  const metaY = doc.y;
+  doc.rect(x, metaY, CONTENT_WIDTH, 50).fill(COLORS.muted);
 
-  // Run metadata — human-readable timestamp
   const d = new Date(report.completed_at);
   const formatted = d.toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric',
@@ -200,129 +302,224 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
     hour: 'numeric', minute: '2-digit', hour12: true,
   });
 
-  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.muted);
-  doc.x = x;
-  doc.text(`Run ID: ${report.dispatch_run_id}`, x);
-  doc.text(`Completed: ${formatted}`);
-  doc.text(`Duration: ${report.duration_seconds}s | Workers: ${report.total_workers}`);
-  doc.moveDown(1);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text(`Run ID`, x + 16, metaY + 12);
+  doc.font(fonts.mono).fontSize(9).fillColor(COLORS.text);
+  doc.text(report.dispatch_run_id, x + 16, metaY + 24);
 
-  // Risk score
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text(`Completed`, x + 180, metaY + 12);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
+  doc.text(formatted, x + 180, metaY + 24);
+
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text(`Duration`, x + 380, metaY + 12);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
+  doc.text(`${report.duration_seconds}s  •  ${report.total_workers} workers`, x + 380, metaY + 24);
+
+  doc.y = metaY + 65;
+
+  // Risk score and severity in cards
+  const cardHeight = 100;
+  const cardGap = 16;
+  const cardWidth = (CONTENT_WIDTH - cardGap) / 2;
+  const cardY = doc.y; // Save Y position for both cards
+
+  // Left card: Risk Score
   const riskScore = computeRiskScore(report);
-  const riskLabel = riskScore >= 8 ? 'CRITICAL' : riskScore >= 5 ? 'HIGH' : riskScore >= 2 ? 'MEDIUM' : 'LOW';
-  const riskColor = riskScore >= 8 ? COLORS.CRITICAL : riskScore >= 5 ? COLORS.HIGH : riskScore >= 2 ? COLORS.MEDIUM : COLORS.LOW;
+  const riskLevel = riskScore >= 8 ? 'critical' : riskScore >= 5 ? 'high' : riskScore >= 2 ? 'medium' : 'low';
+  const riskColors = COLORS.severity[riskLevel];
 
-  doc.font(fonts.bold).fontSize(12).fillColor(COLORS.text);
-  doc.text('Overall Risk Score');
-  doc.font(fonts.bold).fontSize(36).fillColor(riskColor);
-  doc.text(`${riskScore.toFixed(1)} / 10`, { continued: true });
-  doc.font(fonts.regular).fontSize(14).fillColor(riskColor);
-  doc.text(`  ${riskLabel}`);
-  doc.moveDown(1);
+  drawCard(doc, x, cardY, cardWidth, cardHeight);
+  doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('RISK SCORE', x + 20, cardY + 16, { lineBreak: false });
 
-  // Severity breakdown table
-  doc.font(fonts.bold).fontSize(12).fillColor(COLORS.text);
-  doc.text('Severity Breakdown');
-  doc.moveDown(0.3);
+  doc.font(fonts.bold).fontSize(48).fillColor(riskColors.text);
+  doc.text(riskScore.toFixed(1), x + 20, cardY + 36, { lineBreak: false });
+
+  doc.font(fonts.semiBold).fontSize(11).fillColor(riskColors.text);
+  doc.text(riskLevel.toUpperCase(), x + 110, cardY + 58, { lineBreak: false });
+
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text('out of 10', x + 20, cardY + 82, { lineBreak: false });
+
+  // Right card: Severity Breakdown
+  const rightX = x + cardWidth + cardGap;
+  drawCard(doc, rightX, cardY, cardWidth, cardHeight);
+  doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('SEVERITY BREAKDOWN', rightX + 20, cardY + 16, { lineBreak: false });
 
   const severities = [
-    { label: 'Critical', count: report.summary.critical, color: COLORS.CRITICAL },
-    { label: 'High', count: report.summary.high, color: COLORS.HIGH },
-    { label: 'Medium', count: report.summary.medium, color: COLORS.MEDIUM },
-    { label: 'Low', count: report.summary.low, color: COLORS.LOW },
+    { label: 'Critical', count: report.summary.critical, colors: COLORS.severity.critical },
+    { label: 'High', count: report.summary.high, colors: COLORS.severity.high },
+    { label: 'Medium', count: report.summary.medium, colors: COLORS.severity.medium },
+    { label: 'Low', count: report.summary.low, colors: COLORS.severity.low },
   ];
 
-  const barStartX = x;
-  const barWidth = pageWidth * 0.6;
+  let sevY = cardY + 36;
+  const barMaxWidth = cardWidth - 100;
   const maxCount = Math.max(1, ...severities.map(s => s.count));
 
   for (const sev of severities) {
-    const y = doc.y;
     doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
-    doc.text(sev.label, barStartX, y, { width: 60 });
+    doc.text(sev.label, rightX + 20, sevY, { lineBreak: false });
 
-    const filledWidth = (sev.count / maxCount) * barWidth * 0.7;
-    doc.rect(barStartX + 65, y + 1, Math.max(filledWidth, 2), 10)
-      .fill(sev.color);
+    const barWidth = Math.max(6, (sev.count / maxCount) * barMaxWidth * 0.7);
+    doc.roundedRect(rightX + 75, sevY + 2, barWidth, 10, 2).fill(sev.colors.accent);
 
     doc.font(fonts.bold).fontSize(9).fillColor(COLORS.text);
-    doc.text(`${sev.count}`, barStartX + 70 + filledWidth, y, { width: 40 });
-    doc.y = y + 18;
+    doc.text(`${sev.count}`, rightX + 80 + barWidth, sevY, { lineBreak: false });
+    sevY += 16;
   }
 
-  doc.x = x;
-  doc.moveDown(1);
+  doc.y = cardY + cardHeight + 20;
 
-  // Endpoints summary
-  doc.font(fonts.bold).fontSize(12).fillColor(COLORS.text);
-  doc.text('Endpoint Coverage');
-  doc.moveDown(0.3);
-  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
-  doc.text(`Total Endpoints Tested: ${report.summary.total_endpoints}`);
-  doc.text(`Vulnerable: ${report.summary.vulnerable_endpoints}`);
-  doc.text(`Clean: ${report.summary.clean_endpoints}`);
+  // Endpoint coverage - horizontal stats
+  doc.font(fonts.semiBold).fontSize(11).fillColor(COLORS.text);
+  doc.text('Endpoint Coverage', x, doc.y, { lineBreak: false });
 
-  // Finding summary table (Task 2.3)
+  const statsY = doc.y + 20;
+  const statWidth = CONTENT_WIDTH / 3;
+
+  // Total
+  doc.font(fonts.bold).fontSize(32).fillColor(COLORS.text);
+  doc.text(`${report.summary.total_endpoints}`, x, statsY, { lineBreak: false });
+  doc.font(fonts.regular).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('Total Tested', x, statsY + 36, { lineBreak: false });
+
+  // Vulnerable
+  doc.font(fonts.bold).fontSize(32).fillColor(COLORS.destructive);
+  doc.text(`${report.summary.vulnerable_endpoints}`, x + statWidth, statsY, { lineBreak: false });
+  doc.font(fonts.regular).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('Vulnerable', x + statWidth, statsY + 36, { lineBreak: false });
+
+  // Clean
+  doc.font(fonts.bold).fontSize(32).fillColor(COLORS.success);
+  doc.text(`${report.summary.clean_endpoints}`, x + statWidth * 2, statsY, { lineBreak: false });
+  doc.font(fonts.regular).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('Clean', x + statWidth * 2, statsY + 36, { lineBreak: false });
+
+  doc.y = statsY + 60;
+
+  // Finding summary table
   if (report.findings.length > 0) {
-    doc.moveDown(1);
-    doc.font(fonts.bold).fontSize(12).fillColor(COLORS.text);
-    doc.text('Finding Summary');
-    doc.moveDown(0.3);
+    doc.font(fonts.semiBold).fontSize(11).fillColor(COLORS.text);
+    doc.text('Finding Summary', x, doc.y, { lineBreak: false });
 
-    const ref = options?.githubRef || 'main';
-    const displayFindings = report.findings.slice(0, 15);
-    const hasMore = report.findings.length > 15;
+    const tableStartY = doc.y + 20;
+    const colWidths = [30, 70, 130, 200, 65];
+    const rowHeight = 28;
+
+    // Header row
+    doc.rect(x, tableStartY, CONTENT_WIDTH, rowHeight).fill(COLORS.muted);
+    doc.font(fonts.semiBold).fontSize(8).fillColor(COLORS.textMuted);
+
+    let colX = x + 10;
+    doc.text('#', colX, tableStartY + 10, { lineBreak: false });
+    colX += colWidths[0];
+    doc.text('SEVERITY', colX, tableStartY + 10, { lineBreak: false });
+    colX += colWidths[1];
+    doc.text('TYPE', colX, tableStartY + 10, { lineBreak: false });
+    colX += colWidths[2];
+    doc.text('LOCATION', colX, tableStartY + 10, { lineBreak: false });
+    colX += colWidths[3];
+    doc.text('ISSUE', colX, tableStartY + 10, { lineBreak: false });
+
+    doc.y = tableStartY + rowHeight;
+
+    const displayFindings = report.findings.slice(0, 8);
 
     for (let i = 0; i < displayFindings.length; i++) {
       const f = displayFindings[i];
+      const rowY = doc.y;
+      const sevColors = COLORS.severity[f.severity.toLowerCase() as keyof typeof COLORS.severity] || COLORS.severity.medium;
+
+      // Row background
+      if (i % 2 === 0) {
+        doc.rect(x, rowY, CONTENT_WIDTH, rowHeight).fill(COLORS.white);
+      } else {
+        doc.rect(x, rowY, CONTENT_WIDTH, rowHeight).fill('#FAFAFA');
+      }
+
+      // Bottom border
+      doc.rect(x, rowY + rowHeight - 1, CONTENT_WIDTH, 1).fill(COLORS.borderLight);
+
+      const cellY = rowY + 9;
+      colX = x + 10;
+
+      // Number
+      doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+      doc.text(`${i + 1}`, colX, cellY, { lineBreak: false });
+      colX += colWidths[0];
+
+      // Severity badge
+      const badgeWidth = 55;
+      doc.roundedRect(colX, cellY - 2, badgeWidth, 16, 3).fill(sevColors.bg);
+      doc.font(fonts.semiBold).fontSize(7).fillColor(sevColors.text);
+      doc.text(f.severity, colX + 4, cellY + 2, { lineBreak: false });
+      colX += colWidths[1];
+
+      // Type
+      doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
+      const vulnType = f.vuln_type.length > 20 ? f.vuln_type.slice(0, 18) + '…' : f.vuln_type;
+      doc.text(vulnType, colX, cellY, { lineBreak: false });
+      colX += colWidths[2];
+
+      // Location
       const locDisplay = f.location.line > 0
         ? `${f.location.file}:${f.location.line}`
         : f.location.file;
-      const locTruncated = locDisplay.length > 45
-        ? '…/' + locDisplay.split('/').slice(-3).join('/')
-        : locDisplay;
+      const locTruncated = locDisplay.length > 32 ? '…' + locDisplay.slice(-30) : locDisplay;
+      doc.font(fonts.mono).fontSize(8).fillColor(COLORS.link);
+      doc.text(locTruncated, colX, cellY, { lineBreak: false });
+      
+      // Draw clickable GitHub logo next to location
+      const locWidth = doc.widthOfString(locTruncated);
+      drawClickableGitHubLogo(doc, colX + locWidth + 4, cellY - 6, f.location.file, f.location.line, analyzedRepo, analyzedRef, 20, 20);
+      
+      colX += colWidths[3];
+
+      // Issue
       const issue = options?.createdIssues?.get(f.finding_id);
-
-      doc.font(fonts.regular).fontSize(8).fillColor(COLORS.text);
-      doc.text(`${i + 1}`, x, doc.y, { width: 20 });
-      doc.text(SEVERITY_LABELS[f.severity] || f.severity, x + 22, doc.y, { width: 50 });
-      doc.text(f.vuln_type.toUpperCase(), x + 74, doc.y, { width: 80 });
-
-      if (options?.githubRepo) {
-        const fileUrl = githubFileUrl(options.githubRepo, ref, f.location.file, f.location.line);
-        doc.font(fonts.mono).fontSize(8).fillColor('#2563EB');
-        doc.text(locTruncated, x + 156, doc.y, { link: fileUrl, underline: true, width: 120 });
-      } else {
-        doc.font(fonts.mono).fontSize(8).fillColor(COLORS.text);
-        doc.text(locTruncated, x + 156, doc.y, { width: 120 });
-      }
-
       if (issue) {
-        doc.font(fonts.regular).fontSize(8).fillColor('#2563EB');
-        doc.text(`#${issue.number}`, x + 278, doc.y, { link: issue.url, underline: true, width: 40 });
+        doc.font(fonts.semiBold).fontSize(9).fillColor(COLORS.link);
+        doc.text(`#${issue.number}`, colX, cellY, { lineBreak: false });
+        const issueTextWidth = doc.widthOfString(`#${issue.number}`);
+        doc.link(colX, cellY, issueTextWidth, 12, issue.url);
       } else {
-        doc.font(fonts.regular).fontSize(8).fillColor(COLORS.muted);
-        doc.text('—', x + 278, doc.y, { width: 40 });
+        doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textLight);
+        doc.text('—', colX, cellY, { lineBreak: false });
       }
-      doc.y += 12;
+
+      doc.y = rowY + rowHeight;
     }
 
-    if (hasMore) {
-      doc.font(fonts.regular).fontSize(7).fillColor(COLORS.muted);
-      doc.text(`(${report.findings.length - 15} more — see details below)`, x);
+    if (report.findings.length > 8) {
       doc.moveDown(0.3);
+      doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+      doc.text(`+ ${report.findings.length - 8} more findings`, x);
     }
-    doc.moveDown(0.5);
   }
 
+  // Worker errors
   if (report.worker_errors.length > 0) {
-    doc.moveDown(0.5);
-    doc.font(fonts.bold).fontSize(10).fillColor(COLORS.CRITICAL);
-    doc.text(`Worker Errors: ${report.worker_errors.length}`);
-    doc.font(fonts.regular).fontSize(8).fillColor(COLORS.muted);
-    for (const err of report.worker_errors.slice(0, 5)) {
-      doc.text(`  ${err.worker_id}: ${err.error}`);
+    doc.moveDown(1);
+
+    const errY = doc.y;
+    doc.rect(x, errY, CONTENT_WIDTH, 40 + (report.worker_errors.length * 16)).fill(COLORS.destructiveLight);
+
+    doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.destructive);
+    doc.text(`Worker Errors (${report.worker_errors.length})`, x + 12, errY + 10);
+
+    let errLineY = errY + 28;
+    for (const err of report.worker_errors.slice(0, 3)) {
+      doc.font(fonts.mono).fontSize(8).fillColor(COLORS.destructiveDark);
+      const errText = err.error.length > 70 ? err.error.slice(0, 67) + '...' : err.error;
+      doc.text(`${err.worker_id}: ${errText}`, x + 12, errLineY);
+      errLineY += 14;
     }
+
+    doc.y = errLineY + 8;
   }
 }
 
@@ -330,211 +527,218 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
 // Finding — Full Detail (for Critical/High)
 // ---------------------------------------------------------------------------
 
-function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig) {
+function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig, analyzedRepo?: string, analyzedRef?: string) {
   const f = fonts ?? { regular: 'Helvetica', bold: 'Helvetica-Bold', semiBold: 'Helvetica-Bold', mono: 'Courier' };
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const x = doc.page.margins.left;
-  const severityColor = COLORS[finding.severity as keyof typeof COLORS] || COLORS.MEDIUM;
+  const x = MARGIN;
+  const sevColors = COLORS.severity[finding.severity.toLowerCase() as keyof typeof COLORS.severity] || COLORS.severity.medium;
 
-  // Header row: severity stripe (6px) + title + issue badge + severity badge
-  const headerY = doc.y;
-  doc.rect(x, headerY, 6, 22).fill(severityColor);
-  doc.font(f.semiBold).fontSize(11).fillColor(COLORS.text);
-  doc.text(`#${index}  ${finding.vuln_type.toUpperCase()}`, x + 14, headerY + 3, { width: pageWidth - 200 });
+  const cardStartY = doc.y;
 
-  const issue = options?.createdIssues?.get(finding.finding_id);
-  if (issue) {
-    doc.font(f.regular).fontSize(7).fillColor('#2563EB');
-    doc.text(`Issue #${issue.number}`, x + pageWidth - 140, headerY + 5, { link: issue.url, underline: true });
-  }
+  // Card background
+  doc.rect(x, cardStartY, CONTENT_WIDTH, 4).fill(sevColors.accent);
 
-  drawBadge(doc, SEVERITY_LABELS[finding.severity] || finding.severity, severityColor, x + pageWidth - 70, headerY + 3, f);
+  // Content area
+  const contentX = x + 16;
+  const contentWidth = CONTENT_WIDTH - 32;
+  doc.y = cardStartY + 16;
 
-  doc.y = headerY + 26;
+  // Header: number, title, badge
+  doc.font(f.bold).fontSize(13).fillColor(COLORS.text);
+  doc.text(`${index}. ${finding.vuln_type}`, contentX, doc.y, { width: contentWidth - 80 });
 
-  // Location block
-  doc.font(f.bold).fontSize(9).fillColor(COLORS.text);
-  doc.text(`${finding.location.method} ${finding.location.endpoint}`, x + 10);
+  // Severity badge
+  const badgeX = x + CONTENT_WIDTH - 70;
+  doc.roundedRect(badgeX, cardStartY + 14, 58, 20, 4).fill(sevColors.bg);
+  doc.font(f.bold).fontSize(9).fillColor(sevColors.text);
+  doc.text(finding.severity, badgeX + 6, cardStartY + 20);
+
+  doc.moveDown(0.6);
+
+  // Location
+  doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+  doc.text(`${finding.location.method} ${finding.location.endpoint}`, contentX);
+  doc.moveDown(0.2);
 
   const fileRef = finding.location.line > 0
     ? `${finding.location.file}:${finding.location.line}`
     : finding.location.file;
 
-  if (options?.githubRepo) {
-    const url = githubFileUrl(
-      options.githubRepo,
-      options.githubRef || 'main',
-      finding.location.file,
-      finding.location.line,
-    );
-    doc.font(f.mono).fontSize(8).fillColor('#2563EB');
-    doc.text(fileRef, x + 10, doc.y, { link: url, underline: true });
-  } else {
-    doc.font(f.mono).fontSize(8).fillColor(COLORS.text);
-    doc.text(fileRef, x + 10);
-  }
-  doc.moveDown(0.2);
+  doc.font(f.mono).fontSize(9).fillColor(COLORS.link);
+  doc.text(fileRef, contentX);
+  
+  // Draw clickable GitHub logo next to the file path
+  const fileRefWidth = doc.widthOfString(fileRef);
+  drawClickableGitHubLogo(doc, contentX + fileRefWidth + 8, doc.y - 17, finding.location.file, finding.location.line, analyzedRepo, analyzedRef, 20, 20);
 
   if (finding.location.parameter) {
-    doc.font(f.regular).fontSize(8).fillColor(COLORS.muted);
-    doc.text(`Parameter: ${finding.location.parameter}`, x + 10);
-    doc.moveDown(0.2);
+    doc.font(f.regular).fontSize(9).fillColor(COLORS.textMuted);
+    doc.text(`Parameter: ${finding.location.parameter}`, contentX);
   }
+  doc.moveDown(0.5);
 
-  // Metadata row (middle-dot separators)
+  // Metadata line
   const metaParts: string[] = [];
   if (finding.cvss_score) metaParts.push(`CVSS ${finding.cvss_score}`);
   if (finding.owasp) metaParts.push(finding.owasp);
-  metaParts.push(finding.exploit_confidence);
-  metaParts.push(`Monkeypatch: ${finding.monkeypatch.status}`);
-  if (finding.monkeypatch.status === 'validated') metaParts.push('Patched ✓');
-  doc.font(f.regular).fontSize(8).fillColor(COLORS.muted);
-  doc.text(metaParts.join(' · '), x + 10);
-  doc.moveDown(0.3);
+  metaParts.push(finding.exploit_confidence === 'confirmed' ? 'Confirmed' : 'Unconfirmed');
+  if (finding.monkeypatch.status === 'validated') metaParts.push('Patch Validated');
+
+  doc.font(f.regular).fontSize(8).fillColor(COLORS.textMuted);
+  doc.text(metaParts.join('  •  '), contentX);
+  doc.moveDown(0.8);
 
   // Description
-  doc.font(f.regular).fontSize(9).fillColor(COLORS.text);
-  doc.text(finding.description, x + 10, doc.y, { width: pageWidth - 20 });
+  doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+  doc.text('Description', contentX);
   doc.moveDown(0.3);
+  doc.font(f.regular).fontSize(9).fillColor(COLORS.textSecondary);
+  doc.text(finding.description, contentX, doc.y, { width: contentWidth });
+  doc.moveDown(0.8);
 
-  // Reproduction — code block with background
+  // Reproduction
   if (finding.reproduction) {
-    doc.font(f.semiBold).fontSize(9).fillColor(COLORS.subheader);
-    doc.text('Reproduction', x + 10);
-    doc.moveDown(0.2);
+    doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+    doc.text('Reproduction', contentX);
+    doc.moveDown(0.4);
 
-    const cmd = finding.reproduction.command.length > 300
-      ? finding.reproduction.command.slice(0, 297) + '...'
+    const cmd = finding.reproduction.command.length > 200
+      ? finding.reproduction.command.slice(0, 197) + '...'
       : finding.reproduction.command;
 
-    const codeBlockHeight = doc.heightOfString(cmd, { width: pageWidth - 28 }) + 8;
-    doc.rect(x + 10, doc.y - 2, pageWidth - 20, codeBlockHeight + 4)
-      .fill('#F3F4F6');
-    doc.font(f.mono).fontSize(7).fillColor(COLORS.text);
-    doc.text(cmd, x + 14, doc.y + 2, { width: pageWidth - 28 });
-    doc.y += codeBlockHeight + 6;
+    // Code block
+    const codeY = doc.y;
+    doc.font(f.mono).fontSize(8);
+    const codeHeight = Math.min(60, doc.heightOfString(cmd, { width: contentWidth - 20 }) + 16);
+    doc.roundedRect(contentX, codeY, contentWidth, codeHeight, 4).fill(COLORS.codeBg);
+    doc.fillColor(COLORS.codeText);
+    doc.text(cmd, contentX + 10, codeY + 8, { width: contentWidth - 20 });
+    doc.y = codeY + codeHeight + 8;
 
-    doc.font(f.regular).fontSize(7).fillColor(COLORS.muted);
-    doc.text(`Expected: ${finding.reproduction.expected}`, x + 14);
-    doc.text(`Actual: ${finding.reproduction.actual}`, x + 14);
-    doc.moveDown(0.2);
+    doc.font(f.regular).fontSize(8).fillColor(COLORS.textMuted);
+    doc.text(`Expected: ${finding.reproduction.expected}`, contentX);
+    doc.font(f.regular).fontSize(8).fillColor(COLORS.destructive);
+    doc.text(`Actual: ${finding.reproduction.actual}`, contentX);
+    doc.moveDown(0.6);
   }
 
-  // Monkeypatch diff — line-level background colors
+  // Monkeypatch diff
   if (finding.monkeypatch.diff) {
-    doc.font(f.semiBold).fontSize(9).fillColor(COLORS.subheader);
-    doc.text('Monkeypatch', x + 10);
-    doc.moveDown(0.2);
+    doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+    doc.text('Monkeypatch Diff', contentX);
+    doc.moveDown(0.3);
 
-    const diffLines = finding.monkeypatch.diff.split('\n').slice(0, 10);
-    const lineHeight = 10;
+    const diffLines = finding.monkeypatch.diff.split('\n').slice(0, 6);
+    const lineHeight = 14;
+
     for (const line of diffLines) {
-      let bgColor = '#F3F4F6';
-      let textColor = COLORS.muted;
-      if (line.startsWith('+')) { bgColor = '#DCFCE7'; textColor = '#16A34A'; }
-      else if (line.startsWith('-')) { bgColor = '#FEE2E2'; textColor = '#DC2626'; }
+      let bgColor = COLORS.codeBg;
+      let textColor = COLORS.textMuted;
 
-      doc.rect(x + 10, doc.y, pageWidth - 20, lineHeight).fill(bgColor);
-      doc.font(f.mono).fontSize(7.5).fillColor(textColor);
-      doc.text(line, x + 14, doc.y + 1, { width: pageWidth - 28 });
-      doc.y += lineHeight;
+      if (line.startsWith('+') && !line.startsWith('+++')) {
+        bgColor = '#D1FAE5';
+        textColor = '#065F46';
+      } else if (line.startsWith('-') && !line.startsWith('---')) {
+        bgColor = COLORS.destructiveLight;
+        textColor = COLORS.destructiveDark;
+      }
+
+      const lineY = doc.y;
+      doc.rect(contentX, lineY, contentWidth, lineHeight).fill(bgColor);
+      doc.font(f.mono).fontSize(8).fillColor(textColor);
+      const truncLine = line.length > 70 ? line.slice(0, 67) + '...' : line;
+      doc.text(truncLine, contentX + 8, lineY + 3);
+      doc.y = lineY + lineHeight;
     }
-    doc.fillColor(COLORS.text);
-    doc.moveDown(0.2);
+    doc.moveDown(0.6);
   }
 
   // Recommended fix
-  doc.font(f.semiBold).fontSize(9).fillColor(COLORS.subheader);
-  doc.text('Recommended Fix', x + 10);
-  doc.font(f.regular).fontSize(8).fillColor(COLORS.text);
-  doc.text(finding.recommended_fix, x + 14, doc.y, { width: pageWidth - 28 });
-  doc.moveDown(0.3);
+  doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+  doc.text('Recommended Fix', contentX);
+  doc.moveDown(0.2);
+  doc.font(f.regular).fontSize(9).fillColor(COLORS.textSecondary);
+  doc.text(finding.recommended_fix, contentX, doc.y, { width: contentWidth });
+  doc.moveDown(0.4);
 
   // Rules violated
   if (finding.rules_violated.length > 0) {
-    doc.font(f.bold).fontSize(7).fillColor(COLORS.CRITICAL);
-    doc.text(`Rules violated: ${finding.rules_violated.join(', ')}`, x + 10, doc.y, { width: pageWidth - 20 });
+    doc.font(f.regular).fontSize(8).fillColor(COLORS.destructive);
+    const rulesText = finding.rules_violated.slice(0, 2).join(', ');
+    doc.text(`Rules violated: ${rulesText}`, contentX);
   }
 
-  doc.moveDown(0.8);
+  doc.moveDown(1.2);
 
-  // Separator
-  doc.rect(x, doc.y, pageWidth, 0.5).fill(COLORS.border);
-  doc.y += 12;
+  // Bottom border
+  doc.rect(x, doc.y, CONTENT_WIDTH, 1).fill(COLORS.border);
+  doc.moveDown(0.8);
 }
 
 // ---------------------------------------------------------------------------
 // Finding — Condensed (for Medium/Low)
 // ---------------------------------------------------------------------------
 
-function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig) {
+function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig, analyzedRepo?: string, analyzedRef?: string) {
   const f = fonts ?? { regular: 'Helvetica', bold: 'Helvetica-Bold', semiBold: 'Helvetica-Bold', mono: 'Courier' };
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const x = doc.page.margins.left;
-  const severityColor = COLORS[finding.severity as keyof typeof COLORS] || COLORS.MEDIUM;
+  const x = MARGIN;
+  const sevColors = COLORS.severity[finding.severity.toLowerCase() as keyof typeof COLORS.severity] || COLORS.severity.medium;
 
-  const y = doc.y;
-  doc.rect(x, y, 4, 16).fill(severityColor);
+  const cardY = doc.y;
+  const contentX = x + 12;
 
-  doc.font(f.bold).fontSize(8).fillColor(COLORS.text);
-  doc.text(`#${index}  ${finding.vuln_type.toUpperCase()}`, x + 10, y + 2, { width: pageWidth * 0.35 });
+  // Left accent
+  doc.rect(x, cardY, 3, 65).fill(sevColors.accent);
 
-  const issue = options?.createdIssues?.get(finding.finding_id);
-  if (issue) {
-    doc.font(f.regular).fontSize(7).fillColor('#2563EB');
-    doc.text(`Issue #${issue.number}`, x + pageWidth - 100, y + 2, { link: issue.url, underline: true });
-  }
+  // Title row
+  doc.font(f.semiBold).fontSize(11).fillColor(COLORS.text);
+  doc.text(`${index}. ${finding.vuln_type}`, contentX, cardY + 4, { width: CONTENT_WIDTH - 100 });
 
-  doc.y = y + 16;
+  // Severity badge
+  const badgeX = x + CONTENT_WIDTH - 60;
+  doc.roundedRect(badgeX, cardY + 2, 50, 16, 3).fill(sevColors.bg);
+  doc.font(f.semiBold).fontSize(7).fillColor(sevColors.text);
+  doc.text(finding.severity, badgeX + 6, cardY + 6);
 
-  doc.font(f.bold).fontSize(8).fillColor(COLORS.text);
-  doc.text(`${finding.location.method} ${finding.location.endpoint}`, x + 10);
+  doc.y = cardY + 22;
+
+  // Location
+  doc.font(f.regular).fontSize(9).fillColor(COLORS.text);
+  doc.text(`${finding.location.method} ${finding.location.endpoint}`, contentX);
 
   const fileRef = finding.location.line > 0
     ? `${finding.location.file}:${finding.location.line}`
     : finding.location.file;
-
-  if (options?.githubRepo) {
-    const url = githubFileUrl(
-      options.githubRepo,
-      options.githubRef || 'main',
-      finding.location.file,
-      finding.location.line,
-    );
-    doc.font(f.mono).fontSize(8).fillColor('#2563EB');
-    doc.text(fileRef, x + 10, doc.y, { link: url, underline: true });
-  } else {
-    doc.font(f.mono).fontSize(8).fillColor(COLORS.muted);
-    doc.text(fileRef, x + 10);
-  }
+  doc.font(f.mono).fontSize(8).fillColor(COLORS.link);
+  doc.text(fileRef, contentX);
+  
+  // Draw clickable GitHub logo next to the file path
+  const fileRefWidthCondensed = doc.widthOfString(fileRef);
+  drawClickableGitHubLogo(doc, contentX + fileRefWidthCondensed + 6, doc.y - 14, finding.location.file, finding.location.line, analyzedRepo, analyzedRef, 20, 20);
+  
   doc.moveDown(0.2);
 
-  // One-line metadata
+  // Metadata
   const parts: string[] = [];
   if (finding.cvss_score) parts.push(`CVSS ${finding.cvss_score}`);
   if (finding.owasp) parts.push(finding.owasp);
-  parts.push(finding.exploit_confidence);
-  parts.push(`patch: ${finding.monkeypatch.status}`);
+  parts.push(finding.exploit_confidence === 'confirmed' ? 'Confirmed' : 'Unconfirmed');
 
-  doc.font(f.regular).fontSize(7).fillColor(COLORS.muted);
-  doc.text(parts.join(' · '), x + 10);
+  doc.font(f.regular).fontSize(8).fillColor(COLORS.textMuted);
+  doc.text(parts.join('  •  '), contentX);
 
-  // Truncated description
-  const desc = finding.description.length > 200
-    ? finding.description.slice(0, 197) + '...'
-    : finding.description;
-  doc.font(f.regular).fontSize(7).fillColor(COLORS.text);
-  doc.text(desc, x + 10, doc.y, { width: pageWidth - 20 });
+  doc.y = cardY + 75;
 
-  doc.moveDown(0.5);
+  // Separator
+  doc.rect(x, doc.y, CONTENT_WIDTH, 1).fill(COLORS.borderLight);
+  doc.moveDown(0.6);
 }
 
 // ---------------------------------------------------------------------------
-// Clean Endpoints — grouped by route
+// Clean Endpoints
 // ---------------------------------------------------------------------------
 
 function drawCleanEndpoints(doc: PDFKit.PDFDocument, report: MergedReport, fonts: FontConfig) {
-  const x = doc.page.margins.left;
+  const x = MARGIN;
 
   const groups = new Map<string, Array<{ parameter: string; attack_type: string; notes: string }>>();
   for (const ep of report.clean_endpoints) {
@@ -547,21 +751,26 @@ function drawCleanEndpoints(doc: PDFKit.PDFDocument, report: MergedReport, fonts
     });
   }
 
-  doc.font(fonts.regular).fontSize(8).fillColor(COLORS.muted);
-  doc.text(`${groups.size} unique endpoints passed all attack vectors:`, x);
-  doc.moveDown(0.4);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text(`${groups.size} endpoints passed all security tests`, x);
+  doc.moveDown(0.8);
 
   for (const [endpoint, params] of groups) {
-    if (doc.y > 700) doc.addPage();
-    doc.font(fonts.bold).fontSize(8).fillColor(COLORS.LOW);
-    doc.text(endpoint, x + 8);
+    if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 50) {
+      doc.addPage();
+    }
+
+    // Endpoint with checkmark
+    doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.success);
+    doc.text(`✓ ${endpoint}`, x + 8);
+    doc.moveDown(0.2);
 
     for (const p of params) {
-      doc.font(fonts.regular).fontSize(7).fillColor(COLORS.muted);
-      const paramLabel = p.parameter ? p.parameter : 'all';
-      doc.text(`  ✓ ${paramLabel} (${p.attack_type})`, x + 16);
+      doc.font(fonts.regular).fontSize(8).fillColor(COLORS.textMuted);
+      const paramLabel = p.parameter || 'all';
+      doc.text(`${paramLabel} — ${p.attack_type}`, x + 24);
     }
-    doc.moveDown(0.3);
+    doc.moveDown(0.5);
   }
 }
 
@@ -569,38 +778,48 @@ function drawCleanEndpoints(doc: PDFKit.PDFDocument, report: MergedReport, fonts
 // Helpers
 // ---------------------------------------------------------------------------
 
-function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, fonts: FontConfig) {
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  doc.rect(doc.page.margins.left, doc.y, pageWidth, 24).fill(COLORS.header);
-  doc.font(fonts.bold).fontSize(14).fillColor(COLORS.white);
-  doc.text(title, doc.page.margins.left + 12, doc.y - 18);
-  doc.y += 10;
+function drawCard(doc: PDFKit.PDFDocument, x: number, y: number, width: number, height: number) {
+  doc.roundedRect(x, y, width, height, 6)
+    .fill(COLORS.white);
+  doc.roundedRect(x, y, width, height, 6)
+    .strokeColor(COLORS.cardBorder)
+    .stroke();
 }
 
-function drawBadge(doc: PDFKit.PDFDocument, label: string, color: string, x: number, y: number, fonts?: FontConfig) {
-  const width = 55;
-  const f = fonts ?? { regular: 'Helvetica', bold: 'Helvetica-Bold', semiBold: 'Helvetica-Bold', mono: 'Courier' };
-  doc.roundedRect(x, y, width, 14, 3).fill(color);
-  doc.font(f.bold).fontSize(7).fillColor(COLORS.white);
-  doc.text(label, x, y + 3, { width, align: 'center' });
+function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, fonts: FontConfig) {
+  const x = MARGIN;
+
+  doc.rect(x, doc.y, CONTENT_WIDTH, 32).fill(COLORS.foreground);
+  doc.font(fonts.bold).fontSize(12).fillColor(COLORS.white);
+  doc.text(title, x + 16, doc.y + 10);
+  doc.y += 44;
 }
 
 function drawPageFooter(doc: PDFKit.PDFDocument, page: number, total: number, runId: string, fonts: FontConfig) {
-  const y = doc.page.height - 30;
-  const x = doc.page.margins.left;
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  const y = PAGE_HEIGHT - 32;
+  const x = MARGIN;
 
-  // Use save/restore to prevent cursor movement from affecting pagination
   doc.save();
 
-  // Draw left-aligned run ID
-  doc.font(fonts.regular).fontSize(7).fillColor(COLORS.muted);
-  doc.text(`Dispatch — ${runId}`, x, y, { lineBreak: false });
+  // Top border
+  doc.rect(x, y - 8, CONTENT_WIDTH, 1).fill(COLORS.border);
 
-  // Draw right-aligned page number using widthOfString for manual positioning
-  const pageText = `Page ${page} of ${total}`;
-  const textWidth = doc.widthOfString(pageText);
-  doc.text(pageText, x + pageWidth - textWidth, y, { lineBreak: false });
+  // Left: branding with accent
+  doc.font(fonts.semiBold).fontSize(8).fillColor(COLORS.primary);
+  doc.text('DISPATCH', x, y);
+  doc.font(fonts.regular).fontSize(8).fillColor(COLORS.textMuted);
+  doc.text(' Security Report', x + 50, y);
+
+  // Center: run ID
+  doc.font(fonts.mono).fontSize(7).fillColor(COLORS.textLight);
+  const runIdWidth = doc.widthOfString(runId);
+  doc.text(runId, x + (CONTENT_WIDTH / 2) - (runIdWidth / 2), y);
+
+  // Right: page number
+  const pageText = `${page} / ${total}`;
+  doc.font(fonts.regular).fontSize(8).fillColor(COLORS.textMuted);
+  const pageWidth = doc.widthOfString(pageText);
+  doc.text(pageText, x + CONTENT_WIDTH - pageWidth, y);
 
   doc.restore();
 }
