@@ -77,6 +77,8 @@ export interface RunMetrics {
 
 export type TriggeredBy = 'slack' | 'dashboard' | 'github' | 'api';
 
+export type HealthStatus = 'healthy' | 'warning' | 'looping';
+
 export interface DispatchOutput {
   dispatch_run_id: string;
   status: RunStatus;
@@ -93,4 +95,5 @@ export interface DispatchOutput {
   findings: import('../schemas/finding-report').Finding[];
   metrics: RunMetrics;
   graph_data?: GraphData;
+  worker_diagnostics?: Record<string, import('../schemas/agent-diagnostics').AgentDiagnostics>;
 }

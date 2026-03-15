@@ -4,6 +4,11 @@ import { runPentesterWorker } from '../workers/pentester/agent';
 import { SandboxInstance } from '@blaxel/core';
 import fs from 'fs';
 import path from 'path';
+import { DiagnosticsPoller } from '../diagnostics/poller.js';
+import { DiagnosticsAggregator } from '../diagnostics/aggregator.js';
+import { LoopDetector } from '../diagnostics/loop-detector.js';
+import type { AgentDiagnostics } from '../schemas/agent-diagnostics.js';
+import { forwardDiagnostics, forwardLoopAlert, clearThrottle } from '../integrations/datadog/diagnostics-forwarder.js';
 
 export interface DispatcherOptions {
   mode: 'local' | 'blaxel';
@@ -20,6 +25,8 @@ export interface WorkerResult {
 export interface DispatchCallbacks {
   onWorkerDispatched?: (assignment: TaskAssignment) => void;
   onWorkerComplete?: (result: WorkerResult) => void;
+  onDiagnosticsUpdate?: (diagnostics: AgentDiagnostics) => void;
+  onLoopDetected?: (workerId: string, reasons: string[]) => void;
 }
 
 export async function dispatchWorkers(
@@ -41,12 +48,48 @@ async function dispatchLocal(
   options: DispatcherOptions,
   callbacks?: DispatchCallbacks,
 ): Promise<WorkerResult[]> {
+  // Set up diagnostics infrastructure
+  const poller = new DiagnosticsPoller(5_000);
+  const aggregator = new DiagnosticsAggregator();
+  const loopDetector = new LoopDetector();
+
+  poller.onUpdate((diag) => {
+    aggregator.upsert(diag);
+    callbacks?.onDiagnosticsUpdate?.(diag);
+
+    // Forward metrics to Datadog (throttled to 30s per worker internally)
+    forwardDiagnostics(diag);
+
+    // Check for loops
+    const healthStatus = loopDetector.getHealthStatus(diag);
+    if (healthStatus === 'looping') {
+      const reasons = loopDetector.evaluate(diag);
+      const alert = loopDetector.buildAlert(diag, false);
+      if (alert) {
+        aggregator.addAlert(alert);
+        forwardLoopAlert(alert);
+      }
+      callbacks?.onLoopDetected?.(diag.worker_id, reasons);
+      console.warn(`[Dispatcher] Loop detected for worker ${diag.worker_id}: ${reasons.join(', ')}`);
+    }
+  });
+
   const results: WorkerResult[] = [];
   for (let i = 0; i < assignments.length; i++) {
     const assignment = assignments[i];
     console.log(`[Dispatcher] Worker ${i + 1}/${assignments.length}`);
     callbacks?.onWorkerDispatched?.(assignment);
+
+    // Register worker for diagnostics polling
+    const taskDir = path.join(options.targetDir, '.dispatch', assignment.worker_id);
+    const diagPath = path.join(taskDir, 'diagnostics.json');
+    poller.registerWorker(assignment.worker_id, diagPath);
+
+    if (i === 0) poller.start();
+
     const result = await runLocalWorker(assignment, options.targetDir);
+    poller.unregisterWorker(assignment.worker_id);
+    clearThrottle(assignment.worker_id);
     callbacks?.onWorkerComplete?.(result);
     results.push(result);
     if (i < assignments.length - 1) {
@@ -54,6 +97,7 @@ async function dispatchLocal(
     }
   }
 
+  poller.stop();
   return results;
 }
 
