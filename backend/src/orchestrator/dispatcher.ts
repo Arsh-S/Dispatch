@@ -1,12 +1,20 @@
 import { TaskAssignment } from '../schemas/task-assignment';
 import { FindingReport, FindingReportSchema } from '../schemas/finding-report';
 import { runPentesterWorker } from '../workers/pentester/agent';
+import { runClaudePentesterWorker } from '../workers/pentester/claude-agent';
 import { SandboxInstance } from '@blaxel/core';
+import { WorkerSupervisor } from '../diagnostics/worker-supervisor';
+import { LoopDetector } from '../diagnostics/loop-detector';
 import fs from 'fs';
 import path from 'path';
+import { DiagnosticsPoller } from '../diagnostics/poller.js';
+import { DiagnosticsAggregator } from '../diagnostics/aggregator.js';
+import { LoopDetector } from '../diagnostics/loop-detector.js';
+import type { AgentDiagnostics } from '../schemas/agent-diagnostics.js';
+import { forwardDiagnostics, forwardLoopAlert, clearThrottle } from '../integrations/datadog/diagnostics-forwarder.js';
 
 export interface DispatcherOptions {
-  mode: 'local' | 'blaxel';
+  mode: 'local' | 'blaxel' | 'claude';
   targetDir: string;
   maxConcurrent?: number;
 }
@@ -20,6 +28,15 @@ export interface WorkerResult {
 export interface DispatchCallbacks {
   onWorkerDispatched?: (assignment: TaskAssignment) => void;
   onWorkerComplete?: (result: WorkerResult) => void;
+  onDiagnosticsUpdate?: (diagnostics: AgentDiagnostics) => void;
+  onLoopDetected?: (workerId: string, reasons: string[]) => void;
+}
+
+// Shared supervisor instance — accessible from API endpoints for diagnostics
+let activeSupervisor: WorkerSupervisor | null = null;
+
+export function getActiveSupervisor(): WorkerSupervisor | null {
+  return activeSupervisor;
 }
 
 export async function dispatchWorkers(
@@ -33,6 +50,10 @@ export async function dispatchWorkers(
     return dispatchLocal(assignments, options, callbacks);
   }
 
+  if (options.mode === 'claude') {
+    return dispatchClaude(assignments, options, callbacks);
+  }
+
   return dispatchBlaxel(assignments, options, callbacks);
 }
 
@@ -41,12 +62,48 @@ async function dispatchLocal(
   options: DispatcherOptions,
   callbacks?: DispatchCallbacks,
 ): Promise<WorkerResult[]> {
+  // Set up diagnostics infrastructure
+  const poller = new DiagnosticsPoller(5_000);
+  const aggregator = new DiagnosticsAggregator();
+  const loopDetector = new LoopDetector();
+
+  poller.onUpdate((diag) => {
+    aggregator.upsert(diag);
+    callbacks?.onDiagnosticsUpdate?.(diag);
+
+    // Forward metrics to Datadog (throttled to 30s per worker internally)
+    forwardDiagnostics(diag);
+
+    // Check for loops
+    const healthStatus = loopDetector.getHealthStatus(diag);
+    if (healthStatus === 'looping') {
+      const reasons = loopDetector.evaluate(diag);
+      const alert = loopDetector.buildAlert(diag, false);
+      if (alert) {
+        aggregator.addAlert(alert);
+        forwardLoopAlert(alert);
+      }
+      callbacks?.onLoopDetected?.(diag.worker_id, reasons);
+      console.warn(`[Dispatcher] Loop detected for worker ${diag.worker_id}: ${reasons.join(', ')}`);
+    }
+  });
+
   const results: WorkerResult[] = [];
   for (let i = 0; i < assignments.length; i++) {
     const assignment = assignments[i];
     console.log(`[Dispatcher] Worker ${i + 1}/${assignments.length}`);
     callbacks?.onWorkerDispatched?.(assignment);
+
+    // Register worker for diagnostics polling
+    const taskDir = path.join(options.targetDir, '.dispatch', assignment.worker_id);
+    const diagPath = path.join(taskDir, 'diagnostics.json');
+    poller.registerWorker(assignment.worker_id, diagPath);
+
+    if (i === 0) poller.start();
+
     const result = await runLocalWorker(assignment, options.targetDir);
+    poller.unregisterWorker(assignment.worker_id);
+    clearThrottle(assignment.worker_id);
     callbacks?.onWorkerComplete?.(result);
     results.push(result);
     if (i < assignments.length - 1) {
@@ -54,6 +111,7 @@ async function dispatchLocal(
     }
   }
 
+  poller.stop();
   return results;
 }
 
@@ -83,6 +141,113 @@ async function runLocalWorker(
       workerId: assignment.worker_id,
       report: null,
       error: message,
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Claude Agent Mode
+// ---------------------------------------------------------------------------
+
+/**
+ * Dispatch workers using the Claude Code agent.
+ *
+ * Runs sequentially (same as local mode) so Claude API rate limits are
+ * respected. Each worker invokes the Claude CLI in a subprocess and
+ * validates output against Zod schemas.
+ *
+ * Creates a WorkerSupervisor that:
+ * - Registers each worker's child process for kill control
+ * - Runs diagnostics-based loop detection on a poll interval
+ * - Escalates kills based on confidence: low→warn, medium→poison pill, high→SIGKILL
+ * - Cleans up all workers on orchestrator shutdown (SIGINT/SIGTERM)
+ */
+async function dispatchClaude(
+  assignments: TaskAssignment[],
+  options: DispatcherOptions,
+  callbacks?: DispatchCallbacks,
+): Promise<WorkerResult[]> {
+  const loopDetector = new LoopDetector();
+  const supervisor = new WorkerSupervisor(loopDetector);
+  activeSupervisor = supervisor;
+
+  // Ensure cleanup on process exit
+  const cleanup = () => supervisor.killAll();
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+
+  supervisor.startPolling();
+
+  const results: WorkerResult[] = [];
+  try {
+    for (let i = 0; i < assignments.length; i++) {
+      const assignment = assignments[i];
+      console.log(`[Dispatcher/Claude] Worker ${i + 1}/${assignments.length}`);
+      callbacks?.onWorkerDispatched?.(assignment);
+      const result = await runClaudeWorker(assignment, options.targetDir, supervisor);
+
+      supervisor.markCompleted(assignment.worker_id);
+      callbacks?.onWorkerComplete?.(result);
+      results.push(result);
+      if (i < assignments.length - 1) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+  } finally {
+    supervisor.stopPolling();
+    process.removeListener('SIGINT', cleanup);
+    process.removeListener('SIGTERM', cleanup);
+    activeSupervisor = null;
+  }
+
+  return results;
+}
+
+async function runClaudeWorker(
+  assignment: TaskAssignment,
+  targetDir: string,
+  supervisor: WorkerSupervisor,
+): Promise<WorkerResult> {
+  console.log(`[Dispatcher/Claude] Running Claude worker ${assignment.worker_id} for ${assignment.attack_type} on ${assignment.target.endpoint}`);
+
+  const taskDir = path.join(targetDir, '.dispatch', assignment.worker_id);
+
+  try {
+    fs.mkdirSync(taskDir, { recursive: true });
+    const taskAssignmentPath = path.join(taskDir, 'task-assignment.json');
+    fs.writeFileSync(taskAssignmentPath, JSON.stringify(assignment, null, 2));
+
+    const report = await runClaudePentesterWorker(
+      taskAssignmentPath,
+      targetDir,
+      (child) => {
+        supervisor.registerClaudeWorker(
+          assignment.worker_id,
+          'pentester',
+          assignment.dispatch_run_id,
+          child,
+          taskDir,
+          assignment.timeout_seconds * 1000,
+        );
+      },
+    );
+
+    console.log(`[Dispatcher/Claude] Worker ${assignment.worker_id} completed successfully`);
+    return { workerId: assignment.worker_id, report };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+
+    // Check if the supervisor killed this worker
+    const managed = supervisor.getWorker(assignment.worker_id);
+    const wasKilled = managed?.status === 'killed' || managed?.status === 'timed_out';
+    if (wasKilled) {
+      console.warn(`[Dispatcher/Claude] Worker ${assignment.worker_id} was terminated by supervisor`);
+    }
+
+    return {
+      workerId: assignment.worker_id,
+      report: null,
+      error: wasKilled ? `Terminated by supervisor: ${message}` : message,
     };
   }
 }

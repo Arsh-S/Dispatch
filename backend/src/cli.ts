@@ -4,6 +4,7 @@ import { createIssuesFromReport, convertFindingToIssueFormat } from './github/is
 import { createLinearIssuesFromReport } from './linear/issues';
 import { generatePdfReport } from './reporting/pdf';
 import { Finding, CleanEndpoint } from './schemas/finding-report';
+import { runLocalTestRunner } from './test-runner';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
@@ -157,11 +158,75 @@ async function main() {
       githubRef: refFlag || 'main',
     });
     console.log(`PDF report written to: ${result}`);
+  } else if (command === 'test-suite') {
+    const targetPath = args[1];
+    if (!targetPath) {
+      console.error('Usage: pnpm tsx src/cli.ts test-suite <path-to-repo> [--command "..."] [--timeout 300]');
+      process.exit(1);
+    }
+
+    const targetDir = path.resolve(targetPath);
+    if (!fs.existsSync(targetDir)) {
+      console.error(`Target directory not found: ${targetDir}`);
+      process.exit(1);
+    }
+
+    const commandFlag = args.find(a => a.startsWith('--command='))?.split('=').slice(1).join('=')
+      || (args.includes('--command') ? args[args.indexOf('--command') + 1] : undefined);
+    const timeoutFlag = args.find(a => a.startsWith('--timeout='))?.split('=')[1]
+      || (args.includes('--timeout') ? args[args.indexOf('--timeout') + 1] : undefined);
+
+    const frontendPublic = path.join(__dirname, '../../frontend/public');
+    const outputPath = fs.existsSync(frontendPublic)
+      ? path.join(frontendPublic, 'test-run-output.json')
+      : path.join(process.cwd(), 'test-run-output.json');
+
+    console.log('=== Dispatch Test Suite Runner ===');
+    console.log(`Target: ${targetDir}`);
+    if (commandFlag) console.log(`Command: ${commandFlag}`);
+    console.log(`Output: ${outputPath}`);
+    console.log('');
+
+    const report = await runLocalTestRunner(targetDir, {
+      command: commandFlag,
+      timeoutSeconds: timeoutFlag ? parseInt(timeoutFlag, 10) : undefined,
+    });
+
+    const output = {
+      run_id: report.dispatch_run_id,
+      status: report.status,
+      report,
+      started_at: new Date(Date.now() - report.duration_seconds * 1000).toISOString(),
+      completed_at: report.completed_at,
+    };
+
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
+
+    console.log(`Status: ${report.status}`);
+    console.log(`Exit code: ${report.exit_code}`);
+    console.log(`Duration: ${report.duration_seconds}s`);
+    console.log(`Command: ${report.command}`);
+
+    if (report.parsed_summary) {
+      const s = report.parsed_summary;
+      console.log(`\nTest Summary (${s.framework ?? 'unknown'}):`);
+      if (s.passed !== undefined) console.log(`  Passed: ${s.passed}`);
+      if (s.failed !== undefined) console.log(`  Failed: ${s.failed}`);
+      if (s.skipped !== undefined) console.log(`  Skipped: ${s.skipped}`);
+      if (s.total !== undefined) console.log(`  Total: ${s.total}`);
+    }
+
+    console.log(`\nFull report: ${outputPath}`);
+
+    if (report.status === 'failed' || report.status === 'error') {
+      process.exit(1);
+    }
   } else {
     console.log('Dispatch Security Scanner');
     console.log('');
     console.log('Usage:');
     console.log('  pnpm tsx src/cli.ts scan <path-to-repo> [owner/repo] [--blaxel]');
+    console.log('  pnpm tsx src/cli.ts test-suite <path-to-repo> [--command "..."] [--timeout 300]');
     console.log('  pnpm tsx src/cli.ts report [input.json] [output.pdf]');
     console.log('');
     console.log('Options:');
@@ -171,6 +236,8 @@ async function main() {
     console.log('  pnpm tsx src/cli.ts scan ./sample-app');
     console.log('  pnpm tsx src/cli.ts scan ./sample-app --blaxel');
     console.log('  pnpm tsx src/cli.ts scan ./sample-app myorg/myrepo');
+    console.log('  pnpm tsx src/cli.ts test-suite ./sample-app');
+    console.log('  pnpm tsx src/cli.ts test-suite ./sample-app --command "uv run pytest -v"');
     console.log('  pnpm tsx src/cli.ts report dispatch-output.json report.pdf [--repo=owner/repo] [--ref=main]');
   }
 }

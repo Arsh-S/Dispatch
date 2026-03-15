@@ -350,6 +350,43 @@ export interface FixReport {
 }
 
 // ============================================================================
+// Agent Diagnostics (mirrored from backend Zod schemas)
+// ============================================================================
+
+export type HealthStatus = 'healthy' | 'warning' | 'looping';
+
+export interface AgentDiagnostics {
+  worker_id: string;
+  worker_type: 'pentester' | 'constructor';
+  dispatch_run_id: string;
+  started_at: string;
+  updated_at: string;
+  wall_clock_seconds: number;
+  trace_length: number;
+  tool_calls: Record<string, number>;
+  total_tool_calls: number;
+  lines_added: number;
+  lines_removed: number;
+  unique_files_touched: string[];
+  repeated_calls: number;
+  error_count: number;
+  consecutive_errors: number;
+  phase: string;
+  findings_so_far: number;
+  last_action: string;
+}
+
+export interface LoopAlert {
+  worker_id: string;
+  worker_type: 'pentester' | 'constructor';
+  dispatch_run_id: string;
+  triggered_at: string;
+  reasons: string[];
+  diagnostics: AgentDiagnostics;
+  auto_killed: boolean;
+}
+
+// ============================================================================
 // Dispatch Output (written by orchestrator, read by dashboard)
 // ============================================================================
 
@@ -368,4 +405,5 @@ export interface DispatchOutput {
   findings: Finding[];
   metrics: RunMetrics;
   graph_data?: GraphData;
+  worker_diagnostics?: Record<string, AgentDiagnostics>;
 }

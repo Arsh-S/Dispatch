@@ -11,8 +11,13 @@ import {
   CheckCircle,
   ShieldCheck,
   Bug,
+  Activity,
+  AlertTriangle,
+  Repeat,
 } from "lucide-react";
 import type {
+  AgentDiagnostics,
+  HealthStatus,
   TaskAssignment,
   FindingReport,
   Severity,
@@ -21,10 +26,12 @@ import type {
 interface WorkerInspectorProps {
   assignment?: TaskAssignment;
   report?: FindingReport;
+  diagnostics?: AgentDiagnostics;
+  healthStatus?: HealthStatus;
 }
 
-export function WorkerInspector({ assignment, report }: WorkerInspectorProps) {
-  if (!assignment && !report) {
+export function WorkerInspector({ assignment, report, diagnostics, healthStatus }: WorkerInspectorProps) {
+  if (!assignment && !report && !diagnostics) {
     return (
       <div className="text-xs text-muted-foreground">
         No assignment or report data available for this worker.
@@ -34,6 +41,108 @@ export function WorkerInspector({ assignment, report }: WorkerInspectorProps) {
 
   return (
     <div className="space-y-3">
+      {/* Diagnostics / Health Panel */}
+      {diagnostics && (
+        <Card size="sm" className={
+          healthStatus === "looping"
+            ? "border-red-500/30 bg-red-500/5"
+            : healthStatus === "warning"
+            ? "border-amber-400/30 bg-amber-400/5"
+            : "border-primary/30 bg-primary/5"
+        }>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <Activity className="w-3 h-3" />
+              Diagnostics
+              {healthStatus && (
+                <HealthBadge status={healthStatus} />
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <dl className="space-y-1.5 text-xs">
+              <Row label="Phase">
+                <Badge variant="outline" className="text-[10px] font-mono">
+                  {diagnostics.phase}
+                </Badge>
+              </Row>
+              <Row label="Wall Clock">
+                <span className="flex items-center gap-1 text-foreground/80">
+                  <Clock className="size-3" />
+                  {formatSeconds(diagnostics.wall_clock_seconds)}
+                </span>
+              </Row>
+              <Row label="Trace Length">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">
+                    {diagnostics.trace_length}
+                  </span>
+                  <TraceBar value={diagnostics.trace_length} max={200} />
+                </div>
+              </Row>
+              <Row label="Tool Calls">
+                <span className="font-medium text-foreground">{diagnostics.total_tool_calls}</span>
+              </Row>
+              <Row label="Repeated">
+                <span className="flex items-center gap-1">
+                  <Repeat className="size-3 text-amber-400" />
+                  <span className="font-medium text-foreground">{diagnostics.repeated_calls}</span>
+                </span>
+              </Row>
+              <Row label="Errors">
+                <span className="flex items-center gap-1">
+                  <AlertTriangle className="size-3 text-status-error" />
+                  <span className="font-medium text-foreground">
+                    {diagnostics.error_count}
+                    {diagnostics.consecutive_errors > 0 && (
+                      <span className="text-status-error ml-1">
+                        ({diagnostics.consecutive_errors} consecutive)
+                      </span>
+                    )}
+                  </span>
+                </span>
+              </Row>
+              <Row label="Findings">
+                <span className="font-medium text-foreground">{diagnostics.findings_so_far}</span>
+              </Row>
+              <Row label="Lines">
+                <span className="text-foreground/80">
+                  <span className="text-primary">+{diagnostics.lines_added}</span>
+                  {" / "}
+                  <span className="text-status-error">-{diagnostics.lines_removed}</span>
+                </span>
+              </Row>
+              <Row label="Files">
+                <span className="font-medium text-foreground">{diagnostics.unique_files_touched.length}</span>
+              </Row>
+            </dl>
+
+            {/* Tool call breakdown */}
+            {Object.keys(diagnostics.tool_calls).length > 0 && (
+              <div className="space-y-1 pt-2 border-t border-border">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Tool Call Breakdown</div>
+                {Object.entries(diagnostics.tool_calls)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([tool, count]) => (
+                    <div key={tool} className="flex items-center justify-between gap-2 text-xs bg-muted/30 rounded px-2 py-1">
+                      <span className="font-mono truncate text-foreground/80">{tool}</span>
+                      <span className="font-medium text-foreground shrink-0">{count}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+
+            {/* Last action */}
+            {diagnostics.last_action && (
+              <div className="pt-2 border-t border-border">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Last Action</div>
+                <p className="text-xs text-foreground/70">{diagnostics.last_action}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Assignment Details */}
       {assignment && (
         <>
@@ -178,6 +287,31 @@ export function WorkerInspector({ assignment, report }: WorkerInspectorProps) {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+function HealthBadge({ status }: { status: HealthStatus }) {
+  const styles: Record<HealthStatus, string> = {
+    healthy: "bg-primary/10 text-primary border-primary/20",
+    warning: "bg-amber-400/10 text-amber-400 border-amber-400/20",
+    looping: "bg-red-500/10 text-red-500 border-red-500/20",
+  };
+
+  return (
+    <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${styles[status]}`}>
+      {status}
+    </Badge>
+  );
+}
+
+function TraceBar({ value, max }: { value: number; max: number }) {
+  const pct = Math.min((value / max) * 100, 100);
+  const color = pct > 70 ? "bg-red-500" : pct > 40 ? "bg-amber-400" : "bg-primary";
+
+  return (
+    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+      <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
     </div>
   );
 }

@@ -10,9 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import type {
+  AgentDiagnostics,
   DispatchOutput,
   Finding,
   GraphData,
+  HealthStatus,
   NodeId,
   PreReconDeliverable,
   RunMetrics,
@@ -54,6 +56,7 @@ export interface DispatchWorkspaceState {
 
   metrics: RunMetrics;
   graphData: GraphData;
+  workerDiagnostics: Record<string, AgentDiagnostics>;
 
   selectedNodeId: NodeId | null;
   sidebarOpen: boolean;
@@ -80,6 +83,8 @@ type DispatchWorkspaceContextValue = DispatchWorkspaceState & {
   getFindingById: (id: string) => Finding | undefined;
   getAssignmentByWorkerId: (workerId: string) => TaskAssignment | undefined;
   getReportByWorkerId: (workerId: string) => FindingReport | undefined;
+  getDiagnosticsByWorkerId: (workerId: string) => AgentDiagnostics | undefined;
+  getWorkerHealthStatus: (workerId: string) => HealthStatus;
   setSidebarOpen: (open: boolean) => void;
   setRunStatus: (status: RunStatus) => void;
   loadDispatchOutput: (data: DispatchOutput) => void;
@@ -102,6 +107,7 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
 
   const [metrics, setMetrics] = useState<RunMetrics>(emptyMetrics);
   const [graphData, setGraphData] = useState<GraphData>(emptyGraphData);
+  const [workerDiagnostics, setWorkerDiagnostics] = useState<Record<string, AgentDiagnostics>>({});
 
   const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>(null);
   const [sidebarOpen, setSidebarOpenState] = useState(false);
@@ -135,6 +141,40 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
     [findingReports]
   );
 
+  const getDiagnosticsByWorkerId = useCallback(
+    (workerId: string) => workerDiagnostics[workerId],
+    [workerDiagnostics]
+  );
+
+  const getWorkerHealthStatus = useCallback(
+    (workerId: string): HealthStatus => {
+      const diag = workerDiagnostics[workerId];
+      if (!diag) return 'healthy';
+
+      // Client-side heuristic mirroring backend LoopDetector
+      const MAX_TRACE = 200;
+      const MAX_WALL = 600;
+      const MAX_CONSECUTIVE_ERRORS = 5;
+      const MAX_REPETITION_RATIO = 0.4;
+
+      if (diag.trace_length > MAX_TRACE) return 'looping';
+      if (diag.wall_clock_seconds > MAX_WALL) return 'looping';
+      if (diag.consecutive_errors >= MAX_CONSECUTIVE_ERRORS) return 'looping';
+      if (diag.total_tool_calls > 10) {
+        const ratio = diag.repeated_calls / diag.total_tool_calls;
+        if (ratio > MAX_REPETITION_RATIO) return 'looping';
+      }
+
+      // Warning thresholds (70%)
+      if (diag.trace_length / MAX_TRACE > 0.7) return 'warning';
+      if (diag.wall_clock_seconds / MAX_WALL > 0.7) return 'warning';
+      if (diag.consecutive_errors / MAX_CONSECUTIVE_ERRORS > 0.6) return 'warning';
+
+      return 'healthy';
+    },
+    [workerDiagnostics]
+  );
+
   const setSidebarOpen = useCallback((open: boolean) => setSidebarOpenState(open), []);
 
   const setRunStatusFn = useCallback((status: RunStatus) => setRunStatus(status), []);
@@ -149,6 +189,7 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
     setFindings(data.findings);
     setMetrics(data.metrics);
     if (data.graph_data) setGraphData(data.graph_data);
+    if (data.worker_diagnostics) setWorkerDiagnostics(data.worker_diagnostics);
     setLastUpdated(new Date().toISOString());
   }, []);
 
@@ -186,6 +227,7 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
       findings,
       metrics,
       graphData,
+      workerDiagnostics,
       selectedNodeId,
       sidebarOpen,
       isLoading,
@@ -196,6 +238,8 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
       getFindingById,
       getAssignmentByWorkerId,
       getReportByWorkerId,
+      getDiagnosticsByWorkerId,
+      getWorkerHealthStatus,
       setSidebarOpen,
       setRunStatus: setRunStatusFn,
       loadDispatchOutput,
@@ -212,6 +256,7 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
       findings,
       metrics,
       graphData,
+      workerDiagnostics,
       selectedNodeId,
       sidebarOpen,
       isLoading,
@@ -222,6 +267,8 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
       getFindingById,
       getAssignmentByWorkerId,
       getReportByWorkerId,
+      getDiagnosticsByWorkerId,
+      getWorkerHealthStatus,
       setSidebarOpen,
       setRunStatusFn,
       loadDispatchOutput,

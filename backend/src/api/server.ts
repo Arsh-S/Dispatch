@@ -4,12 +4,16 @@ import { runBlaxelConstructor } from '../orchestrator/constructor-dispatcher.js'
 import type { ConstructorBootstrap } from '../workers/constructor/types.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { DiagnosticsAggregator } from '../diagnostics/aggregator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = path.resolve(__dirname, '../..');
 
 const app = express();
 app.use(express.json());
+
+// Shared diagnostics aggregator — populated by the dispatcher during runs
+export const diagnosticsAggregator = new DiagnosticsAggregator();
 
 /**
  * POST /api/fix
@@ -113,11 +117,46 @@ app.get('/fix', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Diagnostics API
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/diagnostics — all active worker diagnostics
+ */
+app.get('/api/diagnostics', (_req, res) => {
+  const all = diagnosticsAggregator.getAll();
+  res.json({ workers: all, count: all.length });
+});
+
+/**
+ * GET /api/diagnostics/alerts — loop detection alerts
+ */
+app.get('/api/diagnostics/alerts', (_req, res) => {
+  const alerts = diagnosticsAggregator.getAlerts();
+  res.json({ alerts, count: alerts.length });
+});
+
+/**
+ * GET /api/diagnostics/:worker_id — single worker diagnostics
+ */
+app.get('/api/diagnostics/:worker_id', (req, res) => {
+  const diag = diagnosticsAggregator.get(req.params.worker_id);
+  if (!diag) {
+    res.status(404).json({ error: 'Worker not found' });
+    return;
+  }
+  res.json(diag);
+});
+
 export function startApiServer(port = 3333) {
   return app.listen(port, () => {
     console.log(`[Dispatch API] Listening on http://localhost:${port}`);
     console.log(`  POST /api/fix — spawn construction worker`);
     console.log(`  GET  /fix?linear=ISSUE-123&github_repo=owner/repo`);
+    console.log(`  GET  /api/diagnostics — all worker diagnostics`);
+    console.log(`  GET  /api/diagnostics/:worker_id — single worker`);
+    console.log(`  GET  /api/diagnostics/alerts — loop alerts`);
   });
 }
 
