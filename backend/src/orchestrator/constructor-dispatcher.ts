@@ -41,43 +41,47 @@ export async function runBlaxelConstructor(
       ttl: '30m',
     });
 
-    // Clone repo
-    console.log(`[Blaxel Constructor] Cloning ${bootstrap.github_repo} to /repo`);
-    await sandbox.process.exec({
-      name: 'git-clone',
-      command: `git clone ${cloneUrl} /repo`,
-      workingDir: '/',
-      waitForCompletion: true,
-      timeout: 120,
-      env: { GITHUB_TOKEN: githubToken },
-    });
-
-    // Upload backend (constructor + deps)
+    // Upload backend (constructor + deps) before running anything
     console.log(`[Blaxel Constructor] Uploading backend to sandbox`);
     await uploadDirectory(sandbox, options.backendDir, '/dispatch-backend');
 
-    // Write bootstrap
     await sandbox.fs.write('/dispatch/constructor-bootstrap.json', JSON.stringify(bootstrap, null, 2));
 
-    // Run constructor (cwd = cloned repo so fixes apply there)
+    // Launch constructor process — use waitForCompletion: false to avoid H2 10s timeout
+    // bug in Blaxel SDK where timeout causes a fallback re-POST, creating a duplicate process.
+    // Instead: start the process and poll manually with process.wait().
+    const procName = `dispatch-${Date.now()}`;
     console.log(`[Blaxel Constructor] Running constructor in sandbox`);
-    const execResult = await sandbox.process.exec({
-      name: 'constructor',
-      command: 'npx tsx /dispatch-backend/src/workers/constructor/cli.ts /dispatch/constructor-bootstrap.json',
-      workingDir: '/repo',
-      waitForCompletion: true,
-      timeout: 300,
+    const startedProcess = await sandbox.process.exec({
+      name: procName,
+      command: [
+        `git clone ${cloneUrl} /repo`,
+        'npm install --ignore-scripts --prefix /dispatch-backend',
+        'npx tsx /dispatch-backend/src/workers/constructor/cli.ts /dispatch/constructor-bootstrap.json',
+      ].join(' && '),
+      workingDir: '/',
+      waitForCompletion: false,
       env: {
         GITHUB_TOKEN: githubToken,
         LINEAR_API_KEY: process.env.LINEAR_API_KEY ?? '',
+        ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? '',
+        REPO_DIR: '/repo',
       },
     });
 
-    if (execResult.logs) {
-      console.log(`[Blaxel Constructor] logs: ${execResult.logs.slice(-800)}`);
+    // Poll until the process finishes (up to 8 minutes)
+    const execResult = await sandbox.process.wait(startedProcess.pid ?? procName, {
+      maxWait: 480_000,
+      interval: 3000,
+    });
+
+    // Fetch logs (wait() result may not include them)
+    const logs = execResult.logs || await sandbox.process.logs(startedProcess.pid ?? procName).catch(() => '');
+    if (logs) {
+      console.log(`[Blaxel Constructor] logs:\n${logs.slice(-3000)}`);
     }
 
-    // Read fix result
+    // Read fix result — written by CLI even on fix_failed; only missing on hard crash
     const resultJson = await sandbox.fs.read('/dispatch/fix-result.json');
     const result = JSON.parse(resultJson) as FixResult;
     console.log(`[Blaxel Constructor] Completed: ${result.status}`);

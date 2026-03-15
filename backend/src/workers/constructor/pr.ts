@@ -20,7 +20,7 @@ export async function createFixPR(
   const branch = `${bootstrap.pr_config.branch_prefix}-${vulnSlug}-${endpointSlug}-${branchSuffix}`;
 
   // Create branch and commit
-  const cwd = process.cwd();
+  const cwd = process.env.REPO_DIR || process.cwd();
   const fixesLine = issueNumber ? `\n\nFixes #${issueNumber}` : '';
   execSync(`git checkout -b ${branch}`, { cwd, stdio: 'pipe' });
   execSync(`git add -A`, { cwd, stdio: 'pipe' });

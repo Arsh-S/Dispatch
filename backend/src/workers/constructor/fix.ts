@@ -6,7 +6,8 @@ export async function applyFix(parsed: ParsedIssue, _bootstrap: ConstructorBoots
   const strategy = getStrategy(parsed.exploit_confidence, parsed.monkeypatch_status);
   console.log(`[Constructor Fix] Strategy: ${strategy}`);
 
-  const targetFile = path.resolve(parsed.location.file);
+  const repoDir = process.env.REPO_DIR || process.cwd();
+  const targetFile = path.resolve(repoDir, parsed.location.file);
 
   if (!fs.existsSync(targetFile)) {
     return { status: 'fix_failed', files_changed: [], notes: `Target file not found: ${targetFile}` };

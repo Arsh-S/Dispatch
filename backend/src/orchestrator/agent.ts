@@ -87,6 +87,7 @@ export async function runOrchestrator(options: OrchestratorOptions): Promise<Orc
     {
       onWorkerDispatched: (a) => writer.onWorkerDispatched(a),
       onWorkerComplete: (r) => writer.onWorkerComplete(r),
+      onDiagnosticsUpdate: (diag) => writer.onDiagnosticsUpdate(diag),
     },
   );
 
