@@ -912,6 +912,11 @@ const Index = () => {
                     <p className="mt-6 text-xl md:text-2xl leading-relaxed text-muted-foreground">
                       {card.description}
                     </p>
+                    {card.methodology && (
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground/70 font-mono bg-white/5 rounded-lg px-3 py-2">
+                        {card.methodology}
+                      </p>
+                    )}
 
                     <div className="mt-8 border-t border-border/60 pt-6">
                       <ul className="space-y-5">
