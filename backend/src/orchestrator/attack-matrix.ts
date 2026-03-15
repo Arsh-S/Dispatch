@@ -86,6 +86,20 @@ export function createTaskAssignments(
     // Config parsing failed, use defaults
   }
 
+  // Inject dispatch preload for Node targets so middleware captures logs to Datadog
+  if (appConfig.runtime === 'node') {
+    const preloadPath =
+      process.env.DISPATCH_PRELOAD_PATH ||
+      path.resolve(path.join(__dirname, '../../src/middleware/dispatch-preload.js'));
+    if (fs.existsSync(preloadPath)) {
+      // Transform start command to use preload (tsx/cjs for TypeScript support)
+      appConfig = {
+        ...appConfig,
+        start: `node -r ${preloadPath} -e "require('tsx/cjs').register(); require('./src/app.ts')"`,
+      };
+    }
+  }
+
   return matrix.map(cell => {
     const workerId = `worker-${cell.attack_type}-${cell.route.endpoint.split('/').pop()}-${uuidv4().slice(0, 3)}`;
 

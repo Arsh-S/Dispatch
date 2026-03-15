@@ -4,12 +4,11 @@ import { runPentesterWorker } from '../workers/pentester/agent';
 import { runClaudePentesterWorker } from '../workers/pentester/claude-agent';
 import { SandboxInstance } from '@blaxel/core';
 import { WorkerSupervisor } from '../diagnostics/worker-supervisor';
-import { LoopDetector } from '../diagnostics/loop-detector';
+import { LoopDetector } from '../diagnostics/loop-detector.js';
 import fs from 'fs';
 import path from 'path';
 import { DiagnosticsPoller } from '../diagnostics/poller.js';
 import { DiagnosticsAggregator } from '../diagnostics/aggregator.js';
-import { LoopDetector } from '../diagnostics/loop-detector.js';
 import type { AgentDiagnostics } from '../schemas/agent-diagnostics.js';
 import { forwardDiagnostics, forwardLoopAlert, clearThrottle } from '../integrations/datadog/diagnostics-forwarder.js';
 
@@ -319,6 +318,9 @@ async function runBlaxelWorker(
       JSON.stringify(assignment, null, 2),
     );
 
+    // Build env for sandbox (Datadog keys, etc.) so target app and worker get them
+    const sandboxEnv = buildSandboxEnv();
+
     // Install dependencies
     console.log(`[Blaxel] Installing dependencies in sandbox ${sandboxName}`);
     const installResult = await sandbox.process.exec({
@@ -327,6 +329,7 @@ async function runBlaxelWorker(
       workingDir: '/app',
       waitForCompletion: true,
       timeout: 120, // seconds
+      env: sandboxEnv,
     });
     if (installResult.logs) {
       console.log(`[Blaxel] Install output: ${installResult.logs.slice(0, 200)}`);
@@ -341,6 +344,7 @@ async function runBlaxelWorker(
         workingDir: '/app',
         waitForCompletion: true,
         timeout: 30, // seconds
+        env: sandboxEnv,
       });
     }
 
@@ -352,6 +356,7 @@ async function runBlaxelWorker(
       workingDir: '/app',
       waitForCompletion: true,
       timeout: 300, // 5 min per worker
+      env: sandboxEnv,
     });
 
     console.log(`[Blaxel] Worker ${assignment.worker_id} process completed`);
@@ -392,6 +397,29 @@ async function runBlaxelWorker(
       }
     }
   }
+}
+
+/**
+ * Build env vars to pass to Blaxel sandbox processes.
+ * Includes Datadog keys so target app and worker can forward logs/traces.
+ */
+function buildSandboxEnv(): Record<string, string> {
+  const keys = [
+    'DATADOG_API_KEY',
+    'DD_APPLICATION_KEY',
+    'DD_SITE',
+    'DD_ENV',
+    'DD_SERVICE',
+    'DD_AGENT_HOST',
+    'JWT_SECRET',
+    'PORT',
+  ];
+  const env: Record<string, string> = {};
+  for (const k of keys) {
+    const v = process.env[k];
+    if (v !== undefined && v !== '') env[k] = v;
+  }
+  return env;
 }
 
 /**
