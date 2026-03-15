@@ -6,6 +6,7 @@ import PaperBackground from '@/components/PaperBackground';
 import { LinesPatternCard, LinesPatternCardBody } from '@/components/ui/card-with-lines-pattern';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
+import dispatchWordmark from '../../../icons/dispatch-name-logo.png';
 
 const problemCards = [
   {
@@ -446,10 +447,10 @@ const Index = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const teamMembers = [
-    { name: 'Arsh Singh', detail: 'Computer Science @Cornell', initials: 'A', image: '/arsh.jpeg' },
-    { name: 'Mateo del Rio Lanse', detail: 'Electrical & Computer Engineering @Cornell', initials: 'M', image: '/Mateo_Headshot.jpeg' },
-    { name: 'Diya Sheth', detail: 'Mechanical Engineering @Cornell', initials: 'D', image: '/Diya_Headshot.jpeg' },
-    { name: 'Jimmy Mulosmani', detail: 'Computer Science @Cornell', initials: 'J', image: '/Jimmy_Headshot.jpeg' },
+    { name: 'Arsh Singh', role: 'Computer Science', initials: 'A', image: '/arsh.jpeg' },
+    { name: 'Mateo del Rio Lanse', role: 'Electrical & Computer Engineering', initials: 'M', image: '/Mateo_Headshot.jpeg' },
+    { name: 'Diya Sheth', role: 'Mechanical Engineering', initials: 'D', image: '/Diya_Headshot.jpeg' },
+    { name: 'Jimmy Mulosmani', role: 'Computer Science', initials: 'J', image: '/Jimmy_Headshot.jpeg' },
   ];
 
   useEffect(() => {
@@ -489,28 +490,35 @@ const Index = () => {
     <div className="relative min-h-screen">
       <PaperBackground />
 
+      <div className="fixed left-8 top-8 z-50">
+        <img
+          src={dispatchWordmark}
+          alt="Dispatch logo"
+          className="h-10 w-auto object-contain shadow-[0_18px_40px_rgba(0,0,0,0.28)] md:h-12"
+        />
+      </div>
+
       <div className="fixed top-8 left-1/2 z-50 -translate-x-1/2">
         <PillBase activeSection={activeSection} onSectionClick={scrollToSection} />
       </div>
 
       <div ref={scrollContainerRef} className="snap-y snap-mandatory h-screen overflow-y-scroll relative">
-        <Section id="home" className="bg-transparent">
+        <Section id="home" className="bg-transparent" contentClassName="max-w-7xl py-16 lg:py-20">
           <div className="space-y-12">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="text-center space-y-6"
+              className="mx-auto max-w-6xl text-center"
             >
-              <h1 className="text-8xl md:text-9xl font-bold text-foreground tracking-tight">
-                {t('home.title')}
-              </h1>
-              <p className="text-2xl md:text-3xl text-muted-foreground font-light max-w-3xl mx-auto">
-                {t('home.subtitle')}
-              </p>
+              <img
+                src={dispatchWordmark}
+                alt={t('home.title')}
+                className="mx-auto w-full max-w-[32rem] sm:max-w-[38rem] md:max-w-[44rem] xl:max-w-[52rem] object-contain drop-shadow-[0_28px_50px_rgba(0,0,0,0.3)]"
+              />
             </motion.div>
 
-            <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-8 max-w-6xl mx-auto mt-16">
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4 max-w-7xl mx-auto mt-14">
               {teamMembers.map((member, index) => (
                 <motion.div
                   key={member.name}
@@ -518,30 +526,52 @@ const Index = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 + index * 0.15 }}
                 >
-                  <LinesPatternCard className="rounded-2xl shadow-xl h-80">
-                    <LinesPatternCardBody className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/5">
-                      <div className="text-center space-y-4 p-6 flex flex-col items-center">
+                  <LinesPatternCard
+                    className="h-[24rem] rounded-[2rem] shadow-2xl"
+                    patternClassName="h-full overflow-hidden rounded-[1.25rem]"
+                    gradientClassName="h-full overflow-hidden rounded-[1.25rem]"
+                  >
+                    <LinesPatternCardBody className="h-full rounded-[1.25rem] bg-gradient-to-br from-primary/10 to-secondary/5 p-0 md:p-0">
+                      <div className="flex h-full flex-col items-center px-5 py-8 text-center sm:px-6">
                         {member.image ? (
-                          <div className="w-32 h-32 rounded-full overflow-hidden border border-primary/20 shadow-sm">
-                            <img
-                              src={member.image}
-                              alt={member.name}
-                              className="w-full h-full object-cover"
-                            />
+                          <div className="flex h-36 items-center justify-center">
+                            <div className="h-32 w-32 overflow-hidden rounded-full border border-primary/20 shadow-sm">
+                              <img
+                                src={member.image}
+                                alt={member.name}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
                           </div>
                         ) : (
-                          <div className="w-32 h-32 rounded-full border border-primary/20 bg-background/80 flex items-center justify-center text-3xl font-bold text-primary shadow-sm">
-                            {member.initials}
+                          <div className="flex h-36 items-center justify-center">
+                            <div className="flex h-32 w-32 items-center justify-center rounded-full border border-primary/20 bg-background/80 text-3xl font-bold text-primary shadow-sm">
+                              {member.initials}
+                            </div>
                           </div>
                         )}
-                        <p className="text-lg text-foreground font-semibold">{member.name}</p>
-                        <p className="text-sm text-muted-foreground">{member.detail}</p>
+                        <div className="mt-6 flex min-h-[7.5rem] w-full flex-col items-center">
+                          <p className="text-xl leading-tight text-foreground font-semibold">{member.name}</p>
+                          <p className="mt-3 w-full text-[0.95rem] leading-tight text-muted-foreground">{member.role}</p>
+                          <p className="mt-2 text-sm font-bold tracking-wide text-foreground">
+                            Cornell University
+                          </p>
+                        </div>
                       </div>
                     </LinesPatternCardBody>
                   </LinesPatternCard>
                 </motion.div>
               ))}
             </div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="mx-auto mt-10 w-fit whitespace-nowrap text-center text-xl font-light leading-none text-muted-foreground md:text-2xl xl:text-[2rem]"
+            >
+              {t('home.subtitle')}
+            </motion.p>
           </div>
         </Section>
 
@@ -602,9 +632,6 @@ const Index = () => {
                   text={'(Invicti, 2025; IBM, 2025).'}
                   className="text-center !mt-2"
                 />
-              </div>
-              <div className="absolute left-1/2 top-full flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#183126] text-2xl text-foreground/90 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
-                ↓
               </div>
             </motion.div>
           </div>

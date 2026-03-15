@@ -6,27 +6,14 @@ interface NavItem {
   id: string
 }
 
-export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: string) => void }> = ({ 
+export const PillBase: React.FC<{ activeSection: string; navItems: NavItem[]; onSectionClick: (id: string) => void }> = ({ 
   activeSection, 
+  navItems,
   onSectionClick 
 }) => {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const prevSectionRef = useRef('home')
-  
-  const navItems: NavItem[] = [
-    { label: 'Home', id: 'home' },
-    { label: 'Problem', id: 'problem' },
-    { label: 'Pre-Recon', id: 'clinical' },
-    { label: 'Architecture', id: 'solution' },
-    { label: 'Workflow', id: 'how-it-works' },
-    { label: 'Outputs', id: 'dashboard' },
-    { label: 'Fix Loop', id: 'muscle' },
-    { label: 'Summary', id: 'summary' },
-    { label: 'Business', id: 'business-model' },
-    { label: 'Market', id: 'market-size' },
-    { label: 'Competition', id: 'competition' },
-  ]
 
   const pillWidth = useSpring(1200, { stiffness: 220, damping: 25, mass: 1 })
   const pillShift = useSpring(0, { stiffness: 220, damping: 25, mass: 1 })
@@ -40,8 +27,6 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
       setIsTransitioning(false)
     }, 400)
   }
-
-  const activeItem = navItems.find(item => item.id === activeSection)
 
   return (
     <motion.nav
