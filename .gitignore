@@ -32,6 +32,10 @@ npm-debug.log*
 dvna-target/
 flask-target/
 
+# Generated artifacts
+dispatch-output.json
+**/dispatch-output.json
+
 # Misc
 coverage/
 .nyc_output/
