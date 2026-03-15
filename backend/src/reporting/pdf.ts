@@ -21,24 +21,70 @@ interface FontConfig {
   mono: string;
 }
 
-// Colors - refined palette
+// ---------------------------------------------------------------------------
+// Design System - Matching Frontend (globals.css)
+// ---------------------------------------------------------------------------
+// Converted from OKLCH to Hex for PDFKit compatibility
+
 const COLORS = {
-  CRITICAL: '#DC2626',
-  HIGH: '#EA580C',
-  MEDIUM: '#D97706',
-  LOW: '#059669',
-  header: '#0F172A',
-  subheader: '#3730A3',
-  text: '#1E293B',
-  muted: '#64748B',
-  light: '#94A3B8',
-  bg: '#F8FAFC',
-  codeBg: '#F1F5F9',
-  accent: '#6366F1',
-  border: '#E2E8F0',
-  white: '#FFFFFF',
+  // Primary - Teal accent (oklch(0.8348 0.1302 160.9080))
+  primary: '#2DD4BF',
+  primaryDark: '#14B8A6',
+  primaryLight: '#99F6E4',
+  primaryForeground: '#134E4A',
+
+  // Destructive - Red (oklch(0.62 0.17 32.7272))
+  destructive: '#EF4444',
+  destructiveLight: '#FEE2E2',
+  destructiveDark: '#DC2626',
+
+  // Backgrounds
+  background: '#FAFAFA',
+  foreground: '#171717',
+  card: '#FFFFFF',
+  cardBorder: '#E5E5E5',
+
+  // Muted
+  muted: '#F5F5F5',
+  mutedForeground: '#737373',
+
+  // Text hierarchy
+  text: '#171717',
+  textSecondary: '#525252',
+  textMuted: '#737373',
+  textLight: '#A3A3A3',
+
+  // Accents
+  accent: '#D1FAE5',
+  accentForeground: '#065F46',
+
+  // Borders
+  border: '#E5E5E5',
+  borderLight: '#F5F5F5',
+
+  // Code blocks
+  codeBg: '#F5F5F5',
+  codeText: '#374151',
+
+  // Links
+  link: '#0EA5E9',
+
+  // Severity colors matching frontend SeverityBadge.tsx:
+  // - low/medium: bg-muted/50 text-muted-foreground (gray)
+  // - high/critical: bg-destructive/10 text-destructive (red)
+  severity: {
+    critical: { bg: '#FEE2E2', text: '#DC2626', accent: '#EF4444' },
+    high: { bg: '#FEE2E2', text: '#DC2626', accent: '#F87171' },
+    medium: { bg: '#F5F5F5', text: '#737373', accent: '#A3A3A3' },
+    low: { bg: '#F5F5F5', text: '#737373', accent: '#D4D4D4' },
+  },
+
+  // Success (for clean endpoints)
   success: '#10B981',
-  link: '#2563EB',
+  successLight: '#D1FAE5',
+
+  // White
+  white: '#FFFFFF',
 } as const;
 
 /** Exported for unit testing. */
@@ -53,17 +99,10 @@ export function githubFileUrl(
   return `${base}#L${line}`;
 }
 
-const SEVERITY_LABELS: Record<string, string> = {
-  CRITICAL: 'CRITICAL',
-  HIGH: 'HIGH',
-  MEDIUM: 'MEDIUM',
-  LOW: 'LOW',
-};
-
 // Page layout constants
 const PAGE_WIDTH = 595.28; // A4 width in points
 const PAGE_HEIGHT = 841.89; // A4 height in points
-const MARGIN = 50;
+const MARGIN = 48;
 const CONTENT_WIDTH = PAGE_WIDTH - (MARGIN * 2);
 const FOOTER_HEIGHT = 40;
 
@@ -76,7 +115,7 @@ export async function generatePdfReport(
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: 'A4',
-      bufferPages: true,
+      bufferPages: false,
       margins: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN },
       info: {
         Title: `Dispatch Security Report — ${scanResult.dispatch_run_id}`,
@@ -126,8 +165,8 @@ export async function generatePdfReport(
       drawSectionHeader(doc, 'Critical & High Severity Findings', fonts);
 
       for (let i = 0; i < criticalHighFindings.length; i++) {
-        // Check if we need a new page (leave room for at least 250pt of content)
-        if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 250) {
+        // Check if we need a new page
+        if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 280) {
           doc.addPage();
         }
         drawFindingFull(doc, criticalHighFindings[i], i + 1, opts, fonts);
@@ -140,17 +179,15 @@ export async function generatePdfReport(
     );
 
     if (mediumLowFindings.length > 0) {
-      // Check if we need a new page
-      if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 200) {
+      if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 180) {
         doc.addPage();
       } else {
-        doc.moveDown(2);
+        doc.moveDown(1.5);
       }
       drawSectionHeader(doc, 'Medium & Low Severity Findings', fonts);
 
       for (let i = 0; i < mediumLowFindings.length; i++) {
-        // Check if we need a new page
-        if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 120) {
+        if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 100) {
           doc.addPage();
         }
         drawFindingCondensed(doc, mediumLowFindings[i], i + 1, opts, fonts);
@@ -159,23 +196,17 @@ export async function generatePdfReport(
 
     // Clean Endpoints appendix
     if (scanResult.clean_endpoints.length > 0) {
-      if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 150) {
+      if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 120) {
         doc.addPage();
       } else {
-        doc.moveDown(2);
+        doc.moveDown(1.5);
       }
       drawSectionHeader(doc, 'Clean Endpoints', fonts);
       drawCleanEndpoints(doc, scanResult, fonts);
     }
 
-    // Footer on each page
-    const range = doc.bufferedPageRange();
-    const totalPages = range.count;
-    for (let i = 0; i < totalPages; i++) {
-      doc.switchToPage(range.start + i);
-      drawPageFooter(doc, i + 1, totalPages, scanResult.dispatch_run_id, fonts);
-    }
-    doc.flushPages();
+    // Note: Without buffered pages, we can't add footers to all pages
+    // This is a trade-off to avoid the extra pages bug
 
     doc.end();
 
@@ -191,21 +222,21 @@ export async function generatePdfReport(
 function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, options: Partial<PdfReportOptions> = {}, fonts: FontConfig) {
   const x = MARGIN;
 
-  // Title banner
-  const bannerHeight = 80;
-  doc.rect(x, doc.y, CONTENT_WIDTH, bannerHeight).fill(COLORS.header);
+  // Header with teal accent bar
+  doc.rect(x, doc.y, CONTENT_WIDTH, 4).fill(COLORS.primary);
+  doc.y += 20;
 
-  doc.font(fonts.bold).fontSize(32).fillColor(COLORS.white);
-  doc.text('DISPATCH', x + 24, doc.y + 18, { lineBreak: false });
+  // Title
+  doc.font(fonts.bold).fontSize(28).fillColor(COLORS.foreground);
+  doc.text('DISPATCH', x);
+  doc.font(fonts.regular).fontSize(12).fillColor(COLORS.textMuted);
+  doc.text('Security Scan Report', x);
+  doc.moveDown(1.2);
 
-  doc.font(fonts.regular).fontSize(12).fillColor('#A5B4FC');
-  doc.text('Security Scan Report', x + 24, doc.y + 54, { lineBreak: false });
+  // Run metadata in a subtle box
+  const metaY = doc.y;
+  doc.rect(x, metaY, CONTENT_WIDTH, 50).fill(COLORS.muted);
 
-  // Accent line
-  doc.rect(x, doc.y + bannerHeight, CONTENT_WIDTH, 3).fill(COLORS.accent);
-  doc.y = doc.y + bannerHeight + 24;
-
-  // Run metadata
   const d = new Date(report.completed_at);
   const formatted = d.toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric',
@@ -213,186 +244,217 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
     hour: 'numeric', minute: '2-digit', hour12: true,
   });
 
-  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.muted);
-  doc.text(`Run ID: ${report.dispatch_run_id}`, x);
-  doc.moveDown(0.3);
-  doc.text(`Completed: ${formatted}`);
-  doc.moveDown(0.3);
-  doc.text(`Duration: ${report.duration_seconds}s  •  Workers: ${report.total_workers}`);
-  doc.moveDown(1.5);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text(`Run ID`, x + 16, metaY + 12);
+  doc.font(fonts.mono).fontSize(9).fillColor(COLORS.text);
+  doc.text(report.dispatch_run_id, x + 16, metaY + 24);
 
-  // Two-column layout for stats
-  const colWidth = (CONTENT_WIDTH - 20) / 2;
-  const statsY = doc.y;
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text(`Completed`, x + 180, metaY + 12);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
+  doc.text(formatted, x + 180, metaY + 24);
 
-  // Left column: Risk Score
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text(`Duration`, x + 380, metaY + 12);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
+  doc.text(`${report.duration_seconds}s  •  ${report.total_workers} workers`, x + 380, metaY + 24);
+
+  doc.y = metaY + 65;
+
+  // Risk score and severity in cards
+  const cardHeight = 100;
+  const cardGap = 16;
+  const cardWidth = (CONTENT_WIDTH - cardGap) / 2;
+  const cardY = doc.y; // Save Y position for both cards
+
+  // Left card: Risk Score
   const riskScore = computeRiskScore(report);
-  const riskLabel = riskScore >= 8 ? 'CRITICAL' : riskScore >= 5 ? 'HIGH' : riskScore >= 2 ? 'MEDIUM' : 'LOW';
-  const riskColor = riskScore >= 8 ? COLORS.CRITICAL : riskScore >= 5 ? COLORS.HIGH : riskScore >= 2 ? COLORS.MEDIUM : COLORS.LOW;
+  const riskLevel = riskScore >= 8 ? 'critical' : riskScore >= 5 ? 'high' : riskScore >= 2 ? 'medium' : 'low';
+  const riskColors = COLORS.severity[riskLevel];
 
-  // Risk score box
-  doc.rect(x, statsY, colWidth, 90).fill('#F8FAFC').stroke(COLORS.border);
-  doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.muted);
-  doc.text('OVERALL RISK SCORE', x + 16, statsY + 12);
+  drawCard(doc, x, cardY, cardWidth, cardHeight);
+  doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('RISK SCORE', x + 20, cardY + 16, { lineBreak: false });
 
-  doc.font(fonts.bold).fontSize(42).fillColor(riskColor);
-  doc.text(`${riskScore.toFixed(1)}`, x + 16, statsY + 30);
+  doc.font(fonts.bold).fontSize(48).fillColor(riskColors.text);
+  doc.text(riskScore.toFixed(1), x + 20, cardY + 36, { lineBreak: false });
 
-  doc.font(fonts.semiBold).fontSize(14).fillColor(riskColor);
-  doc.text(riskLabel, x + 100, statsY + 48);
+  doc.font(fonts.semiBold).fontSize(11).fillColor(riskColors.text);
+  doc.text(riskLevel.toUpperCase(), x + 110, cardY + 58, { lineBreak: false });
 
-  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.muted);
-  doc.text('out of 10', x + 16, statsY + 72);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text('out of 10', x + 20, cardY + 82, { lineBreak: false });
 
-  // Right column: Severity breakdown
-  const rightX = x + colWidth + 20;
-  doc.rect(rightX, statsY, colWidth, 90).fill('#F8FAFC').stroke(COLORS.border);
-  doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.muted);
-  doc.text('SEVERITY BREAKDOWN', rightX + 16, statsY + 12);
+  // Right card: Severity Breakdown
+  const rightX = x + cardWidth + cardGap;
+  drawCard(doc, rightX, cardY, cardWidth, cardHeight);
+  doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('SEVERITY BREAKDOWN', rightX + 20, cardY + 16, { lineBreak: false });
 
   const severities = [
-    { label: 'Critical', count: report.summary.critical, color: COLORS.CRITICAL },
-    { label: 'High', count: report.summary.high, color: COLORS.HIGH },
-    { label: 'Medium', count: report.summary.medium, color: COLORS.MEDIUM },
-    { label: 'Low', count: report.summary.low, color: COLORS.LOW },
+    { label: 'Critical', count: report.summary.critical, colors: COLORS.severity.critical },
+    { label: 'High', count: report.summary.high, colors: COLORS.severity.high },
+    { label: 'Medium', count: report.summary.medium, colors: COLORS.severity.medium },
+    { label: 'Low', count: report.summary.low, colors: COLORS.severity.low },
   ];
 
-  let sevY = statsY + 32;
-  const barMaxWidth = colWidth - 100;
+  let sevY = cardY + 36;
+  const barMaxWidth = cardWidth - 100;
   const maxCount = Math.max(1, ...severities.map(s => s.count));
 
   for (const sev of severities) {
-    doc.font(fonts.regular).fontSize(8).fillColor(COLORS.text);
-    doc.text(sev.label, rightX + 16, sevY, { width: 45, lineBreak: false });
+    doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
+    doc.text(sev.label, rightX + 20, sevY, { lineBreak: false });
 
-    const barWidth = Math.max(4, (sev.count / maxCount) * barMaxWidth * 0.8);
-    doc.rect(rightX + 65, sevY + 1, barWidth, 8).fill(sev.color);
+    const barWidth = Math.max(6, (sev.count / maxCount) * barMaxWidth * 0.7);
+    doc.roundedRect(rightX + 75, sevY + 2, barWidth, 10, 2).fill(sev.colors.accent);
 
-    doc.font(fonts.bold).fontSize(8).fillColor(COLORS.text);
-    doc.text(`${sev.count}`, rightX + 70 + barWidth, sevY, { lineBreak: false });
-    sevY += 14;
+    doc.font(fonts.bold).fontSize(9).fillColor(COLORS.text);
+    doc.text(`${sev.count}`, rightX + 80 + barWidth, sevY, { lineBreak: false });
+    sevY += 16;
   }
 
-  doc.y = statsY + 105;
+  doc.y = cardY + cardHeight + 20;
 
-  // Endpoint coverage
+  // Endpoint coverage - horizontal stats
   doc.font(fonts.semiBold).fontSize(11).fillColor(COLORS.text);
-  doc.text('Endpoint Coverage', x);
-  doc.moveDown(0.5);
+  doc.text('Endpoint Coverage', x, doc.y, { lineBreak: false });
 
-  const endpointStats = [
-    { label: 'Total Tested', value: report.summary.total_endpoints, color: COLORS.text },
-    { label: 'Vulnerable', value: report.summary.vulnerable_endpoints, color: COLORS.CRITICAL },
-    { label: 'Clean', value: report.summary.clean_endpoints, color: COLORS.success },
-  ];
+  const statsY = doc.y + 20;
+  const statWidth = CONTENT_WIDTH / 3;
 
-  const statsRowY = doc.y;
-  let epX = x;
-  for (const stat of endpointStats) {
-    doc.font(fonts.bold).fontSize(20).fillColor(stat.color);
-    doc.text(`${stat.value}`, epX, statsRowY, { lineBreak: false, continued: false });
-    const numWidth = doc.widthOfString(`${stat.value}`);
-    doc.font(fonts.regular).fontSize(9).fillColor(COLORS.muted);
-    doc.text(stat.label, epX + numWidth + 6, statsRowY + 6, { lineBreak: false, continued: false });
-    epX += 140;
-  }
-  doc.y = statsRowY + 30;
-  doc.moveDown(1);
+  // Total
+  doc.font(fonts.bold).fontSize(32).fillColor(COLORS.text);
+  doc.text(`${report.summary.total_endpoints}`, x, statsY, { lineBreak: false });
+  doc.font(fonts.regular).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('Total Tested', x, statsY + 36, { lineBreak: false });
+
+  // Vulnerable
+  doc.font(fonts.bold).fontSize(32).fillColor(COLORS.destructive);
+  doc.text(`${report.summary.vulnerable_endpoints}`, x + statWidth, statsY, { lineBreak: false });
+  doc.font(fonts.regular).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('Vulnerable', x + statWidth, statsY + 36, { lineBreak: false });
+
+  // Clean
+  doc.font(fonts.bold).fontSize(32).fillColor(COLORS.success);
+  doc.text(`${report.summary.clean_endpoints}`, x + statWidth * 2, statsY, { lineBreak: false });
+  doc.font(fonts.regular).fontSize(10).fillColor(COLORS.textMuted);
+  doc.text('Clean', x + statWidth * 2, statsY + 36, { lineBreak: false });
+
+  doc.y = statsY + 60;
 
   // Finding summary table
   if (report.findings.length > 0) {
     doc.font(fonts.semiBold).fontSize(11).fillColor(COLORS.text);
-    doc.text('Finding Summary', x);
-    doc.moveDown(0.8);
+    doc.text('Finding Summary', x, doc.y, { lineBreak: false });
 
-    // Table header
-    const tableY = doc.y;
-    doc.rect(x, tableY, CONTENT_WIDTH, 20).fill('#F1F5F9');
+    const tableStartY = doc.y + 20;
+    const colWidths = [30, 70, 130, 200, 65];
+    const rowHeight = 28;
 
-    doc.font(fonts.semiBold).fontSize(8).fillColor(COLORS.muted);
-    doc.text('#', x + 8, tableY + 6, { lineBreak: false });
-    doc.text('SEVERITY', x + 30, tableY + 6, { lineBreak: false });
-    doc.text('TYPE', x + 95, tableY + 6, { lineBreak: false });
-    doc.text('LOCATION', x + 200, tableY + 6, { lineBreak: false });
-    doc.text('ISSUE', x + 420, tableY + 6, { lineBreak: false });
+    // Header row
+    doc.rect(x, tableStartY, CONTENT_WIDTH, rowHeight).fill(COLORS.muted);
+    doc.font(fonts.semiBold).fontSize(8).fillColor(COLORS.textMuted);
 
-    doc.y = tableY + 22;
+    let colX = x + 10;
+    doc.text('#', colX, tableStartY + 10, { lineBreak: false });
+    colX += colWidths[0];
+    doc.text('SEVERITY', colX, tableStartY + 10, { lineBreak: false });
+    colX += colWidths[1];
+    doc.text('TYPE', colX, tableStartY + 10, { lineBreak: false });
+    colX += colWidths[2];
+    doc.text('LOCATION', colX, tableStartY + 10, { lineBreak: false });
+    colX += colWidths[3];
+    doc.text('ISSUE', colX, tableStartY + 10, { lineBreak: false });
 
-    const ref = options?.githubRef || 'main';
-    const displayFindings = report.findings.slice(0, 10);
+    doc.y = tableStartY + rowHeight;
+
+    const displayFindings = report.findings.slice(0, 8);
 
     for (let i = 0; i < displayFindings.length; i++) {
       const f = displayFindings[i];
       const rowY = doc.y;
+      const sevColors = COLORS.severity[f.severity.toLowerCase() as keyof typeof COLORS.severity] || COLORS.severity.medium;
 
-      // Alternating row background
-      if (i % 2 === 1) {
-        doc.rect(x, rowY, CONTENT_WIDTH, 22).fill('#FAFAFA');
+      // Row background
+      if (i % 2 === 0) {
+        doc.rect(x, rowY, CONTENT_WIDTH, rowHeight).fill(COLORS.white);
+      } else {
+        doc.rect(x, rowY, CONTENT_WIDTH, rowHeight).fill('#FAFAFA');
       }
 
-      // Row content - use absolute positioning for each cell
-      const cellY = rowY + 6;
+      // Bottom border
+      doc.rect(x, rowY + rowHeight - 1, CONTENT_WIDTH, 1).fill(COLORS.borderLight);
 
-      doc.font(fonts.regular).fontSize(8).fillColor(COLORS.text);
-      doc.text(`${i + 1}`, x + 8, cellY, { lineBreak: false, continued: false });
+      const cellY = rowY + 9;
+      colX = x + 10;
+
+      // Number
+      doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+      doc.text(`${i + 1}`, colX, cellY, { lineBreak: false });
+      colX += colWidths[0];
 
       // Severity badge
-      const sevColor = COLORS[f.severity as keyof typeof COLORS] || COLORS.MEDIUM;
-      doc.font(fonts.bold).fontSize(7).fillColor(sevColor);
-      doc.text(f.severity, x + 30, cellY, { lineBreak: false, continued: false });
+      const badgeWidth = 55;
+      doc.roundedRect(colX, cellY - 2, badgeWidth, 16, 3).fill(sevColors.bg);
+      doc.font(fonts.semiBold).fontSize(7).fillColor(sevColors.text);
+      doc.text(f.severity, colX + 4, cellY + 2, { lineBreak: false });
+      colX += colWidths[1];
 
-      // Vuln type
-      doc.font(fonts.regular).fontSize(8).fillColor(COLORS.text);
-      const vulnType = f.vuln_type.length > 18 ? f.vuln_type.slice(0, 16) + '…' : f.vuln_type;
-      doc.text(vulnType.toUpperCase(), x + 95, cellY, { lineBreak: false, continued: false });
+      // Type
+      doc.font(fonts.regular).fontSize(9).fillColor(COLORS.text);
+      const vulnType = f.vuln_type.length > 20 ? f.vuln_type.slice(0, 18) + '…' : f.vuln_type;
+      doc.text(vulnType, colX, cellY, { lineBreak: false });
+      colX += colWidths[2];
 
       // Location
       const locDisplay = f.location.line > 0
         ? `${f.location.file}:${f.location.line}`
         : f.location.file;
-      const locTruncated = locDisplay.length > 35
-        ? '…' + locDisplay.slice(-33)
-        : locDisplay;
+      const locTruncated = locDisplay.length > 32 ? '…' + locDisplay.slice(-30) : locDisplay;
+      doc.font(fonts.mono).fontSize(8).fillColor(COLORS.link);
+      doc.text(locTruncated, colX, cellY, { lineBreak: false });
+      colX += colWidths[3];
 
-      doc.font(fonts.mono).fontSize(7).fillColor(options?.githubRepo ? COLORS.link : COLORS.text);
-      doc.text(locTruncated, x + 200, cellY, { lineBreak: false, continued: false });
-
-      // Issue link
+      // Issue
       const issue = options?.createdIssues?.get(f.finding_id);
       if (issue) {
-        doc.font(fonts.regular).fontSize(8).fillColor(COLORS.link);
-        doc.text(`#${issue.number}`, x + 420, cellY, { lineBreak: false, continued: false });
+        doc.font(fonts.semiBold).fontSize(9).fillColor(COLORS.link);
+        doc.text(`#${issue.number}`, colX, cellY, { lineBreak: false });
       } else {
-        doc.font(fonts.regular).fontSize(8).fillColor(COLORS.light);
-        doc.text('—', x + 420, cellY, { lineBreak: false, continued: false });
+        doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textLight);
+        doc.text('—', colX, cellY, { lineBreak: false });
       }
 
-      doc.y = rowY + 22;
+      doc.y = rowY + rowHeight;
     }
 
-    if (report.findings.length > 10) {
+    if (report.findings.length > 8) {
       doc.moveDown(0.3);
-      doc.font(fonts.regular).fontSize(8).fillColor(COLORS.muted);
-      doc.text(`+ ${report.findings.length - 10} more findings (see details below)`, x);
+      doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+      doc.text(`+ ${report.findings.length - 8} more findings`, x);
     }
   }
 
-  // Worker errors (if any)
+  // Worker errors
   if (report.worker_errors.length > 0) {
-    doc.moveDown(1.5);
-    doc.rect(x, doc.y, CONTENT_WIDTH, 1).fill(COLORS.border);
     doc.moveDown(1);
 
-    doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.CRITICAL);
-    doc.text(`⚠ Worker Errors (${report.worker_errors.length})`, x);
-    doc.moveDown(0.5);
+    const errY = doc.y;
+    doc.rect(x, errY, CONTENT_WIDTH, 40 + (report.worker_errors.length * 16)).fill(COLORS.destructiveLight);
 
+    doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.destructive);
+    doc.text(`Worker Errors (${report.worker_errors.length})`, x + 12, errY + 10);
+
+    let errLineY = errY + 28;
     for (const err of report.worker_errors.slice(0, 3)) {
-      doc.font(fonts.mono).fontSize(8).fillColor(COLORS.muted);
-      const errText = err.error.length > 80 ? err.error.slice(0, 77) + '...' : err.error;
-      doc.text(`${err.worker_id}: ${errText}`, x + 8, doc.y, { width: CONTENT_WIDTH - 16 });
-      doc.moveDown(0.3);
+      doc.font(fonts.mono).fontSize(8).fillColor(COLORS.destructiveDark);
+      const errText = err.error.length > 70 ? err.error.slice(0, 67) + '...' : err.error;
+      doc.text(`${err.worker_id}: ${errText}`, x + 12, errLineY);
+      errLineY += 14;
     }
+
+    doc.y = errLineY + 8;
   }
 }
 
@@ -403,162 +465,144 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
 function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig) {
   const f = fonts ?? { regular: 'Helvetica', bold: 'Helvetica-Bold', semiBold: 'Helvetica-Bold', mono: 'Courier' };
   const x = MARGIN;
-  const severityColor = COLORS[finding.severity as keyof typeof COLORS] || COLORS.MEDIUM;
+  const sevColors = COLORS.severity[finding.severity.toLowerCase() as keyof typeof COLORS.severity] || COLORS.severity.medium;
 
-  doc.moveDown(0.5);
-
-  // Card container with left border
   const cardStartY = doc.y;
-  doc.rect(x, cardStartY, 4, 0).fill(severityColor); // Will extend later
 
-  // Header row
-  const headerX = x + 16;
-  doc.font(f.bold).fontSize(12).fillColor(COLORS.text);
-  doc.text(`${index}. ${finding.vuln_type.toUpperCase()}`, headerX, doc.y);
+  // Card background
+  doc.rect(x, cardStartY, CONTENT_WIDTH, 4).fill(sevColors.accent);
 
-  // Severity badge (right aligned)
+  // Content area
+  const contentX = x + 16;
+  const contentWidth = CONTENT_WIDTH - 32;
+  doc.y = cardStartY + 16;
+
+  // Header: number, title, badge
+  doc.font(f.bold).fontSize(13).fillColor(COLORS.text);
+  doc.text(`${index}. ${finding.vuln_type}`, contentX, doc.y, { width: contentWidth - 80 });
+
+  // Severity badge
   const badgeX = x + CONTENT_WIDTH - 70;
-  doc.roundedRect(badgeX, cardStartY, 60, 18, 3).fill(severityColor);
-  doc.font(f.bold).fontSize(8).fillColor(COLORS.white);
-  doc.text(finding.severity, badgeX, cardStartY + 5, { width: 60, align: 'center' });
+  doc.roundedRect(badgeX, cardStartY + 14, 58, 20, 4).fill(sevColors.bg);
+  doc.font(f.bold).fontSize(9).fillColor(sevColors.text);
+  doc.text(finding.severity, badgeX + 6, cardStartY + 20);
 
-  // Issue link (if exists)
-  const issue = options?.createdIssues?.get(finding.finding_id);
-  if (issue) {
-    doc.font(f.regular).fontSize(8).fillColor(COLORS.link);
-    doc.text(`Issue #${issue.number}`, badgeX - 80, cardStartY + 5, { link: issue.url, underline: true });
-  }
+  doc.moveDown(0.6);
 
-  doc.moveDown(0.8);
-
-  // Location info
+  // Location
   doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
-  doc.text(`${finding.location.method} ${finding.location.endpoint}`, headerX);
-  doc.moveDown(0.3);
+  doc.text(`${finding.location.method} ${finding.location.endpoint}`, contentX);
+  doc.moveDown(0.2);
 
   const fileRef = finding.location.line > 0
     ? `${finding.location.file}:${finding.location.line}`
     : finding.location.file;
 
-  if (options?.githubRepo) {
-    const url = githubFileUrl(
-      options.githubRepo,
-      options.githubRef || 'main',
-      finding.location.file,
-      finding.location.line,
-    );
-    doc.font(f.mono).fontSize(9).fillColor(COLORS.link);
-    doc.text(fileRef, headerX, doc.y, { link: url, underline: true });
-  } else {
-    doc.font(f.mono).fontSize(9).fillColor(COLORS.muted);
-    doc.text(fileRef, headerX);
-  }
+  doc.font(f.mono).fontSize(9).fillColor(COLORS.link);
+  doc.text(fileRef, contentX);
 
   if (finding.location.parameter) {
-    doc.font(f.regular).fontSize(9).fillColor(COLORS.muted);
-    doc.text(`Parameter: ${finding.location.parameter}`, headerX);
+    doc.font(f.regular).fontSize(9).fillColor(COLORS.textMuted);
+    doc.text(`Parameter: ${finding.location.parameter}`, contentX);
   }
   doc.moveDown(0.5);
 
-  // Metadata chips
+  // Metadata line
   const metaParts: string[] = [];
   if (finding.cvss_score) metaParts.push(`CVSS ${finding.cvss_score}`);
   if (finding.owasp) metaParts.push(finding.owasp);
-  metaParts.push(finding.exploit_confidence === 'confirmed' ? '✓ Confirmed' : 'Unconfirmed');
-  if (finding.monkeypatch.status === 'validated') metaParts.push('✓ Patch Validated');
+  metaParts.push(finding.exploit_confidence === 'confirmed' ? 'Confirmed' : 'Unconfirmed');
+  if (finding.monkeypatch.status === 'validated') metaParts.push('Patch Validated');
 
-  doc.font(f.regular).fontSize(8).fillColor(COLORS.muted);
-  doc.text(metaParts.join('  •  '), headerX);
+  doc.font(f.regular).fontSize(8).fillColor(COLORS.textMuted);
+  doc.text(metaParts.join('  •  '), contentX);
   doc.moveDown(0.8);
 
   // Description
-  doc.font(f.semiBold).fontSize(9).fillColor(COLORS.subheader);
-  doc.text('Description', headerX);
+  doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+  doc.text('Description', contentX);
   doc.moveDown(0.3);
-  doc.font(f.regular).fontSize(9).fillColor(COLORS.text);
-  doc.text(finding.description, headerX, doc.y, { width: CONTENT_WIDTH - 32 });
+  doc.font(f.regular).fontSize(9).fillColor(COLORS.textSecondary);
+  doc.text(finding.description, contentX, doc.y, { width: contentWidth });
   doc.moveDown(0.8);
 
   // Reproduction
   if (finding.reproduction) {
-    doc.font(f.semiBold).fontSize(9).fillColor(COLORS.subheader);
-    doc.text('Reproduction', headerX);
+    doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+    doc.text('Reproduction', contentX);
     doc.moveDown(0.4);
 
-    const cmd = finding.reproduction.command.length > 250
-      ? finding.reproduction.command.slice(0, 247) + '...'
+    const cmd = finding.reproduction.command.length > 200
+      ? finding.reproduction.command.slice(0, 197) + '...'
       : finding.reproduction.command;
 
     // Code block
     const codeY = doc.y;
     doc.font(f.mono).fontSize(8);
-    const codeHeight = doc.heightOfString(cmd, { width: CONTENT_WIDTH - 48 }) + 16;
-    doc.rect(headerX, codeY, CONTENT_WIDTH - 32, codeHeight).fill(COLORS.codeBg);
-    doc.fillColor(COLORS.text);
-    doc.text(cmd, headerX + 8, codeY + 8, { width: CONTENT_WIDTH - 48 });
+    const codeHeight = Math.min(60, doc.heightOfString(cmd, { width: contentWidth - 20 }) + 16);
+    doc.roundedRect(contentX, codeY, contentWidth, codeHeight, 4).fill(COLORS.codeBg);
+    doc.fillColor(COLORS.codeText);
+    doc.text(cmd, contentX + 10, codeY + 8, { width: contentWidth - 20 });
     doc.y = codeY + codeHeight + 8;
 
-    doc.font(f.regular).fontSize(8).fillColor(COLORS.muted);
-    doc.text(`Expected: ${finding.reproduction.expected}`, headerX);
-    doc.moveDown(0.2);
-    doc.font(f.regular).fontSize(8).fillColor(COLORS.CRITICAL);
-    doc.text(`Actual: ${finding.reproduction.actual}`, headerX);
-    doc.moveDown(0.8);
+    doc.font(f.regular).fontSize(8).fillColor(COLORS.textMuted);
+    doc.text(`Expected: ${finding.reproduction.expected}`, contentX);
+    doc.font(f.regular).fontSize(8).fillColor(COLORS.destructive);
+    doc.text(`Actual: ${finding.reproduction.actual}`, contentX);
+    doc.moveDown(0.6);
   }
 
   // Monkeypatch diff
   if (finding.monkeypatch.diff) {
-    doc.font(f.semiBold).fontSize(9).fillColor(COLORS.subheader);
-    doc.text('Monkeypatch Diff', headerX);
-    doc.moveDown(0.4);
+    doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+    doc.text('Monkeypatch Diff', contentX);
+    doc.moveDown(0.3);
 
-    const diffLines = finding.monkeypatch.diff.split('\n').slice(0, 8);
+    const diffLines = finding.monkeypatch.diff.split('\n').slice(0, 6);
+    const lineHeight = 14;
 
     for (const line of diffLines) {
       let bgColor = COLORS.codeBg;
-      let textColor = COLORS.muted;
+      let textColor = COLORS.textMuted;
+
       if (line.startsWith('+') && !line.startsWith('+++')) {
-        bgColor = '#DCFCE7';
-        textColor = '#166534';
+        bgColor = '#D1FAE5';
+        textColor = '#065F46';
       } else if (line.startsWith('-') && !line.startsWith('---')) {
-        bgColor = '#FEE2E2';
-        textColor = '#991B1B';
+        bgColor = COLORS.destructiveLight;
+        textColor = COLORS.destructiveDark;
       }
 
       const lineY = doc.y;
-      doc.rect(headerX, lineY, CONTENT_WIDTH - 32, 12).fill(bgColor);
-      doc.font(f.mono).fontSize(7).fillColor(textColor);
-      const truncatedLine = line.length > 80 ? line.slice(0, 77) + '...' : line;
-      doc.text(truncatedLine, headerX + 6, lineY + 2, { lineBreak: false });
-      doc.y = lineY + 12;
+      doc.rect(contentX, lineY, contentWidth, lineHeight).fill(bgColor);
+      doc.font(f.mono).fontSize(8).fillColor(textColor);
+      const truncLine = line.length > 70 ? line.slice(0, 67) + '...' : line;
+      doc.text(truncLine, contentX + 8, lineY + 3);
+      doc.y = lineY + lineHeight;
     }
-    doc.moveDown(0.8);
+    doc.moveDown(0.6);
   }
 
   // Recommended fix
-  doc.font(f.semiBold).fontSize(9).fillColor(COLORS.subheader);
-  doc.text('Recommended Fix', headerX);
-  doc.moveDown(0.3);
-  doc.font(f.regular).fontSize(9).fillColor(COLORS.text);
-  doc.text(finding.recommended_fix, headerX, doc.y, { width: CONTENT_WIDTH - 32 });
-  doc.moveDown(0.5);
+  doc.font(f.semiBold).fontSize(10).fillColor(COLORS.text);
+  doc.text('Recommended Fix', contentX);
+  doc.moveDown(0.2);
+  doc.font(f.regular).fontSize(9).fillColor(COLORS.textSecondary);
+  doc.text(finding.recommended_fix, contentX, doc.y, { width: contentWidth });
+  doc.moveDown(0.4);
 
   // Rules violated
   if (finding.rules_violated.length > 0) {
-    doc.font(f.regular).fontSize(8).fillColor(COLORS.CRITICAL);
-    const rulesText = finding.rules_violated.join(', ');
-    doc.text(`Rules violated: ${rulesText}`, headerX, doc.y, { width: CONTENT_WIDTH - 32 });
-    doc.moveDown(0.5);
+    doc.font(f.regular).fontSize(8).fillColor(COLORS.destructive);
+    const rulesText = finding.rules_violated.slice(0, 2).join(', ');
+    doc.text(`Rules violated: ${rulesText}`, contentX);
   }
 
-  // Extend the left border to match card height
-  const cardEndY = doc.y;
-  doc.rect(x, cardStartY, 4, cardEndY - cardStartY).fill(severityColor);
+  doc.moveDown(1.2);
 
-  // Separator line
-  doc.moveDown(0.5);
+  // Bottom border
   doc.rect(x, doc.y, CONTENT_WIDTH, 1).fill(COLORS.border);
-  doc.moveDown(1);
+  doc.moveDown(0.8);
 }
 
 // ---------------------------------------------------------------------------
@@ -568,51 +612,36 @@ function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: numbe
 function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig) {
   const f = fonts ?? { regular: 'Helvetica', bold: 'Helvetica-Bold', semiBold: 'Helvetica-Bold', mono: 'Courier' };
   const x = MARGIN;
-  const severityColor = COLORS[finding.severity as keyof typeof COLORS] || COLORS.MEDIUM;
+  const sevColors = COLORS.severity[finding.severity.toLowerCase() as keyof typeof COLORS.severity] || COLORS.severity.medium;
 
   const cardY = doc.y;
+  const contentX = x + 12;
 
-  // Left accent bar
-  doc.rect(x, cardY, 3, 70).fill(severityColor);
-
-  // Content area
-  const contentX = x + 14;
+  // Left accent
+  doc.rect(x, cardY, 3, 65).fill(sevColors.accent);
 
   // Title row
-  doc.font(f.bold).fontSize(10).fillColor(COLORS.text);
-  doc.text(`${index}. ${finding.vuln_type.toUpperCase()}`, contentX, cardY);
+  doc.font(f.semiBold).fontSize(11).fillColor(COLORS.text);
+  doc.text(`${index}. ${finding.vuln_type}`, contentX, cardY + 4, { width: CONTENT_WIDTH - 100 });
 
   // Severity badge
-  const badgeX = x + CONTENT_WIDTH - 55;
-  doc.roundedRect(badgeX, cardY - 2, 50, 16, 2).fill(severityColor);
-  doc.font(f.bold).fontSize(7).fillColor(COLORS.white);
-  doc.text(finding.severity, badgeX, cardY + 2, { width: 50, align: 'center' });
+  const badgeX = x + CONTENT_WIDTH - 60;
+  doc.roundedRect(badgeX, cardY + 2, 50, 16, 3).fill(sevColors.bg);
+  doc.font(f.semiBold).fontSize(7).fillColor(sevColors.text);
+  doc.text(finding.severity, badgeX + 6, cardY + 6);
 
-  doc.y = cardY + 18;
+  doc.y = cardY + 22;
 
   // Location
-  doc.font(f.semiBold).fontSize(9).fillColor(COLORS.text);
+  doc.font(f.regular).fontSize(9).fillColor(COLORS.text);
   doc.text(`${finding.location.method} ${finding.location.endpoint}`, contentX);
-  doc.moveDown(0.2);
 
   const fileRef = finding.location.line > 0
     ? `${finding.location.file}:${finding.location.line}`
     : finding.location.file;
-
-  if (options?.githubRepo) {
-    const url = githubFileUrl(
-      options.githubRepo,
-      options.githubRef || 'main',
-      finding.location.file,
-      finding.location.line,
-    );
-    doc.font(f.mono).fontSize(8).fillColor(COLORS.link);
-    doc.text(fileRef, contentX, doc.y, { link: url, underline: true });
-  } else {
-    doc.font(f.mono).fontSize(8).fillColor(COLORS.muted);
-    doc.text(fileRef, contentX);
-  }
-  doc.moveDown(0.3);
+  doc.font(f.mono).fontSize(8).fillColor(COLORS.link);
+  doc.text(fileRef, contentX);
+  doc.moveDown(0.2);
 
   // Metadata
   const parts: string[] = [];
@@ -620,22 +649,14 @@ function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: 
   if (finding.owasp) parts.push(finding.owasp);
   parts.push(finding.exploit_confidence === 'confirmed' ? 'Confirmed' : 'Unconfirmed');
 
-  doc.font(f.regular).fontSize(8).fillColor(COLORS.muted);
+  doc.font(f.regular).fontSize(8).fillColor(COLORS.textMuted);
   doc.text(parts.join('  •  '), contentX);
-  doc.moveDown(0.3);
 
-  // Description (truncated)
-  const desc = finding.description.length > 150
-    ? finding.description.slice(0, 147) + '...'
-    : finding.description;
-  doc.font(f.regular).fontSize(8).fillColor(COLORS.text);
-  doc.text(desc, contentX, doc.y, { width: CONTENT_WIDTH - 30 });
+  doc.y = cardY + 75;
 
-  doc.moveDown(1);
-
-  // Light separator
-  doc.rect(x + 14, doc.y, CONTENT_WIDTH - 14, 0.5).fill(COLORS.border);
-  doc.moveDown(0.8);
+  // Separator
+  doc.rect(x, doc.y, CONTENT_WIDTH, 1).fill(COLORS.borderLight);
+  doc.moveDown(0.6);
 }
 
 // ---------------------------------------------------------------------------
@@ -656,24 +677,24 @@ function drawCleanEndpoints(doc: PDFKit.PDFDocument, report: MergedReport, fonts
     });
   }
 
-  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.muted);
-  doc.text(`${groups.size} unique endpoints passed all security tests:`, x);
-  doc.moveDown(1);
+  doc.font(fonts.regular).fontSize(9).fillColor(COLORS.textMuted);
+  doc.text(`${groups.size} endpoints passed all security tests`, x);
+  doc.moveDown(0.8);
 
   for (const [endpoint, params] of groups) {
-    if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 60) {
+    if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 50) {
       doc.addPage();
     }
 
+    // Endpoint with checkmark
     doc.font(fonts.semiBold).fontSize(10).fillColor(COLORS.success);
     doc.text(`✓ ${endpoint}`, x + 8);
-    doc.moveDown(0.3);
+    doc.moveDown(0.2);
 
     for (const p of params) {
-      doc.font(fonts.regular).fontSize(8).fillColor(COLORS.muted);
-      const paramLabel = p.parameter || 'all params';
+      doc.font(fonts.regular).fontSize(8).fillColor(COLORS.textMuted);
+      const paramLabel = p.parameter || 'all';
       doc.text(`${paramLabel} — ${p.attack_type}`, x + 24);
-      doc.moveDown(0.2);
     }
     doc.moveDown(0.5);
   }
@@ -683,38 +704,48 @@ function drawCleanEndpoints(doc: PDFKit.PDFDocument, report: MergedReport, fonts
 // Helpers
 // ---------------------------------------------------------------------------
 
+function drawCard(doc: PDFKit.PDFDocument, x: number, y: number, width: number, height: number) {
+  doc.roundedRect(x, y, width, height, 6)
+    .fill(COLORS.white);
+  doc.roundedRect(x, y, width, height, 6)
+    .strokeColor(COLORS.cardBorder)
+    .stroke();
+}
+
 function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, fonts: FontConfig) {
   const x = MARGIN;
 
-  doc.rect(x, doc.y, CONTENT_WIDTH, 28).fill(COLORS.header);
-  doc.font(fonts.bold).fontSize(13).fillColor(COLORS.white);
-  doc.text(title, x + 16, doc.y + 8, { lineBreak: false });
-  doc.y += 40;
+  doc.rect(x, doc.y, CONTENT_WIDTH, 32).fill(COLORS.foreground);
+  doc.font(fonts.bold).fontSize(12).fillColor(COLORS.white);
+  doc.text(title, x + 16, doc.y + 10);
+  doc.y += 44;
 }
 
 function drawPageFooter(doc: PDFKit.PDFDocument, page: number, total: number, runId: string, fonts: FontConfig) {
-  const y = PAGE_HEIGHT - 35;
+  const y = PAGE_HEIGHT - 32;
   const x = MARGIN;
 
   doc.save();
 
-  // Separator line
-  doc.rect(x, y - 10, CONTENT_WIDTH, 0.5).fill(COLORS.border);
+  // Top border
+  doc.rect(x, y - 8, CONTENT_WIDTH, 1).fill(COLORS.border);
 
-  // Left: branding
-  doc.font(fonts.regular).fontSize(8).fillColor(COLORS.muted);
-  doc.text(`Dispatch Security Report`, x, y, { lineBreak: false });
+  // Left: branding with accent
+  doc.font(fonts.semiBold).fontSize(8).fillColor(COLORS.primary);
+  doc.text('DISPATCH', x, y);
+  doc.font(fonts.regular).fontSize(8).fillColor(COLORS.textMuted);
+  doc.text(' Security Report', x + 50, y);
 
   // Center: run ID
-  doc.font(fonts.mono).fontSize(7).fillColor(COLORS.light);
+  doc.font(fonts.mono).fontSize(7).fillColor(COLORS.textLight);
   const runIdWidth = doc.widthOfString(runId);
-  doc.text(runId, x + (CONTENT_WIDTH / 2) - (runIdWidth / 2), y, { lineBreak: false });
+  doc.text(runId, x + (CONTENT_WIDTH / 2) - (runIdWidth / 2), y);
 
   // Right: page number
   const pageText = `${page} / ${total}`;
-  doc.font(fonts.regular).fontSize(8).fillColor(COLORS.muted);
+  doc.font(fonts.regular).fontSize(8).fillColor(COLORS.textMuted);
   const pageWidth = doc.widthOfString(pageText);
-  doc.text(pageText, x + CONTENT_WIDTH - pageWidth, y, { lineBreak: false });
+  doc.text(pageText, x + CONTENT_WIDTH - pageWidth, y);
 
   doc.restore();
 }
