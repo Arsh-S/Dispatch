@@ -37,8 +37,6 @@ export function WorkerNode({
   size = 14,
 }: WorkerNodeProps) {
   const fill = statusColors[status] ?? statusColors.idle;
-
-  // Health-based visual overrides
   const isWarning = healthStatus === "warning";
   const isLooping = healthStatus === "looping";
 

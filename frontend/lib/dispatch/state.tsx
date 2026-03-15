@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -111,6 +112,7 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
 
   const [selectedNodeId, setSelectedNodeId] = useState<NodeId | null>(null);
   const [sidebarOpen, setSidebarOpenState] = useState(false);
+  const hasAutoSelectedRef = useRef(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -151,7 +153,6 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
       const diag = workerDiagnostics[workerId];
       if (!diag) return 'healthy';
 
-      // Client-side heuristic mirroring backend LoopDetector
       const MAX_TRACE = 200;
       const MAX_WALL = 600;
       const MAX_CONSECUTIVE_ERRORS = 5;
@@ -165,7 +166,6 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
         if (ratio > MAX_REPETITION_RATIO) return 'looping';
       }
 
-      // Warning thresholds (70%)
       if (diag.trace_length / MAX_TRACE > 0.7) return 'warning';
       if (diag.wall_clock_seconds / MAX_WALL > 0.7) return 'warning';
       if (diag.consecutive_errors / MAX_CONSECUTIVE_ERRORS > 0.6) return 'warning';
@@ -188,7 +188,14 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
     setFindingReports(data.finding_reports);
     setFindings(data.findings);
     setMetrics(data.metrics);
-    if (data.graph_data) setGraphData(data.graph_data);
+    if (data.graph_data) {
+      setGraphData(data.graph_data);
+      if (!hasAutoSelectedRef.current && data.graph_data.nodes["orchestrator"]) {
+        hasAutoSelectedRef.current = true;
+        setSelectedNodeId("orchestrator");
+        setSidebarOpenState(true);
+      }
+    }
     if (data.worker_diagnostics) setWorkerDiagnostics(data.worker_diagnostics);
     setLastUpdated(new Date().toISOString());
   }, []);
@@ -197,7 +204,7 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/dispatch-output.json");
+      const response = await fetch(process.env.NEXT_PUBLIC_DISPATCH_OUTPUT_PATH!);
       if (response.ok) {
         const data: DispatchOutput = await response.json();
         loadDispatchOutput(data);
@@ -211,7 +218,7 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
 
   useEffect(() => {
     refreshData();
-    const pollInterval = setInterval(refreshData, 2000);
+    const pollInterval = setInterval(refreshData, Number(process.env.NEXT_PUBLIC_POLL_INTERVAL_MS));
     return () => clearInterval(pollInterval);
   }, [refreshData]);
 

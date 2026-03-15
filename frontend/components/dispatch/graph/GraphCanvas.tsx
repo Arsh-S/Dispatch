@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import type { GraphData, NodeId } from "@/lib/dispatch/graphTypes";
+import type { GraphData, NodeId, HealthStatus } from "@/lib/dispatch/graphTypes";
 import { useForceGraph } from "@/lib/dispatch/useForceGraph";
 
 export interface GraphCanvasProps {
@@ -9,6 +9,7 @@ export interface GraphCanvasProps {
   selectedNodeId: NodeId | null;
   onNodeSelect: (id: NodeId | null) => void;
   runStatus: string;
+  getWorkerHealthStatus?: (workerId: string) => HealthStatus;
   resetViewRef?: React.MutableRefObject<(() => void) | null>;
 }
 
@@ -16,6 +17,7 @@ export function GraphCanvas({
   graphData,
   selectedNodeId,
   onNodeSelect,
+  getWorkerHealthStatus,
   resetViewRef,
 }: GraphCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -24,6 +26,7 @@ export function GraphCanvas({
     graphData,
     selectedNodeId,
     onNodeSelect,
+    getWorkerHealthStatus,
     resetViewRef,
   });
 

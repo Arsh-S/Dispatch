@@ -10,20 +10,7 @@ import {
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from "d3-force";
-import type { GraphData, NodeId, NodeType, NodeStatus } from "./graphTypes";
-
-/* ------------------------------------------------------------------ */
-/*  Graph fingerprint for change detection                             */
-/* ------------------------------------------------------------------ */
-
-function computeGraphFingerprint(graphData: GraphData): string {
-  const nodeIds = Object.keys(graphData.nodes).sort().join(",");
-  const edgeKeys = graphData.edges
-    .map((e) => `${e.from}->${e.to}`)
-    .sort()
-    .join(",");
-  return `${nodeIds}|${edgeKeys}`;
-}
+import type { GraphData, NodeId, NodeType, NodeStatus, HealthStatus } from "./graphTypes";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -34,6 +21,7 @@ export interface SimNode extends SimulationNodeDatum {
   label: string;
   nodeType: NodeType;
   status: NodeStatus;
+  healthStatus?: HealthStatus;
   radius: number;
   color: string;
 }
@@ -47,134 +35,34 @@ export interface UseForceGraphOptions {
   graphData: GraphData;
   selectedNodeId: NodeId | null;
   onNodeSelect: (id: NodeId | null) => void;
-  /** Optional ref to receive a resetView() function (pan/zoom to initial). */
+  getWorkerHealthStatus?: (workerId: string) => HealthStatus;
   resetViewRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Color palette - Supabase themed (emerald greens + neutral grays)  */
+/*  Color palette                                                      */
 /* ------------------------------------------------------------------ */
 
-// Supabase emerald primary: oklch(0.4365 0.1044 156.7556) ≈ #3ecf8e
 const SUPABASE_GREEN = "#3ecf8e";
-const SUPABASE_GREEN_DIM = "#2a9d6a";
-const IDLE_ALPHA_TARGET = 0.05;
-const DRAG_ALPHA_TARGET = 0.3;
-const COLD_START_ALPHA = 1;
-const RESTORE_ALPHA = 0.18;
-const OVERLAP_REHEAT_ALPHA = 0.38;
-const LAYOUT_STORAGE_PREFIX = "dispatch-force-layout:";
 
 const TYPE_COLORS: Record<NodeType, string> = {
-  orchestrator: SUPABASE_GREEN,    // Primary green for orchestrator
-  cluster: "#6b7280",              // Neutral gray for clusters
-  worker: "#4b5563",               // Darker gray for workers
-  finding: "#ef6461",              // Muted coral for findings
+  orchestrator: SUPABASE_GREEN,
+  cluster: "#6b7280",
+  worker: "#4b5563",
+  finding: "#ef6461",
 };
 
 const STATUS_OVERRIDES: Partial<Record<NodeStatus, string>> = {
-  running: "#d4a853",              // Warm amber
-  failed: "#ef6461",               // Muted coral
-  success: SUPABASE_GREEN,         // Supabase green
-  warning: "#e5954a",              // Soft orange
-  fixer: "#9f7aea",                // Muted purple
-  retestVerified: "#4fd1c5",       // Soft teal
+  running: "#d4a853",
+  failed: "#ef6461",
+  success: SUPABASE_GREEN,
+  warning: "#e5954a",
+  fixer: "#9f7aea",
+  retestVerified: "#4fd1c5",
 };
 
 function nodeColor(type: NodeType, status: NodeStatus): string {
   return STATUS_OVERRIDES[status] ?? TYPE_COLORS[type] ?? "#6b7280";
-}
-
-function loadStoredLayout(fingerprint: string): Map<string, { x: number; y: number }> {
-  if (typeof window === "undefined") return new Map();
-
-  try {
-    const raw = window.sessionStorage.getItem(`${LAYOUT_STORAGE_PREFIX}${fingerprint}`);
-    if (!raw) return new Map();
-
-    const parsed = JSON.parse(raw) as Record<string, { x?: number; y?: number }>;
-    return new Map(
-      Object.entries(parsed)
-        .filter(([, position]) => typeof position?.x === "number" && typeof position?.y === "number")
-        .map(([id, position]) => [id, { x: position.x as number, y: position.y as number }])
-    );
-  } catch {
-    return new Map();
-  }
-}
-
-function saveStoredLayout(fingerprint: string, nodes: SimNode[]) {
-  if (typeof window === "undefined" || !fingerprint || nodes.length === 0) return;
-
-  try {
-    const positions = Object.fromEntries(
-      nodes
-        .filter((node) => node.x !== undefined && node.y !== undefined)
-        .map((node) => [node.id, { x: node.x as number, y: node.y as number }])
-    );
-
-    window.sessionStorage.setItem(
-      `${LAYOUT_STORAGE_PREFIX}${fingerprint}`,
-      JSON.stringify(positions)
-    );
-  } catch {
-    // Ignore storage failures; layout persistence is best-effort only.
-  }
-}
-
-function hashString(value: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < value.length; i += 1) {
-    hash ^= value.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
-function nudgeOverlappingNodes(nodes: SimNode[]): number {
-  let nudgedCount = 0;
-
-  for (const node of nodes) {
-    if (node.nodeType === "orchestrator" || node.x === undefined || node.y === undefined) {
-      continue;
-    }
-
-    let pushX = 0;
-    let pushY = 0;
-    let collisions = 0;
-
-    for (const other of nodes) {
-      if (other === node || other.x === undefined || other.y === undefined) continue;
-
-      const minDistance = node.radius + other.radius + 10;
-      const dx = node.x - other.x;
-      const dy = node.y - other.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (distance >= minDistance) continue;
-
-      collisions += 1;
-
-      let angle = Math.atan2(dy, dx);
-      if (!Number.isFinite(angle) || distance < 0.001) {
-        angle = ((hashString(`${node.id}:${other.id}`) % 360) * Math.PI) / 180;
-      }
-
-      const overlap = minDistance - Math.max(distance, 0.001);
-      pushX += Math.cos(angle) * overlap;
-      pushY += Math.sin(angle) * overlap;
-    }
-
-    if (collisions === 0) continue;
-
-    node.x += pushX / collisions;
-    node.y += pushY / collisions;
-    node.vx = pushX * 0.04;
-    node.vy = pushY * 0.04;
-    nudgedCount += 1;
-  }
-
-  return nudgedCount;
 }
 
 /* ------------------------------------------------------------------ */
@@ -183,17 +71,16 @@ function nudgeOverlappingNodes(nodes: SimNode[]): number {
 
 export function useForceGraph(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
-  { graphData, selectedNodeId, onNodeSelect, resetViewRef }: UseForceGraphOptions
+  { graphData, selectedNodeId, onNodeSelect, getWorkerHealthStatus, resetViewRef }: UseForceGraphOptions
 ) {
   const simRef = useRef<ReturnType<typeof forceSimulation<SimNode>> | null>(null);
   const nodesRef = useRef<SimNode[]>([]);
   const linksRef = useRef<SimLink[]>([]);
   const rafRef = useRef<number>(0);
-  const prevFingerprintRef = useRef<string>("");
-  const initialBuildDoneRef = useRef(false);
 
   const transformRef = useRef({ x: 0, y: 0, k: 1 });
   const hoveredRef = useRef<SimNode | null>(null);
+  const cursorWorldRef = useRef<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{
     node: SimNode;
     offsetX: number;
@@ -208,73 +95,89 @@ export function useForceGraph(
   const onNodeSelectRef = useRef(onNodeSelect);
   onNodeSelectRef.current = onNodeSelect;
 
-  /* ---------- build simulation from graphData ---------- */
+  const graphDataRef = useRef(graphData);
+  graphDataRef.current = graphData;
+
+  const getWorkerHealthStatusRef = useRef(getWorkerHealthStatus);
+  getWorkerHealthStatusRef.current = getWorkerHealthStatus;
+
+  const lastStructureKeyRef = useRef<string>("");
+
+  /* ---------- structure key: only topology, not status/metadata ---------- */
+
+  const getStructureKey = useCallback((data: GraphData) => {
+    const nodeIds = Object.keys(data.nodes).sort().join(",");
+    const edgeKeys = data.edges
+      .map((e) => `${e.from}->${e.to}`)
+      .sort()
+      .join(",");
+    return `${nodeIds}|${edgeKeys}`;
+  }, []);
+
+  /* ---------- update existing nodes in place (no sim rebuild) ---------- */
+
+  const updateNodesInPlace = useCallback((data: GraphData) => {
+    const ghsFn = getWorkerHealthStatusRef.current;
+    const degreeMap: Record<string, number> = {};
+    for (const e of data.edges) {
+      degreeMap[e.from] = (degreeMap[e.from] ?? 0) + 1;
+      degreeMap[e.to] = (degreeMap[e.to] ?? 0) + 1;
+    }
+    for (const node of nodesRef.current) {
+      const n = data.nodes[node.id];
+      if (!n) continue;
+      const degree = degreeMap[n.id] ?? 0;
+      const baseRadius =
+        n.type === "orchestrator" ? 10 : n.type === "cluster" ? 6 : 4;
+      node.radius = baseRadius + Math.min(degree * 1.2, 8);
+      node.status = n.status;
+      node.healthStatus =
+        n.type === "worker" && ghsFn ? ghsFn(n.id) : undefined;
+      node.color = nodeColor(n.type, n.status);
+    }
+  }, []);
+
+  /* ---------- build simulation from scratch ---------- */
 
   const buildSim = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Skip rebuild if graph structure hasn't changed (but always build on first call)
-    const fingerprint = computeGraphFingerprint(graphData);
-    if (initialBuildDoneRef.current && fingerprint === prevFingerprintRef.current && nodesRef.current.length > 0) {
-      return;
-    }
-    prevFingerprintRef.current = fingerprint;
-    initialBuildDoneRef.current = true;
+    const data = graphDataRef.current;
+    const ghsFn = getWorkerHealthStatusRef.current;
 
     const w = canvas.clientWidth || 800;
     const h = canvas.clientHeight || 600;
 
     const degreeMap: Record<string, number> = {};
-    for (const e of graphData.edges) {
+    for (const e of data.edges) {
       degreeMap[e.from] = (degreeMap[e.from] ?? 0) + 1;
       degreeMap[e.to] = (degreeMap[e.to] ?? 0) + 1;
     }
 
-    // Preserve positions of existing nodes
-    const existingPositions = loadStoredLayout(fingerprint);
-    for (const node of nodesRef.current) {
-      if (node.x !== undefined && node.y !== undefined) {
-        existingPositions.set(node.id, { x: node.x, y: node.y });
-      }
-    }
-    const isRestoringLayout = existingPositions.size > 0;
-
-    const nodes: SimNode[] = Object.values(graphData.nodes).map((n) => {
+    const nodes: SimNode[] = Object.values(data.nodes).map((n) => {
       const degree = degreeMap[n.id] ?? 0;
-      const isOrchestrator = n.type === "orchestrator";
-      const baseRadius = isOrchestrator ? 18 : n.type === "cluster" ? 6 : 4;
+      const baseRadius =
+        n.type === "orchestrator" ? 10 : n.type === "cluster" ? 6 : 4;
       const radius = baseRadius + Math.min(degree * 1.2, 8);
-      const existingPos = existingPositions.get(n.id);
-
-      const node: SimNode = {
+      const healthStatus =
+        n.type === "worker" && ghsFn ? ghsFn(n.id) : undefined;
+      return {
         id: n.id,
         label: n.label,
         nodeType: n.type,
         status: n.status,
+        healthStatus,
         radius,
-        color: isOrchestrator ? "#ffffff" : nodeColor(n.type, n.status),
-        x: isOrchestrator ? w / 2 : (existingPos?.x ?? w / 2 + (Math.random() - 0.5) * 200),
-        y: isOrchestrator ? h / 2 : (existingPos?.y ?? h / 2 + (Math.random() - 0.5) * 200),
+        color: nodeColor(n.type, n.status),
+        x: w / 2 + (Math.random() - 0.5) * 400,
+        y: h / 2 + (Math.random() - 0.5) * 400,
       };
-
-      // Fix orchestrator at center
-      if (isOrchestrator) {
-        node.fx = w / 2;
-        node.fy = h / 2;
-      } else if (existingPos) {
-        // Start restored nodes without residual momentum, then gently reheat.
-        node.vx = 0;
-        node.vy = 0;
-      }
-
-      return node;
     });
 
-    const nudgedNodeCount = isRestoringLayout ? nudgeOverlappingNodes(nodes) : 0;
     const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
-    const links: SimLink[] = graphData.edges
+    const links: SimLink[] = data.edges
       .filter((e) => nodeMap.has(e.from) && nodeMap.has(e.to))
       .map((e) => ({
         source: e.from,
@@ -287,40 +190,41 @@ export function useForceGraph(
     if (simRef.current) simRef.current.stop();
 
     const sim = forceSimulation<SimNode>(nodes)
-      .force(
-        "charge",
-        forceManyBody<SimNode>().strength(-400)
-      )
+      .force("charge", forceManyBody<SimNode>().strength(-300))
       .force(
         "link",
         forceLink<SimNode, SimLink>(links)
           .id((d) => d.id)
-          .distance(120)
+          .distance(100)
       )
       .force("center", forceCenter(w / 2, h / 2))
       .force(
         "collide",
-        forceCollide<SimNode>().radius((d) => d.radius + 6)
+        forceCollide<SimNode>().radius((d) => d.radius + 4)
       )
-      .alphaDecay(0)
-      .alphaTarget(IDLE_ALPHA_TARGET)
-      .velocityDecay(0.4);
+      .force("cursor", () => {
+        const cursor = cursorWorldRef.current;
+        if (!cursor) return;
+        for (const node of nodesRef.current) {
+          const dx = node.x! - cursor.x;
+          const dy = node.y! - cursor.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const deadZone = node.radius + 20;
+          if (dist < 12 && dist > deadZone) {
+            const strength = ((120 - dist) / (120 - deadZone)) * 0.06;
+            node.vx! += (dx / dist) * strength;
+            node.vy! += (dy / dist) * strength;
+          }
+        }
+      })
+      .alphaDecay(0.02)
+      .velocityDecay(0.3)
+      .alpha(1)
+      .restart();
 
     simRef.current = sim;
-
     sim.on("tick", () => {});
-
-    // Restored layouts get a light reheat, with extra energy only if overlaps were detected.
-    sim
-      .alpha(
-        !isRestoringLayout
-          ? COLD_START_ALPHA
-          : nudgedNodeCount > 0
-            ? OVERLAP_REHEAT_ALPHA
-            : RESTORE_ALPHA
-      )
-      .restart();
-  }, [graphData, canvasRef]);
+  }, [canvasRef]);
 
   /* ---------- canvas rendering ---------- */
 
@@ -372,7 +276,7 @@ export function useForceGraph(
     ctx.translate(tx, ty);
     ctx.scale(k, k);
 
-    /* --- dotted grid in world space (pans/zooms with graph) --- */
+    /* --- dotted grid --- */
     const gridSpacing = 24;
     const dotRadius = 0.6;
     ctx.fillStyle = "rgba(255,255,255,0.12)";
@@ -407,7 +311,7 @@ export function useForceGraph(
         ctx.strokeStyle = "rgba(255,255,255,0.03)";
         ctx.lineWidth = 0.5;
       } else if (edgeConnected) {
-        ctx.strokeStyle = "rgba(62,207,142,0.6)"; // Supabase green
+        ctx.strokeStyle = "rgba(62,207,142,0.6)";
         ctx.lineWidth = 1.5;
       } else {
         ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -424,7 +328,6 @@ export function useForceGraph(
       const isConnected = connectedIds.has(node.id);
       const isHovered = hovered?.id === node.id;
       const isSelected = selected === node.id;
-      const isOrchestrator = node.nodeType === "orchestrator";
 
       let alpha = 1;
       if (dimming && !isConnected) alpha = 0.08;
@@ -437,23 +340,25 @@ export function useForceGraph(
         ctx.shadowBlur = 20;
       } else {
         ctx.shadowColor = node.color;
-        ctx.shadowBlur = isOrchestrator ? 12 : 8;
+        ctx.shadowBlur = 8;
       }
 
       ctx.beginPath();
-      if (isOrchestrator) {
-        // Draw square for orchestrator
-        const size = r * 1.8;
-        ctx.rect(nx - size / 2, ny - size / 2, size, size);
-      } else {
-        ctx.arc(nx, ny, r, 0, Math.PI * 2);
-      }
+      ctx.arc(nx, ny, r, 0, Math.PI * 2);
       ctx.fillStyle = node.color;
       ctx.fill();
 
       if (isSelected) {
         ctx.strokeStyle = "#fff";
         ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      if (node.healthStatus === "warning" || node.healthStatus === "looping") {
+        ctx.beginPath();
+        ctx.arc(nx, ny, r + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = node.healthStatus === "looping" ? "#ef4444" : "#f59e0b";
+        ctx.lineWidth = node.healthStatus === "looping" ? 2 : 1.5;
         ctx.stroke();
       }
 
@@ -465,12 +370,11 @@ export function useForceGraph(
     if (hovered) {
       const nx = hovered.x!;
       const ny = hovered.y!;
-      const label = hovered.label.toUpperCase();
-      const fontSize = 11;
-      ctx.font = `600 ${fontSize}px Inter, system-ui, sans-serif`;
+      const label = hovered.label;
+      const fontSize = 12;
+      ctx.font = `500 ${fontSize}px Inter, system-ui, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
-      ctx.letterSpacing = "0.05em";
 
       ctx.shadowColor = "rgba(0,0,0,0.8)";
       ctx.shadowBlur = 4;
@@ -533,7 +437,7 @@ export function useForceGraph(
         };
         node.fx = node.x;
         node.fy = node.y;
-        simRef.current?.alphaTarget(DRAG_ALPHA_TARGET).restart();
+        simRef.current?.alphaTarget(0.3).restart();
       } else {
         panRef.current = {
           startX: e.clientX,
@@ -576,20 +480,26 @@ export function useForceGraph(
       }
 
       const world = screenToWorld(sx, sy);
+      cursorWorldRef.current = world;
       const node = findNodeAt(world.x, world.y);
       hoveredRef.current = node;
       canvas.style.cursor = node ? "grab" : "default";
+
+      const sim = simRef.current;
+      if (sim && sim.alpha() < 0.1) {
+        sim.alpha(0.1).restart();
+      }
     },
     [canvasRef, screenToWorld, findNodeAt]
   );
 
   const handleMouseUp = useCallback(
-    (e: MouseEvent) => {
+    (_e: MouseEvent) => {
       if (dragRef.current) {
         const { node } = dragRef.current;
         node.fx = null;
         node.fy = null;
-        simRef.current?.alphaTarget(IDLE_ALPHA_TARGET).restart();
+        simRef.current?.alphaTarget(0);
 
         if (!didDragRef.current) {
           onNodeSelectRef.current(node.id);
@@ -608,6 +518,20 @@ export function useForceGraph(
     },
     []
   );
+
+  const handleMouseLeave = useCallback(() => {
+    cursorWorldRef.current = null;
+    hoveredRef.current = null;
+
+    if (dragRef.current) {
+      const { node } = dragRef.current;
+      node.fx = null;
+      node.fy = null;
+      simRef.current?.alphaTarget(0);
+      dragRef.current = null;
+    }
+    panRef.current = null;
+  }, []);
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
@@ -634,40 +558,7 @@ export function useForceGraph(
     transformRef.current = { x: 0, y: 0, k: 1 };
   }, []);
 
-  /* ---------- sync node properties without rebuilding ---------- */
-
-  useEffect(() => {
-    // Update existing node properties (status, color) without rebuilding simulation
-    const nodeMap = new Map(
-      Object.values(graphData.nodes).map((n) => [n.id, n])
-    );
-    for (const simNode of nodesRef.current) {
-      const dataNode = nodeMap.get(simNode.id);
-      if (dataNode) {
-        simNode.status = dataNode.status;
-        simNode.color = nodeColor(dataNode.type, dataNode.status);
-        simNode.label = dataNode.label;
-      }
-    }
-  }, [graphData]);
-
-  /* ---------- lifecycle ---------- */
-
-  useEffect(() => {
-    buildSim();
-  }, [buildSim]);
-
-  useEffect(() => {
-    const persistLayout = () => {
-      saveStoredLayout(prevFingerprintRef.current, nodesRef.current);
-    };
-
-    window.addEventListener("pagehide", persistLayout);
-    return () => {
-      persistLayout();
-      window.removeEventListener("pagehide", persistLayout);
-    };
-  }, []);
+  /* ---------- mount: RAF loop + event listeners (stable, runs once) ---------- */
 
   useEffect(() => {
     if (resetViewRef) resetViewRef.current = resetView;
@@ -678,7 +569,7 @@ export function useForceGraph(
       canvas.addEventListener("mousedown", handleMouseDown);
       canvas.addEventListener("mousemove", handleMouseMove);
       canvas.addEventListener("mouseup", handleMouseUp);
-      canvas.addEventListener("mouseleave", handleMouseUp);
+      canvas.addEventListener("mouseleave", handleMouseLeave);
       canvas.addEventListener("wheel", handleWheel, { passive: false });
     }
 
@@ -690,9 +581,49 @@ export function useForceGraph(
         canvas.removeEventListener("mousedown", handleMouseDown);
         canvas.removeEventListener("mousemove", handleMouseMove);
         canvas.removeEventListener("mouseup", handleMouseUp);
-        canvas.removeEventListener("mouseleave", handleMouseUp);
+        canvas.removeEventListener("mouseleave", handleMouseLeave);
         canvas.removeEventListener("wheel", handleWheel);
       }
     };
-  }, [draw, handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, canvasRef, resetView, resetViewRef]);
+  }, [canvasRef, draw, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave, handleWheel, resetView, resetViewRef]);
+
+  /* ---------- data sync: rebuild or patch sim on graph changes ---------- */
+
+  useEffect(() => {
+    const structureKey = getStructureKey(graphData);
+    if (structureKey !== lastStructureKeyRef.current) {
+      lastStructureKeyRef.current = structureKey;
+      buildSim();
+    } else if (lastStructureKeyRef.current !== "") {
+      updateNodesInPlace(graphData);
+    }
+  }, [graphData, getStructureKey, buildSim, updateNodesInPlace]);
+
+  /* ---------- programmatic selection: mimic a click on the node ---------- */
+
+  const prevSelectedRef = useRef<NodeId | null>(null);
+
+  useEffect(() => {
+    if (selectedNodeId === prevSelectedRef.current) return;
+    prevSelectedRef.current = selectedNodeId;
+
+    if (!selectedNodeId) return;
+    const sim = simRef.current;
+    if (!sim) return;
+
+    const node = nodesRef.current.find((n) => n.id === selectedNodeId);
+    if (!node) return;
+
+    node.fx = node.x;
+    node.fy = node.y;
+    sim.alphaTarget(0.3).restart();
+
+    const release = window.setTimeout(() => {
+      node.fx = null;
+      node.fy = null;
+      sim.alphaTarget(0);
+    }, 300);
+
+    return () => window.clearTimeout(release);
+  }, [selectedNodeId]);
 }

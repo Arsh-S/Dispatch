@@ -12,6 +12,7 @@ export function GraphWorkspace() {
     selectedNodeId,
     selectNode,
     runStatus,
+    getWorkerHealthStatus,
   } = useDispatchWorkspace();
 
   const resetViewRef = useRef<(() => void) | null>(null);
@@ -27,6 +28,7 @@ export function GraphWorkspace() {
           selectedNodeId={selectedNodeId}
           onNodeSelect={selectNode}
           runStatus={runStatus}
+          getWorkerHealthStatus={getWorkerHealthStatus}
           resetViewRef={resetViewRef}
         />
         <div className="pointer-events-none absolute inset-0 z-10">
