@@ -8,17 +8,17 @@
  *   2. Blaxel sandbox mode — sandbox.delete()
  *   3. Orchestrator shutdown — killAll()
  *
- * Kill escalation for Claude mode workers:
- *   low  confidence → log warning, no kill
- *   medium confidence → write poison pill, 30s grace period, then force kill
- *   high confidence → immediate SIGTERM → 5s → SIGKILL
+ * Kill escalation based on number of loop-detection reasons:
+ *   1 reason  → log warning, no kill
+ *   2 reasons → write poison pill, 30s grace period, then force kill
+ *   3+ reasons → immediate SIGTERM → 5s → SIGKILL
  */
 
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
-import type { LoopAlert, AlertConfidence, AgentDiagnostics } from '../schemas/agent-diagnostics';
+import type { LoopAlert, AgentDiagnostics } from '../schemas/agent-diagnostics';
 import { LoopDetector } from './loop-detector';
 
 // Blaxel SandboxInstance — kept as a loose type so we don't import @blaxel/core here
@@ -155,10 +155,6 @@ export class WorkerSupervisor extends EventEmitter {
   // Diagnostics polling
   // ---------------------------------------------------------------------------
 
-  /**
-   * Set a callback that returns the current diagnostics for a worker.
-   * Called on each poll interval to feed the loop detector.
-   */
   setDiagnosticsReader(reader: (workerId: string) => AgentDiagnostics | null): void {
     this.diagnosticsReader = reader;
   }
@@ -186,10 +182,13 @@ export class WorkerSupervisor extends EventEmitter {
       const diagnostics = this.diagnosticsReader!(workerId);
       if (!diagnostics) return;
 
-      const alert = this.loopDetector.evaluate(diagnostics);
+      const reasons = this.loopDetector.evaluate(diagnostics);
+      if (reasons.length === 0) return;
+
+      const alert = this.loopDetector.buildAlert(diagnostics, false);
       if (!alert) return;
 
-      this.onAlert(alert);
+      this.onAlert(alert, reasons.length);
     });
   }
 
@@ -197,30 +196,26 @@ export class WorkerSupervisor extends EventEmitter {
   // Alert handling — the kill decision
   // ---------------------------------------------------------------------------
 
-  onAlert(alert: LoopAlert): void {
+  onAlert(alert: LoopAlert, reasonCount: number): void {
     const worker = this.workers.get(alert.worker_id);
     if (!worker || worker.status !== 'running') return;
 
     console.log(
-      `[Supervisor] Alert for ${alert.worker_id}: confidence=${alert.confidence}, reasons=[${alert.reasons.join(', ')}]`,
+      `[Supervisor] Alert for ${alert.worker_id}: ${reasonCount} reason(s)=[${alert.reasons.join('; ')}]`,
     );
 
     this.alerts.push(alert);
     this.emit('alert', alert);
 
-    switch (alert.confidence) {
-      case 'low':
-        // Just log — the diagnostics API surfaces this as a warning on the dashboard
-        this.emit('warning', alert);
-        break;
-
-      case 'medium':
-        this.requestGracefulShutdown(worker, alert);
-        break;
-
-      case 'high':
-        this.forceKill(worker, alert);
-        break;
+    if (reasonCount >= 3) {
+      // High confidence — immediate kill
+      this.forceKill(worker, alert);
+    } else if (reasonCount === 2) {
+      // Medium confidence — poison pill + grace period
+      this.requestGracefulShutdown(worker, alert);
+    } else {
+      // Low confidence — warning only
+      this.emit('warning', alert);
     }
   }
 
@@ -236,10 +231,8 @@ export class WorkerSupervisor extends EventEmitter {
       `[Supervisor] Requesting graceful shutdown for ${worker.workerId} (${this.opts.gracePeriodMs}ms grace)`,
     );
 
-    // Write poison pill file for the worker to pick up
     this.writePoisonPill(worker, alert);
 
-    // If the worker doesn't exit within the grace period, force kill
     worker.gracePeriodHandle = setTimeout(() => {
       if (worker.status === 'grace_period') {
         console.log(`[Supervisor] Grace period expired for ${worker.workerId}, force killing`);
@@ -252,20 +245,17 @@ export class WorkerSupervisor extends EventEmitter {
 
   private writePoisonPill(worker: ManagedWorker, alert: LoopAlert): void {
     const abortPayload = JSON.stringify({
-      reason: alert.reasons,
-      confidence: alert.confidence,
+      reasons: alert.reasons,
       message: 'Supervisor detected potential infinite loop. Write partial results and exit.',
       partial_results_requested: true,
       triggered_at: alert.triggered_at,
     }, null, 2);
 
     if (worker.sandbox) {
-      // Write into sandbox filesystem
       worker.sandbox.fs.write('/dispatch/ABORT', abortPayload).catch((err) => {
         console.warn(`[Supervisor] Failed to write poison pill to sandbox for ${worker.workerId}: ${err}`);
       });
     } else {
-      // Local filesystem
       const abortDir = path.join(worker.workerDir, '.dispatch');
       try {
         fs.mkdirSync(abortDir, { recursive: true });
@@ -312,7 +302,6 @@ export class WorkerSupervisor extends EventEmitter {
     const pid = worker.pid;
     if (!pid) return;
 
-    // Step 1: SIGTERM the process group
     try {
       process.kill(-pid, 'SIGTERM');
       console.log(`[Supervisor] Sent SIGTERM to process group -${pid}`);
@@ -320,20 +309,16 @@ export class WorkerSupervisor extends EventEmitter {
       if (err.code !== 'ESRCH') {
         console.warn(`[Supervisor] SIGTERM failed for -${pid}: ${err.message}`);
       }
-      // Process already dead — that's fine
       return;
     }
 
-    // Step 2: Wait 5 seconds, then SIGKILL if still alive
     setTimeout(() => {
       try {
-        // Check if process is still alive (signal 0 = existence check)
         process.kill(-pid, 0);
-        // Still alive — escalate to SIGKILL
         process.kill(-pid, 'SIGKILL');
         console.log(`[Supervisor] Sent SIGKILL to process group -${pid}`);
       } catch {
-        // Process is dead — good
+        // Process is dead
       }
     }, 5000);
   }
@@ -354,8 +339,7 @@ export class WorkerSupervisor extends EventEmitter {
         worker_type: worker.workerType,
         dispatch_run_id: worker.dispatchRunId,
         triggered_at: new Date().toISOString(),
-        reasons: ['wall_clock_exceeded'],
-        confidence: 'high',
+        reasons: [`Wall clock timeout: ${Math.round(timeoutMs / 1000)}s`],
         diagnostics: {
           worker_id: worker.workerId,
           worker_type: worker.workerType,
@@ -375,7 +359,6 @@ export class WorkerSupervisor extends EventEmitter {
           phase: 'unknown',
           findings_so_far: 0,
           last_action: 'timeout',
-          health_status: 'looping',
         },
         auto_killed: true,
       };
@@ -401,8 +384,7 @@ export class WorkerSupervisor extends EventEmitter {
           worker_type: worker.workerType,
           dispatch_run_id: worker.dispatchRunId,
           triggered_at: new Date().toISOString(),
-          reasons: ['orchestrator_shutdown'],
-          confidence: 'high',
+          reasons: ['Orchestrator shutdown'],
           diagnostics: {
             worker_id: worker.workerId,
             worker_type: worker.workerType,
@@ -422,7 +404,6 @@ export class WorkerSupervisor extends EventEmitter {
             phase: 'unknown',
             findings_so_far: 0,
             last_action: 'orchestrator_shutdown',
-            health_status: 'looping',
           },
           auto_killed: true,
         };

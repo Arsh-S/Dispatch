@@ -2,6 +2,7 @@ import { SlackHandlerContext, SlackAppMentionEvent, AgentProcessingResult, Agent
 import { extractCommand, formatBlockKitResponse, formatErrorResponse, formatFindingsResponse } from './client';
 import { runOrchestrator } from '../orchestrator/agent';
 import { createSimpleIssue, createIssuesFromReport, bootstrapLabels, convertFindingToIssueFormat } from '../github/issues';
+import { createLinearIssuesFromReport } from '../linear/issues';
 import type { Finding as OrchestratorFinding } from '../schemas/finding-report';
 import type { FindingForIssue } from '../github/types';
 import path from 'path';
@@ -157,7 +158,9 @@ export async function processAgentCommand(
   const lowerCommand = command.toLowerCase();
 
   try {
-    if (lowerCommand.includes('create issue') || lowerCommand.includes('github')) {
+    if (lowerCommand.includes('fix ') || lowerCommand.startsWith('fix')) {
+      return await handleFixCommand(command, agentConfig);
+    } else if (lowerCommand.includes('create issue') || lowerCommand.includes('github')) {
       return await handleGitHubCommand(command, agentConfig);
     } else if (lowerCommand.includes('help')) {
       return handleHelpCommand();
@@ -256,8 +259,32 @@ async function handleSecurityScan(command: string, agentConfig: AgentConfig): Pr
       }
     }
 
+    // Create Linear issues alongside GitHub issues
+    let linearIssueCount = 0;
+    if (agentConfig.linearApiKey && agentConfig.linearTeamId && mergedReport.findings.length > 0) {
+      try {
+        if (!process.env.LINEAR_API_KEY) process.env.LINEAR_API_KEY = agentConfig.linearApiKey;
+        const issueFindings: FindingForIssue[] = mergedReport.findings.map(f =>
+          convertFindingToIssueFormat(f, result.preRecon.dispatch_run_id)
+        );
+        const linearIssues = await createLinearIssuesFromReport(
+          agentConfig.linearTeamId,
+          issueFindings,
+        );
+        linearIssueCount = linearIssues.length;
+        console.log(`[Slack] Created ${linearIssueCount} Linear issues`);
+      } catch (err: any) {
+        console.warn(`[Slack] Linear issue creation failed: ${err.message}`);
+      }
+    }
+
     const summary = mergedReport.summary;
-    const response = `Security scan completed. Found ${mergedReport.findings.length} findings (${summary.critical} critical, ${summary.high} high, ${summary.medium} medium, ${summary.low} low).${issueUrls.length > 0 ? ` Created ${issueUrls.length} GitHub issues.` : ''}`;
+    const parts = [
+      `Security scan completed. Found ${mergedReport.findings.length} findings (${summary.critical} critical, ${summary.high} high, ${summary.medium} medium, ${summary.low} low).`,
+    ];
+    if (issueUrls.length > 0) parts.push(`Created ${issueUrls.length} GitHub issues.`);
+    if (linearIssueCount > 0) parts.push(`Created ${linearIssueCount} Linear issues.`);
+    const response = parts.join(' ');
 
     return {
       success: true,
@@ -341,20 +368,105 @@ async function handleGitHubCommand(command: string, agentConfig: AgentConfig): P
 }
 
 /**
+ * Handle fix command — triggers the constructor worker for a Linear issue.
+ *
+ * Usage: @Dispatch fix DISP-123
+ */
+async function handleFixCommand(command: string, agentConfig: AgentConfig): Promise<AgentProcessingResult> {
+  const startTime = Date.now();
+
+  // Extract issue identifier (e.g. "DISP-123" or a Linear UUID)
+  const match = command.match(/fix\s+(\S+)/i);
+  const issueId = match?.[1];
+
+  if (!issueId) {
+    return {
+      success: false,
+      response: '',
+      error: 'Usage: `fix DISP-123` — provide a Linear issue identifier.',
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
+
+  if (!agentConfig.githubRepo) {
+    return {
+      success: false,
+      response: '',
+      error: 'GITHUB_REPO not configured. Required for the constructor to create PRs.',
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
+
+  try {
+    // Call the fix API endpoint (same one the "Run Dispatch Fixer" link uses)
+    const apiBase = process.env.DISPATCH_API_URL || 'http://localhost:3333';
+    const res = await fetch(`${apiBase}/api/fix`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        linear_issue_id: issueId,
+        github_repo: agentConfig.githubRepo,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      return {
+        success: false,
+        response: '',
+        error: `Fix API returned error: ${data.error ?? res.statusText}`,
+        executionTimeMs: Date.now() - startTime,
+      };
+    }
+
+    const fixResult = data.result;
+    const prUrl = fixResult?.pr?.url;
+    const status = fixResult?.status ?? 'unknown';
+
+    const response = [
+      `*Fix initiated for ${issueId}*`,
+      `Status: \`${status}\``,
+      fixResult?.files_changed?.length
+        ? `Files changed: ${fixResult.files_changed.join(', ')}`
+        : null,
+      prUrl ? `PR: ${prUrl}` : null,
+      fixResult?.notes ? `Notes: ${fixResult.notes}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    return {
+      success: true,
+      response,
+      executionTimeMs: Date.now() - startTime,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      response: '',
+      error: `Fix failed: ${error.message}`,
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
+}
+
+/**
  * Handle help command
  */
 function handleHelpCommand(): AgentProcessingResult {
   const helpText = `
 *Available Commands:*
 
-• \`scan [endpoint]\` - Run a security scan (requires DISPATCH_TARGET_DIR)
-• \`juice [command]\` - Interact with Juice Shop (e.g., "juice scan /api/users")
+• \`scan\` - Run a security scan (requires DISPATCH_TARGET_DIR)
+• \`fix DISP-123\` - Fix a Linear issue (triggers constructor agent → PR)
 • \`create issue [title]\` - Create a GitHub issue
+• \`juice [command]\` - Interact with Juice Shop
 • \`help\` - Show this help message
 
 *Examples:*
 • "@Dispatch scan"
-• "@Dispatch juice test /rest/admin"
+• "@Dispatch fix DISP-42"
 • "@Dispatch create issue SQL Injection in login form"
 `;
 
