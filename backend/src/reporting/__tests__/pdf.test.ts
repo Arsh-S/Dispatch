@@ -468,8 +468,8 @@ describe('generatePdfReport', () => {
     });
     const outputPath = path.join(tmpDir, 'with-options.pdf');
     await generatePdfReport(report, outputPath, {
-      githubRepo: 'owner/repo',
-      githubRef: 'main',
+      analyzedRepo: 'owner/repo',
+      analyzedRef: 'main',
     });
     expect(fs.existsSync(outputPath)).toBe(true);
     const buf = fs.readFileSync(outputPath);
@@ -550,7 +550,7 @@ describe('generatePdfReport', () => {
     expect(fs.existsSync(outputPath)).toBe(true);
   });
 
-  it('generatePdfReport_WithGithubRepo_PdfContainsGitHubFileUrls', async () => {
+  it('generatePdfReport_WithAnalyzedRepo_PdfContainsGitHubFileUrls', async () => {
     const finding = makeFinding('HIGH', '/api/users', 'id', {
       location: { file: 'src/routes/users.ts', line: 42, endpoint: '/api/users', method: 'GET', parameter: 'id' },
     });
@@ -561,8 +561,8 @@ describe('generatePdfReport', () => {
     const outputPath = path.join(tmpDir, 'github-urls.pdf');
 
     await generatePdfReport(report, outputPath, {
-      githubRepo: 'acme/app',
-      githubRef: 'main',
+      analyzedRepo: 'acme/app',
+      analyzedRef: 'main',
     });
 
     const content = readPdfAsString(outputPath);
@@ -571,6 +571,42 @@ describe('generatePdfReport', () => {
     expect(content).toContain('blob/main');
     expect(content).toContain('src/routes/users.ts');
     expect(content).toContain('#L42');
+  });
+
+  it('generatePdfReport_WithoutAnalyzedRepo_NoFileLinks', async () => {
+    const finding = makeFinding('HIGH', '/api/users', 'id', {
+      location: { file: 'src/routes/users.ts', line: 42, endpoint: '/api/users', method: 'GET', parameter: 'id' },
+    });
+    const report = makeMergedReport({
+      findings: [finding],
+      summary: { critical: 0, high: 1, medium: 0, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'no-links.pdf');
+
+    await generatePdfReport(report, outputPath);
+
+    const content = readPdfAsString(outputPath);
+    expect(content).not.toMatch(/github\.com\/[^/]+\/[^/]+\/blob/);
+  });
+
+  it('generatePdfReport_WithAnalyzedRepoAndLineZero_OmitsLineFragment', async () => {
+    const finding = makeFinding('MEDIUM', '/api/search', 'q', {
+      location: { file: 'src/routes/search.ts', line: 0, endpoint: '/api/search', method: 'GET', parameter: 'q' },
+    });
+    const report = makeMergedReport({
+      findings: [finding],
+      summary: { critical: 0, high: 0, medium: 1, low: 0, total_endpoints: 1, vulnerable_endpoints: 1, clean_endpoints: 0 },
+    });
+    const outputPath = path.join(tmpDir, 'no-line-frag.pdf');
+
+    await generatePdfReport(report, outputPath, {
+      analyzedRepo: 'acme/app',
+      analyzedRef: 'develop',
+    });
+
+    const content = readPdfAsString(outputPath);
+    expect(content).toContain('github.com/acme/app/blob/develop/src/routes/search.ts');
+    expect(content).not.toContain('#L0');
   });
 
   it('generatePdfReport_WithoutGithubRepo_PdfContainsPlainFilePaths', async () => {

@@ -207,9 +207,9 @@ export async function generatePdfReport(
     const stream = fs.createWriteStream(outputPath);
     doc.pipe(stream);
 
-    // Extract analyzed repo info - falls back to githubRepo if not explicitly set
-    const analyzedRepo = opts.analyzedRepo || opts.githubRepo;
-    const analyzedRef = opts.analyzedRef || opts.githubRef || 'main';
+    // Extract analyzed repo info - no fallback; when unknown, no file links
+    const analyzedRepo = opts.analyzedRepo;
+    const analyzedRef = opts.analyzedRef ?? opts.githubRef ?? 'main';
 
     // Page 1: Executive Summary
     drawExecutiveSummary(doc, scanResult, opts, fonts, analyzedRepo, analyzedRef);
@@ -471,11 +471,16 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
         ? `${f.location.file}:${f.location.line}`
         : f.location.file;
       const locTruncated = locDisplay.length > 32 ? '…' + locDisplay.slice(-30) : locDisplay;
+      const linkUrl = generateFileLink(f.location.file, f.location.line, analyzedRepo, analyzedRef);
       doc.font(fonts.mono).fontSize(8).fillColor(COLORS.link);
       doc.text(locTruncated, colX, cellY, { lineBreak: false });
-      
-      // Draw clickable GitHub logo next to location
       const locWidth = doc.widthOfString(locTruncated);
+      if (linkUrl) {
+        const locHeight = doc.currentLineHeight();
+        doc.link(colX, cellY, locWidth, locHeight, linkUrl);
+        doc.underline(colX, cellY, locWidth, locHeight, { color: COLORS.link });
+      }
+      // Draw clickable GitHub logo next to location
       drawClickableGitHubLogo(doc, colX + locWidth + 4, cellY - 6, f.location.file, f.location.line, analyzedRepo, analyzedRef, 20, 20);
       
       colX += colWidths[3];
@@ -564,9 +569,16 @@ function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: numbe
     ? `${finding.location.file}:${finding.location.line}`
     : finding.location.file;
 
+  const linkUrl = generateFileLink(finding.location.file, finding.location.line, analyzedRepo, analyzedRef);
   doc.font(f.mono).fontSize(9).fillColor(COLORS.link);
   doc.text(fileRef, contentX);
-  
+  if (linkUrl) {
+    const fileRefWidth = doc.widthOfString(fileRef);
+    const fileRefHeight = doc.currentLineHeight();
+    const fileRefY = doc.y - fileRefHeight;
+    doc.link(contentX, fileRefY, fileRefWidth, fileRefHeight, linkUrl);
+    doc.underline(contentX, fileRefY, fileRefWidth, fileRefHeight, { color: COLORS.link });
+  }
   // Draw clickable GitHub logo next to the file path
   const fileRefWidth = doc.widthOfString(fileRef);
   drawClickableGitHubLogo(doc, contentX + fileRefWidth + 8, doc.y - 17, finding.location.file, finding.location.line, analyzedRepo, analyzedRef, 20, 20);
@@ -709,13 +721,18 @@ function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: 
   const fileRef = finding.location.line > 0
     ? `${finding.location.file}:${finding.location.line}`
     : finding.location.file;
+  const linkUrl = generateFileLink(finding.location.file, finding.location.line, analyzedRepo, analyzedRef);
   doc.font(f.mono).fontSize(8).fillColor(COLORS.link);
   doc.text(fileRef, contentX);
-  
-  // Draw clickable GitHub logo next to the file path
   const fileRefWidthCondensed = doc.widthOfString(fileRef);
+  if (linkUrl) {
+    const fileRefHeight = doc.currentLineHeight();
+    const fileRefY = doc.y - fileRefHeight;
+    doc.link(contentX, fileRefY, fileRefWidthCondensed, fileRefHeight, linkUrl);
+    doc.underline(contentX, fileRefY, fileRefWidthCondensed, fileRefHeight, { color: COLORS.link });
+  }
+  // Draw clickable GitHub logo next to the file path
   drawClickableGitHubLogo(doc, contentX + fileRefWidthCondensed + 6, doc.y - 14, finding.location.file, finding.location.line, analyzedRepo, analyzedRef, 20, 20);
-  
   doc.moveDown(0.2);
 
   // Metadata

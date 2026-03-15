@@ -29,6 +29,7 @@ export interface OrchestratorResult {
   workerResults: WorkerResult[];
   mergedReport: MergedReport | null;
   gitSha?: string;
+  gitRemote?: string;  // "owner/repo" from origin, if GitHub
 }
 
 export async function runOrchestrator(options: OrchestratorOptions): Promise<OrchestratorResult> {
@@ -48,6 +49,16 @@ export async function runOrchestrator(options: OrchestratorOptions): Promise<Orc
       .toString().trim();
   } catch {
     /* not a git repo — gitSha stays undefined */
+  }
+
+  let gitRemote: string | undefined;
+  try {
+    const url = execSync('git remote get-url origin', { cwd: options.targetDir })
+      .toString().trim();
+    const match = url.match(/github\.com[:/]([\w.-]+\/[\w.-]+?)(?:\.git)?$/);
+    if (match) gitRemote = match[1];
+  } catch {
+    /* no remote or not GitHub */
   }
 
   writer.writePhase('planning');
@@ -133,5 +144,5 @@ export async function runOrchestrator(options: OrchestratorOptions): Promise<Orc
   writer.onComplete(mergedReport, workerResults);
   console.log(`[Orchestrator] Output written to ${outputPath}`);
 
-  return { preRecon, assignments, workerResults, mergedReport, gitSha };
+  return { preRecon, assignments, workerResults, mergedReport, gitSha, gitRemote };
 }

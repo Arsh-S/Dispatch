@@ -108,10 +108,14 @@ async function main() {
 
       // Generate PDF report
       const pdfPath = outputPath.replace(/\.json$/, '.pdf');
+      const analyzedRepo = githubRepo ?? result.gitRemote;
+      const analyzedRef = result.gitSha ?? 'main';
       try {
         await generatePdfReport(report, pdfPath, {
           githubRepo,
-          githubRef: result.gitSha ?? 'main',
+          githubRef: analyzedRef,
+          analyzedRepo: analyzedRepo ?? undefined,
+          analyzedRef,
           createdIssues: issueMap.size > 0 ? issueMap : undefined,
         });
         console.log(`\nPDF report: ${pdfPath}`);
@@ -158,6 +162,8 @@ async function main() {
     const result = await generatePdfReport(data, pdfOutputPath, {
       githubRepo: repoFlag,
       githubRef: refFlag || 'main',
+      analyzedRepo: repoFlag ?? undefined,
+      analyzedRef: refFlag || 'main',
     });
     console.log(`PDF report written to: ${result}`);
   } else if (command === 'test-suite') {
