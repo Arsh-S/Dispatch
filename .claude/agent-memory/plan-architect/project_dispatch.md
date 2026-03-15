@@ -26,6 +26,14 @@ CLI (`src/cli.ts`) -> Orchestrator (`src/orchestrator/agent.ts`) -> Pre-Recon ->
 - `ConstructorBootstrap` in constructor/types.ts = input to construction worker (needs github_issue.repo, number, app_config, pr_config)
 - `FixResult` = output of construction worker
 
+## Constructor Worker Details
+- Two execution modes: regex (`agent.ts` -> `fix.ts`) and Claude CLI subprocess (`claude-agent.ts` -> `agent-adapters/claude-agent-runner.ts`)
+- `claude-agent-runner.ts` spawns `claude --print` CLI, not the `@anthropic-ai/sdk` npm package
+- `@anthropic-ai/sdk` is NOT currently a dependency (needs `pnpm add`)
+- `ANTHROPIC_API_KEY` is passed as env var to Blaxel sandbox
+- `prompts.ts` has system/task prompts already written for the Claude agent mode
+- `fix.ts` signature: `applyFix(parsed: ParsedIssue, bootstrap: ConstructorBootstrap): Promise<FixResult>`
+
 ## Conventions
 - pnpm package manager, TypeScript throughout
 - Root package.json has no PDF library yet
