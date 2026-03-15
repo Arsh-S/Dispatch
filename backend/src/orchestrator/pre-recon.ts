@@ -187,7 +187,7 @@ function readDispatchIgnore(targetDir: string): string[] {
 }
 
 async function findSourceFiles(targetDir: string, ignorePatterns: string[]): Promise<string[]> {
-  const files = await glob('**/*.{ts,js,tsx,jsx}', {
+  const files = await glob('**/*.{ts,js,tsx,jsx,py}', {
     cwd: targetDir,
     ignore: ignorePatterns.map(p => `**/${p}/**`).concat(ignorePatterns),
   });
@@ -202,7 +202,60 @@ function analyzeRoutes(fileContents: Map<string, string>): RouteMapEntry[] {
   // Also match named routers like commentsRouter.post(...)
   const routeRegex = /(?:\w*(?:router|Router|app))\.(get|post|put|delete|patch)\s*\(\s*['"`]([^'"`]+)['"`]/gi;
 
+  // Match Flask route decorators: @app.route('/path', methods=['GET', 'POST'])
+  const flaskRouteRegex = /@(?:app|blueprint|\w+)\.route\s*\(\s*['"]([^'"]+)['"]\s*(?:,\s*methods\s*=\s*\[([^\]]*)\])?\s*\)/g;
+
   for (const [filePath, content] of fileContents) {
+    // Flask (.py) route detection
+    if (filePath.endsWith('.py')) {
+      const lines = content.split('\n');
+      flaskRouteRegex.lastIndex = 0;
+      let match;
+      while ((match = flaskRouteRegex.exec(content)) !== null) {
+        const routePath = match[1];
+        const methodsRaw = match[2] || "'GET'";
+        const methods = methodsRaw.match(/['"](\w+)['"]/g)?.map(m => m.replace(/['"]/g, '').toUpperCase()) || ['GET'];
+        const lineNumber = content.substring(0, match.index).split('\n').length;
+
+        // Find parameters: <type:name> in path, request.form.get / request.args.get / request.json
+        const parameters: { name: string; source: 'body' | 'query' | 'params' | 'header'; type: string }[] = [];
+        const pathParamMatches = routePath.match(/<(?:\w+:)?(\w+)>/g);
+        if (pathParamMatches) {
+          pathParamMatches.forEach(p => {
+            const name = p.replace(/<(?:\w+:)?(\w+)>/, '$1');
+            parameters.push({ name, source: 'params', type: 'string' });
+          });
+        }
+
+        const startLine = Math.max(0, lineNumber);
+        const endLine = Math.min(lines.length, lineNumber + 30);
+        const fnBlock = lines.slice(startLine, endLine).join('\n');
+
+        const formRegex = /request\.form\.get\s*\(\s*['"](\w+)['"]/g;
+        let fm;
+        while ((fm = formRegex.exec(fnBlock)) !== null) {
+          if (!parameters.find(p => p.name === fm[1])) parameters.push({ name: fm[1], source: 'body', type: 'string' });
+        }
+        const argsRegex = /request\.args\.get\s*\(\s*['"](\w+)['"]/g;
+        let am;
+        while ((am = argsRegex.exec(fnBlock)) !== null) {
+          if (!parameters.find(p => p.name === am[1])) parameters.push({ name: am[1], source: 'query', type: 'string' });
+        }
+
+        for (const method of methods) {
+          routes.push({
+            endpoint: `${method} ${routePath}`,
+            method,
+            handler_file: filePath,
+            handler_line: lineNumber,
+            middleware: [],
+            parameters,
+          });
+        }
+      }
+      continue;
+    }
+
     if (!filePath.includes('route') && !filePath.includes('app') && !filePath.includes('Router')) continue;
 
     const lines = content.split('\n');
@@ -298,6 +351,30 @@ function analyzeRiskSignals(fileContents: Map<string, string>): RiskSignal[] {
   const signals: RiskSignal[] = [];
 
   const patterns = [
+    {
+      // Python SQL injection via f-string or % formatting
+      regex: /cursor\.execute\s*\(\s*(?:f['"]|['"][^'"]*%\s*(?:username|password|input|query|param))/g,
+      pattern: 'raw-sql-concatenation',
+      attacks: ['sql-injection'],
+    },
+    {
+      // Python OS command injection via os.system / subprocess with user input
+      regex: /(?:os\.system|subprocess\.(?:call|run|Popen))\s*\(\s*(?:f['"]|[^)]*\+\s*(?:host|ip|cmd|input|param))/g,
+      pattern: 'command-injection',
+      attacks: ['command-injection'],
+    },
+    {
+      // Python insecure deserialization
+      regex: /pickle\.loads\s*\(/g,
+      pattern: 'insecure-deserialization',
+      attacks: ['deserialization'],
+    },
+    {
+      // Python hardcoded secrets/credentials
+      regex: /(?:SECRET|PASSWORD|API_KEY|ACCESS_KEY|TOKEN)\s*=\s*['"][^'"]{8,}['"]/g,
+      pattern: 'hardcoded-secret',
+      attacks: ['secrets-exposure'],
+    },
     {
       // SQL injection via string concatenation/template literals
       regex: /(?:query|exec|run|prepare)\s*\(\s*`[^`]*\$\{[^}]*req\b/g,
