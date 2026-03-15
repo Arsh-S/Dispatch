@@ -1,8 +1,8 @@
 import { ParsedIssue } from './types.js';
 
 export function parseIssueBody(body: string): ParsedIssue {
-  // Parse YAML frontmatter
-  const frontmatterMatch = body.match(/---\n([\s\S]*?)\n---/);
+  // Parse YAML metadata — supports ```yaml code block or --- frontmatter delimiters
+  const frontmatterMatch = body.match(/```ya?ml\n([\s\S]*?)\n```/) || body.match(/---\n([\s\S]*?)\n---/);
   const metadata: Record<string, string> = {};
 
   if (frontmatterMatch) {
