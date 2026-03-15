@@ -1,47 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { motion, useSpring, AnimatePresence } from 'framer-motion'
+import React from 'react'
+import { motion, useSpring } from 'framer-motion'
 
 interface NavItem {
   label: string
   id: string
 }
 
-export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: string) => void }> = ({ 
+export const PillBase: React.FC<{ activeSection: string; navItems: NavItem[]; onSectionClick: (id: string) => void }> = ({ 
   activeSection, 
+  navItems,
   onSectionClick 
 }) => {
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const prevSectionRef = useRef('home')
-  
-  const navItems: NavItem[] = [
-    { label: 'Home', id: 'home' },
-    { label: 'Problem', id: 'problem' },
-    { label: 'Pre-Recon', id: 'clinical' },
-    { label: 'Architecture', id: 'solution' },
-    { label: 'Workflow', id: 'how-it-works' },
-    { label: 'Outputs', id: 'dashboard' },
-    { label: 'Fix Loop', id: 'muscle' },
-    { label: 'Summary', id: 'summary' },
-    { label: 'Business', id: 'business-model' },
-    { label: 'Market', id: 'market-size' },
-    { label: 'Competition', id: 'competition' },
-  ]
-
-  const pillWidth = useSpring(1200, { stiffness: 220, damping: 25, mass: 1 })
+  const targetWidth = Math.min(1200, Math.max(760, navItems.length * 140))
+  const pillWidth = useSpring(targetWidth, { stiffness: 220, damping: 25, mass: 1 })
   const pillShift = useSpring(0, { stiffness: 220, damping: 25, mass: 1 })
-
-  const handleSectionClick = (sectionId: string) => {
-    setIsTransitioning(true)
-    prevSectionRef.current = sectionId
-    onSectionClick(sectionId)
-    
-    setTimeout(() => {
-      setIsTransitioning(false)
-    }, 400)
-  }
-
-  const activeItem = navItems.find(item => item.id === activeSection)
 
   return (
     <motion.nav
@@ -187,8 +159,7 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
       />
 
       {/* Navigation items container */}
-      <div 
-        ref={containerRef}
+      <div
         className="relative z-10 h-full flex items-center justify-center px-4"
         style={{
           fontFamily: '"Elms Sans", sans-serif',
@@ -196,7 +167,7 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
       >
         {/* Always show all sections */}
         <div className="flex items-center justify-evenly w-full">
-          {navItems.map((item, index) => {
+          {navItems.map((item) => {
             const isActive = item.id === activeSection
             
             return (
@@ -208,7 +179,7 @@ export const PillBase: React.FC<{ activeSection: string; onSectionClick: (id: st
                   duration: 0.25,
                   ease: 'easeOut'
                 }}
-                onClick={() => handleSectionClick(item.id)}
+                onClick={() => onSectionClick(item.id)}
                 className="relative cursor-pointer transition-all duration-200"
                 style={{
                   fontSize: isActive ? '14.5px' : '14px',
