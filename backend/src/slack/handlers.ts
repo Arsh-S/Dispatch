@@ -459,7 +459,7 @@ function handleHelpCommand(): AgentProcessingResult {
 *Available Commands:*
 
 • \`scan\` - Run a security scan (requires DISPATCH_TARGET_DIR)
-• \`fix DISP-123\` - Fix a Linear issue (triggers constructor agent → PR)
+• \`fix DIS-123\` - Fix a Linear issue (triggers constructor agent → PR)
 • \`create issue [title]\` - Create a GitHub issue
 • \`juice [command]\` - Interact with Juice Shop
 • \`help\` - Show this help message
