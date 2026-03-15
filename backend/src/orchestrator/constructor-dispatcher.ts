@@ -56,6 +56,8 @@ export async function runBlaxelConstructor(
       name: procName,
       command: [
         `git clone ${cloneUrl} /repo`,
+        'git config --global user.email "dispatch@dispatch.ai"',
+        'git config --global user.name "Dispatch Constructor"',
         'npm install --ignore-scripts --prefix /dispatch-backend',
         'npx tsx /dispatch-backend/src/workers/constructor/cli.ts /dispatch/constructor-bootstrap.json',
       ].join(' && '),
