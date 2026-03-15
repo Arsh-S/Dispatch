@@ -1,4 +1,25 @@
+import { z } from 'zod';
+
 export type IssueSource = 'github' | 'linear';
+
+// ---------------------------------------------------------------------------
+// Zod schemas for constructor outputs (used by Claude agent adapter)
+// ---------------------------------------------------------------------------
+
+export const FixResultSchema = z.object({
+  status: z.enum(['fix_verified', 'fix_unverified', 'fix_failed', 'timeout', 'error']),
+  files_changed: z.array(z.string()).default([]),
+  validation: z.object({
+    result: z.enum(['PASS', 'FAIL']),
+    response: z.string(),
+  }).nullable().default(null),
+  pr: z.object({
+    number: z.number(),
+    url: z.string(),
+    branch: z.string(),
+  }).nullable().default(null),
+  notes: z.string().default(''),
+});
 
 export interface ConstructorBootstrap {
   construction_worker_id: string;
