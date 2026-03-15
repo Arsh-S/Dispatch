@@ -28,6 +28,10 @@ slides/dist/
 *.log
 npm-debug.log*
 
+# Sample targets (cloned repos with nested .git — use submodules if needed)
+dvna-target/
+flask-target/
+
 # Misc
 coverage/
 .nyc_output/
