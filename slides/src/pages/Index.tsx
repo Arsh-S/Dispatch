@@ -18,20 +18,28 @@ const problemCards = [
     shadowClassName: 'shadow-[0_30px_80px_rgba(255,79,79,0.08)]',
   },
   {
+    number: '17 hrs',
+    text: 'Per week developers can spend on security work, much of it triaging reports and translating findings into fixes by hand.',
+    citation: '(Checkmarx, 2025).',
+    numberClassName: 'text-[#7fb0ff]',
+    borderClassName: 'border-[#7fb0ff]/25',
+    shadowClassName: 'shadow-[0_30px_80px_rgba(127,176,255,0.12)]',
+  },
+  {
+    number: '$5K-$100K',
+    text: 'Typical pentests still cost thousands to tens of thousands of dollars before the developer even starts the remediation work.',
+    citation: '(Invicti, 2025).',
+    numberClassName: 'text-[#e4b24d]',
+    borderClassName: 'border-[#e4b24d]/25',
+    shadowClassName: 'shadow-[0_30px_80px_rgba(228,178,77,0.12)]',
+  },
+  {
     number: '$4.44M',
     text: 'Average global breach cost in 2025, while vulnerability exploitation remained the leading cause of observed cyberattacks.',
     citation: '(IBM, 2025; IBM, 2026).',
     numberClassName: 'text-primary',
     borderClassName: 'border-primary/25',
     shadowClassName: 'shadow-[0_30px_80px_rgba(62,207,142,0.12)]',
-  },
-  {
-    number: '17 hrs',
-    text: 'Per week developers can spend on security work, much of it triaging reports and translating findings into fixes by hand.',
-    citation: '(Checkmarx, 2025).',
-    numberClassName: 'text-accent',
-    borderClassName: 'border-accent/25',
-    shadowClassName: 'shadow-[0_30px_80px_rgba(24,201,141,0.1)]',
   },
 ];
 
@@ -84,40 +92,40 @@ const architectureCards = [
 ];
 
 const workflowSteps = [
-  { title: 'Pre-Recon', borderClassName: 'border-primary/30', arrowClassName: 'text-primary' },
-  { title: 'Pentest Worker', borderClassName: 'border-secondary/30', arrowClassName: 'text-secondary' },
-  { title: 'GitHub Issue', borderClassName: 'border-accent/30', arrowClassName: 'text-accent' },
+  { title: 'Read Repo', borderClassName: 'border-primary/30', arrowClassName: 'text-primary' },
+  { title: 'Attack App', borderClassName: 'border-secondary/30', arrowClassName: 'text-secondary' },
+  { title: 'Open Issue', borderClassName: 'border-accent/30', arrowClassName: 'text-accent' },
   { title: 'Fix PR', borderClassName: 'border-destructive/30', arrowClassName: 'text-destructive' },
 ];
 
 const workflowArtifacts = [
   {
-    title: 'Route Map + Briefing',
-    text: 'Handlers, middleware, parameters, risk signals, and rules-aware targeting.',
+    title: 'Repo Map',
+    text: 'Routes, files, rules, and risk signals so testing starts with context instead of guesswork.',
     citation: '(OWASP Foundation, 2020; Scarfone et al., 2008).',
     accentClassName: 'text-primary',
     borderClassName: 'border-primary/30',
     bgClassName: 'bg-primary/10',
   },
   {
-    title: 'Finding Report + Logs',
-    text: 'Exploit evidence, localhost log capture, monkeypatch attempts, and clean endpoints tested.',
+    title: 'Exploit Evidence',
+    text: 'Live attack output, logs, and proof that the vulnerability actually reproduced.',
     citation: '(Scarfone et al., 2008; OWASP Foundation, 2025).',
     accentClassName: 'text-secondary',
     borderClassName: 'border-secondary/30',
     bgClassName: 'bg-secondary/10',
   },
   {
-    title: 'Tagged Issue + Repro',
-    text: 'Severity, OWASP mapping, reproduction steps, logs, recommended fix, and lifecycle labels.',
+    title: 'Auto-Created Issue',
+    text: 'Severity, reproduction steps, logs, and the recommended fix are posted automatically.',
     citation: '(OWASP Foundation, 2025; Souppaya et al., 2022).',
     accentClassName: 'text-accent',
     borderClassName: 'border-accent/30',
     bgClassName: 'bg-accent/10',
   },
   {
-    title: 'Validated Patch + Audit Trail',
-    text: 'Construction worker patch, verification result, review link, and issue thread as the permanent record.',
+    title: 'Fix Pull Request',
+    text: 'Dispatch writes the patch, validates it, and hands the developer a PR to review and merge.',
     citation: '(Souppaya et al., 2022; OWASP Foundation, 2025).',
     accentClassName: 'text-destructive',
     borderClassName: 'border-destructive/30',
@@ -338,6 +346,44 @@ const marketCards = [
   },
 ];
 
+const ganttMetrics = [
+  { label: 'Traditional workflow', value: '18-32 days', valueClassName: 'text-[#f27e73]' },
+  { label: 'With Dispatch', value: '2-4 days', valueClassName: 'text-primary' },
+  { label: 'Time saved', value: '~87%', valueClassName: 'text-[#7fb0ff]' },
+  { label: 'Dev hours freed / week', value: '17 hrs', valueClassName: 'text-foreground' },
+];
+
+const ganttDays = Array.from({ length: 22 }, (_, index) => index + 1);
+
+const traditionalWorkflowRows = [
+  { label: 'Vendor RFP & scheduling', dotClassName: 'bg-[#c83a36]', barClassName: 'bg-[#c83a36]', start: 1, span: 4, barLabel: 'Find & book pentest' },
+  { label: 'Scoping call & NDA', dotClassName: 'bg-[#9b9a94]', barClassName: 'bg-[#a6a39c]', start: 5, span: 2, barLabel: 'Scope docs' },
+  { label: 'Pentest execution', dotClassName: 'bg-[#c83a36]', barClassName: 'bg-[#c83a36]', start: 7, span: 5, barLabel: 'Manual testing (5 days)' },
+  { label: 'Waiting for report', dotClassName: 'bg-[#9b9a94]', barClassName: 'bg-[#a6a39c]', start: 12, span: 4, barLabel: 'Report generation' },
+  { label: 'PDF report delivered', dotClassName: 'bg-[#c83a36]', barClassName: 'bg-[#c83a36]', start: 16, span: 1 },
+  { label: 'Internal triage meeting', dotClassName: 'bg-[#9b9a94]', barClassName: 'bg-[#a6a39c]', start: 17, span: 2 },
+  { label: 'Manual ticket creation', dotClassName: 'bg-[#c83a36]', barClassName: 'bg-[#c83a36]', start: 19, span: 2, barLabel: 'Jira / Linear' },
+  { label: 'Dev fixes (manual)', dotClassName: 'bg-[#2f6fb6]', barClassName: 'bg-[#2f6fb6]', start: 21, span: 2, barLabel: 'Code fixes' },
+  { label: 'Re-test & verify', dotClassName: 'bg-[#9b9a94]', barClassName: 'bg-[#a6a39c]', start: 22, span: 1 },
+];
+
+const dispatchWorkflowRows = [
+  { label: 'Pre-recon (automated)', dotClassName: 'bg-[#1fb388]', barClassName: 'bg-[#1fb388]', start: 1, span: 1 },
+  { label: 'Parallel worker testing', dotClassName: 'bg-[#1fb388]', barClassName: 'bg-[#24b587]', start: 2, span: 2 },
+  { label: 'GitHub issues created', dotClassName: 'bg-[#1fb388]', barClassName: 'bg-[#24b587]', start: 4, span: 1 },
+  { label: 'Construction worker patches', dotClassName: 'bg-[#1fb388]', barClassName: 'bg-[#24b587]', start: 5, span: 1 },
+  { label: 'Dev review & merge', dotClassName: 'bg-[#2f6fb6]', barClassName: 'bg-[#2f6fb6]', start: 6, span: 1 },
+  { label: 'Automated verification', dotClassName: 'bg-[#1fb388]', barClassName: 'bg-[#24b587]', start: 7, span: 1 },
+  { label: 'PDF + graph report', dotClassName: 'bg-[#1fb388]', barClassName: 'bg-[#24b587]', start: 8, span: 1 },
+];
+
+const demoMoments = [
+  'Dispatch ingests the repo and reads the rules like a developer.',
+  'Workers attack the app in parallel and prove what is actually exploitable.',
+  'Issues are created automatically and the construction worker opens the fix PR.',
+  '90 seconds later, the developer reviews the PR instead of reading a PDF.',
+];
+
 const competitorRows = [
   {
     tool: 'Casco',
@@ -442,14 +488,15 @@ const Citation = ({ text, className = '' }: { text: string; className?: string }
 const MAIN_NAV_ITEMS = [
   { label: 'Home', id: 'home' },
   { label: 'Problem', id: 'problem' },
-  { label: 'Workflow', id: 'how-it-works' },
-  { label: 'Summary', id: 'summary' },
-  { label: 'Business', id: 'business-model' },
+  { label: 'Dispatch', id: 'how-it-works' },
+  { label: 'Demo', id: 'demo' },
   { label: 'Market', id: 'market-size' },
   { label: 'Competition', id: 'competition' },
 ];
 
 const APPENDIX_NAV_ITEMS = [
+  { label: 'Summary', id: 'summary' },
+  { label: 'Business', id: 'business-model' },
   { label: 'Pre-Recon', id: 'clinical' },
   { label: 'Architecture', id: 'solution' },
   { label: 'Outputs', id: 'dashboard' },
@@ -464,10 +511,10 @@ const Index = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const teamMembers = [
-    { name: 'Arsh Singh', role: 'Computer Science', initials: 'A', image: '/arsh.jpeg' },
-    { name: 'Mateo del Rio Lanse', role: 'Electrical & Computer Engineering', initials: 'M', image: '/Mateo_Headshot.jpeg' },
-    { name: 'Diya Sheth', role: 'Mechanical Engineering', initials: 'D', image: '/Diya_Headshot.jpeg' },
-    { name: 'Jimmy Mulosmani', role: 'Computer Science', initials: 'J', image: '/Jimmy_Headshot.jpeg' },
+    { name: 'Arsh Singh', role: 'Computer Science @Cornell', initials: 'A', image: '/arsh.jpeg' },
+    { name: 'Mateo del Rio Lanse', role: 'Electrical & Computer Engineering @Cornell', initials: 'M', image: '/Mateo_Headshot.jpeg' },
+    { name: 'Diya Sheth', role: 'Mechanical Engineering @Cornell', initials: 'D', image: '/Diya_Headshot.jpeg' },
+    { name: 'Jimmy Mulosmani', role: 'Computer Science @Cornell', initials: 'J', image: '/Jimmy_Headshot.jpeg' },
   ];
 
   useEffect(() => {
@@ -520,7 +567,7 @@ const Index = () => {
       </div>
 
       <div className="fixed bottom-6 right-6 z-[70]">
-        <LinesPatternCard className="w-44 rounded-2xl border border-primary/35 bg-card/95 shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-md">
+        <LinesPatternCard className="w-52 rounded-2xl border border-primary/35 bg-card/95 shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-md">
           <LinesPatternCardBody className="p-3">
             <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary">Appendix</p>
             <div className="mt-2 flex flex-col gap-1.5">
@@ -619,41 +666,39 @@ const Index = () => {
           </div>
         </Section>
 
-        <Section id="problem" className="bg-transparent" contentClassName="max-w-7xl py-8">
-          <div className="space-y-5">
+        <Section id="problem" className="bg-transparent" contentClassName="max-w-[92rem] py-4">
+          <div className="space-y-4">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              viewport={{ once: false, amount: 0.45 }}
-              className="max-w-6xl mx-auto text-center space-y-2"
+              viewport={{ once: false, amount: 0.35 }}
+              className="mx-auto max-w-6xl text-center"
             >
-              <h2 className="text-3xl md:text-5xl xl:text-6xl font-black tracking-tight leading-[1.05] text-foreground">
-                A pentest finds your vulnerabilities... but it still costs
+              <p className="text-sm font-semibold tracking-[0.24em] uppercase text-primary">The bottleneck is remediation</p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight leading-[1.05] text-foreground md:text-5xl xl:text-6xl">
+                Every security tool scans your code, finds vulnerabilities, and hands you a report. Then it stops.
               </h2>
-              <div className="text-5xl md:text-7xl font-black tracking-tight text-destructive">
-                $5K-$100K+
-              </div>
-              <Citation
-                text={'(Invicti, 2025).'}
-                className="text-center max-w-3xl mx-auto !mt-2"
-              />
+              <p className="mx-auto mt-4 max-w-5xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+                From there, the developer has to read the report, create tickets, write the patch, deploy it, and verify it manually.
+                The real problem in security is not finding vulnerabilities. It is fixing them.
+              </p>
             </motion.div>
 
-            <div className="grid max-w-7xl mx-auto gap-4 lg:grid-cols-3">
+            <div className="grid max-w-7xl mx-auto gap-3 md:grid-cols-2 xl:grid-cols-4">
               {problemCards.map((card, index) => (
                 <motion.div
                   key={card.number}
-                  initial={{ opacity: 0, y: 32 }}
+                  initial={{ opacity: 0, y: 28 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: 0.12 * index }}
-                  viewport={{ once: false, amount: 0.35 }}
-                  className={`h-full rounded-[2rem] border bg-card/90 px-6 py-6 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}
+                  transition={{ duration: 0.5, delay: 0.08 * index }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  className={`h-full rounded-[1.75rem] border bg-card/90 px-5 py-5 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}
                 >
-                  <div className={`text-5xl md:text-6xl font-black tracking-tight ${card.numberClassName}`}>
+                  <div className={`text-4xl font-black tracking-tight md:text-5xl ${card.numberClassName}`}>
                     {card.number}
                   </div>
-                  <p className="mt-3 text-base md:text-lg leading-relaxed text-muted-foreground">
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
                     {card.text}
                   </p>
                   <Citation text={card.citation} className="!mt-2" />
@@ -662,31 +707,176 @@ const Index = () => {
             </div>
 
             <motion.div
-              initial={{ opacity: 0, y: 32 }}
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
-              viewport={{ once: false, amount: 0.35 }}
-              className="relative max-w-7xl mx-auto pt-2"
+              transition={{ duration: 0.55, delay: 0.18 }}
+              viewport={{ once: false, amount: 0.25 }}
             >
-              <div className="rounded-[2rem] border border-primary/20 bg-card/90 px-6 py-6 text-center shadow-[0_30px_90px_rgba(33,117,78,0.22)] backdrop-blur-md">
-                <p className="mx-auto max-w-6xl text-xl font-bold leading-snug text-foreground md:text-2xl">
-                  How do we turn security testing into tickets, fixes, and verified PRs instead of yet another PDF?
-                </p>
-                <Citation
-                  text={'(Invicti, 2025; IBM, 2025).'}
-                  className="text-center !mt-2"
-                />
-              </div>
+              <LinesPatternCard className="max-w-[90rem] mx-auto rounded-[2rem] border-primary/30 shadow-[0_30px_90px_rgba(33,117,78,0.22)]">
+                <LinesPatternCardBody className="p-4 md:p-6">
+                  <div className="grid gap-4 border-b border-border/60 pb-4 md:grid-cols-4">
+                    {ganttMetrics.map((metric) => (
+                      <div key={metric.label}>
+                        <p className="text-sm font-medium text-muted-foreground md:text-base">{metric.label}</p>
+                        <p className={`mt-1 text-3xl font-black tracking-tight md:text-4xl ${metric.valueClassName}`}>
+                          {metric.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 overflow-x-auto">
+                    <table className="min-w-[1520px] w-full border-separate border-spacing-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-background/30 text-left">
+                      <thead>
+                        <tr className="bg-white/[0.03] text-sm text-muted-foreground">
+                          <th className="w-[360px] min-w-[360px] border-b border-border/40 px-4 py-3 font-semibold">
+                            Phase
+                          </th>
+                          {ganttDays.map((day) => (
+                            <th
+                              key={day}
+                              className="min-w-[52px] border-b border-l border-border/35 px-2 py-3 text-center font-semibold"
+                            >
+                              Day {day}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="bg-white/[0.03]">
+                          <td className="border-b border-border/35 px-4 py-3 text-2xl font-bold text-foreground">
+                            Traditional security workflow
+                          </td>
+                          <td colSpan={ganttDays.length} className="border-b border-border/35" />
+                        </tr>
+                        {traditionalWorkflowRows.map((row) => {
+                          const daysBefore = row.start - 1;
+                          const daysAfter = ganttDays.length - (row.start + row.span - 1);
+
+                          return (
+                            <tr key={row.label} className="border-b border-border/35">
+                              <td className="border-b border-border/35 px-4 py-3 align-middle">
+                                <div className="flex items-center gap-3 text-base md:text-lg">
+                                  <span className={`h-3 w-3 shrink-0 rounded-full ${row.dotClassName}`} />
+                                  <span className="font-medium text-foreground/90">{row.label}</span>
+                                </div>
+                              </td>
+                              {Array.from({ length: daysBefore }).map((_, index) => (
+                                <td
+                                  key={`${row.label}-before-${index}`}
+                                  className="h-14 border-b border-l border-border/35"
+                                />
+                              ))}
+                              <td
+                                colSpan={row.span}
+                                className="h-14 border-b border-l border-border/35 px-1 py-2"
+                              >
+                                <div
+                                  className={`flex h-10 items-center rounded-md text-xs font-semibold text-white ${
+                                    row.barLabel ? 'justify-start px-3' : 'justify-center'
+                                  } ${row.barClassName}`}
+                                >
+                                  {row.barLabel ?? ''}
+                                </div>
+                              </td>
+                              {Array.from({ length: daysAfter }).map((_, index) => (
+                                <td
+                                  key={`${row.label}-after-${index}`}
+                                  className="h-14 border-b border-l border-border/35"
+                                />
+                              ))}
+                            </tr>
+                          );
+                        })}
+
+                        <tr className="bg-primary/10">
+                          <td className="border-b border-border/35 px-4 py-3 text-2xl font-bold text-foreground">
+                            Dispatch automated workflow
+                          </td>
+                          <td colSpan={ganttDays.length} className="border-b border-border/35" />
+                        </tr>
+                        {dispatchWorkflowRows.map((row) => {
+                          const daysBefore = row.start - 1;
+                          const daysAfter = ganttDays.length - (row.start + row.span - 1);
+
+                          return (
+                            <tr key={row.label} className="border-b border-border/35 last:border-b-0">
+                              <td className="border-b border-border/35 px-4 py-3 align-middle">
+                                <div className="flex items-center gap-3 text-base md:text-lg">
+                                  <span className={`h-3 w-3 shrink-0 rounded-full ${row.dotClassName}`} />
+                                  <span className="font-medium text-foreground/90">{row.label}</span>
+                                </div>
+                              </td>
+                              {Array.from({ length: daysBefore }).map((_, index) => (
+                                <td
+                                  key={`${row.label}-before-${index}`}
+                                  className="h-14 border-b border-l border-border/35"
+                                />
+                              ))}
+                              <td
+                                colSpan={row.span}
+                                className="h-14 border-b border-l border-border/35 px-1 py-2"
+                              >
+                                <div
+                                  className={`flex h-10 items-center rounded-md text-xs font-semibold text-white ${
+                                    row.barLabel ? 'justify-start px-3' : 'justify-center'
+                                  } ${row.barClassName}`}
+                                >
+                                  {row.barLabel ?? ''}
+                                </div>
+                              </td>
+                              {Array.from({ length: daysAfter }).map((_, index) => (
+                                <td
+                                  key={`${row.label}-after-${index}`}
+                                  className="h-14 border-b border-l border-border/35"
+                                />
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-6 text-sm md:text-base">
+                    <div className="flex items-center gap-2 text-foreground/90">
+                      <span className="h-3 w-3 rounded-sm bg-[#c83a36]" />
+                      <span>Manual or blocking step</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-foreground/90">
+                      <span className="h-3 w-3 rounded-sm bg-[#a6a39c]" />
+                      <span>Waiting or scheduling</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-foreground/90">
+                      <span className="h-3 w-3 rounded-sm bg-[#24b587]" />
+                      <span>Automated by Dispatch</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-foreground/90">
+                      <span className="h-3 w-3 rounded-sm bg-[#2f6fb6]" />
+                      <span>Developer review</span>
+                    </div>
+                  </div>
+
+                  <Citation
+                    text={'Illustrative pentest-to-fix timeline based on remediation backlog, pentest delivery, and developer security-work benchmarks (EdgeScan, 2025; Invicti, 2025; Checkmarx, 2025; OWASP Foundation, 2025).'}
+                    className="!mt-3"
+                  />
+                </LinesPatternCardBody>
+              </LinesPatternCard>
             </motion.div>
           </div>
         </Section>
 
-        <Section id="how-it-works" className="bg-transparent">
+        <Section id="how-it-works" className="bg-transparent" contentClassName="max-w-7xl py-10">
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground">How Dispatch Works</h1>
-              <p className="max-w-4xl mx-auto text-xl md:text-2xl text-muted-foreground">
-                The workflow moves from intelligence gathering to exploitation, to issue creation, to verified remediation.
+              <p className="text-sm font-semibold tracking-[0.24em] uppercase text-primary">Dispatch</p>
+              <h1 className="text-4xl font-bold text-foreground md:text-6xl xl:text-7xl">
+                Dispatch reads the repo, attacks the app, and writes the fix.
+              </h1>
+              <p className="max-w-5xl mx-auto text-lg md:text-2xl text-muted-foreground">
+                You give Dispatch your repository. It reads the code like a developer, attacks it like a hacker,
+                creates the ticket automatically, and opens the pull request with the patch already written.
               </p>
             </div>
 
@@ -699,7 +889,7 @@ const Index = () => {
               {workflowSteps.map((step, index) => (
                 <div key={step.title} className="flex items-center gap-3">
                   <LinesPatternCard className={`rounded-lg shadow-lg ${step.borderClassName}`}>
-                    <LinesPatternCardBody className="px-4 py-3 text-center h-16 flex items-center justify-center">
+                    <LinesPatternCardBody className="flex h-16 items-center justify-center px-4 py-3 text-center">
                       <p className="text-xl font-semibold text-foreground whitespace-nowrap">{step.title}</p>
                     </LinesPatternCardBody>
                   </LinesPatternCard>
@@ -718,7 +908,7 @@ const Index = () => {
             >
               <LinesPatternCard className="rounded-2xl shadow-2xl border-primary/40 max-w-7xl mx-auto">
                 <LinesPatternCardBody className="p-8">
-                  <h3 className="text-3xl font-bold text-foreground mb-8 text-center">Artifacts At Each Stage</h3>
+                  <h3 className="text-3xl font-bold text-foreground mb-8 text-center">What Dispatch produces at each stage</h3>
                   <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                     {workflowArtifacts.map((artifact) => (
                       <div
@@ -734,6 +924,238 @@ const Index = () => {
                 </LinesPatternCardBody>
               </LinesPatternCard>
             </motion.div>
+
+            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-primary/25">
+              <LinesPatternCardBody className="p-6 text-center">
+                <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug">
+                  Instead of a security report, the developer gets a PR to review and merge.
+                </p>
+              </LinesPatternCardBody>
+            </LinesPatternCard>
+          </div>
+        </Section>
+
+        <Section id="demo" className="bg-transparent" contentClassName="max-w-7xl py-10">
+          <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+            <LinesPatternCard className="rounded-[2rem] shadow-2xl border-primary/35">
+              <LinesPatternCardBody className="flex h-full min-h-[28rem] flex-col justify-between p-8 md:p-10">
+                <div className="space-y-4">
+                  <p className="text-sm font-semibold tracking-[0.24em] uppercase text-primary">Video Demo</p>
+                  <h1 className="text-4xl font-bold text-foreground md:text-5xl">
+                    Repository in. Pull request out.
+                  </h1>
+                  <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+                    This slide is reserved for the live demo video. It will show Dispatch running end-to-end:
+                    proving the exploit, opening the issue, patching the code, and handing the developer a fix PR.
+                  </p>
+                </div>
+
+                <div className="rounded-[1.5rem] border border-white/10 bg-background/50 px-6 py-8 text-center">
+                  <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground">Demo placeholder</p>
+                  <p className="mt-4 text-5xl font-black tracking-tight text-primary md:text-6xl">~90 sec</p>
+                  <p className="mt-3 text-lg text-muted-foreground">
+                    End state: the developer reviews the PR instead of reading a PDF.
+                  </p>
+                </div>
+              </LinesPatternCardBody>
+            </LinesPatternCard>
+
+            <div className="grid gap-4">
+              {demoMoments.map((moment, index) => (
+                <motion.div
+                  key={moment}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, delay: 0.08 * index }}
+                >
+                  <LinesPatternCard className="rounded-[1.5rem] shadow-xl border-white/10 h-full">
+                    <LinesPatternCardBody className="flex h-full items-start gap-4 p-5">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-lg font-bold text-primary">
+                        {index + 1}
+                      </div>
+                      <p className="pt-1 text-lg leading-relaxed text-foreground/90">{moment}</p>
+                    </LinesPatternCardBody>
+                  </LinesPatternCard>
+                </motion.div>
+              ))}
+
+              <LinesPatternCard className="rounded-[1.5rem] shadow-xl border-secondary/25">
+                <LinesPatternCardBody className="p-5">
+                  <p className="text-xl font-bold text-foreground">What the audience should see</p>
+                  <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                    A repo gets scanned, exploit evidence is generated, a ticket appears automatically, and the patch shows up as a reviewable pull request.
+                  </p>
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+            </div>
+          </div>
+        </Section>
+
+        <Section id="market-size" className="bg-transparent">
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Market Size</h1>
+              <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
+                Year 3 starts with $750K-$2.5M from Series A-B teams hitting compliance deadlines, then expands into a $1.5B GitHub-native SaaS segment.
+              </p>
+            </div>
+
+            <div className="grid max-w-7xl mx-auto gap-6 lg:grid-cols-3">
+              {marketCards.map((card, index) => (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.1 * index }}
+                >
+                  <div className={`h-full rounded-[2rem] border bg-card/90 px-8 py-10 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}>
+                    <p className={`text-2xl md:text-3xl font-semibold tracking-[0.12em] uppercase ${card.accentClassName}`}>
+                      {card.title}
+                    </p>
+                    <div className={`mt-6 text-3xl md:text-4xl font-black tracking-tight ${card.accentClassName}`}>
+                      {card.value}
+                    </div>
+                    <p className="mt-6 text-xl md:text-2xl leading-relaxed text-muted-foreground">
+                      {card.description}
+                    </p>
+
+                    <div className="mt-8 border-t border-border/60 pt-6">
+                      <ul className="space-y-5">
+                        {card.bullets.map((bullet) => (
+                          <li key={bullet} className="flex items-start gap-3 text-xl leading-relaxed text-foreground/90">
+                            <span className={`mt-2.5 h-2.5 w-2.5 shrink-0 rounded-full ${card.dotClassName}`} />
+                            <span>{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        <Section id="competition" className="bg-transparent" contentClassName="max-w-7xl py-6">
+          <div className="space-y-4">
+            <div className="text-center space-y-1">
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground">Competitive Landscape</h1>
+              <p className="max-w-5xl mx-auto text-base md:text-lg text-muted-foreground">
+                Every other tool in this category stops at detection. Dispatch closes the loop from recon to verified remediation inside the developer workflow.
+              </p>
+            </div>
+
+            <LinesPatternCard className="rounded-[1.5rem] shadow-2xl border-primary/25">
+              <LinesPatternCardBody className="p-4 md:p-5">
+                <div className="overflow-x-auto">
+                  <table className="min-w-[1100px] w-full text-left">
+                    <thead>
+                      <tr className="border-b border-border/60 text-sm md:text-base text-muted-foreground">
+                        <th className="pb-3 pr-4 font-semibold">Tool</th>
+                        <th className="pb-3 px-4 font-semibold">Pricing</th>
+                        {competitorColumns.map((column) => (
+                          <th key={column} className="pb-3 px-3 text-center font-semibold">
+                            {column}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {competitorRows.map((row) => (
+                        <tr
+                          key={row.tool}
+                          className={`border-b border-border/50 ${row.isDispatch ? 'bg-primary/18 ring-1 ring-primary/50' : ''}`}
+                        >
+                          <td className="py-4 pr-4 align-top">
+                            <div className={`${row.isDispatch ? 'text-primary' : 'text-foreground'} text-xl font-bold`}>
+                              {row.tool}
+                            </div>
+                            <div className="text-sm md:text-base text-muted-foreground">
+                              {row.description}
+                            </div>
+                          </td>
+                          <td className={`py-4 px-4 align-top text-base md:text-lg font-semibold ${row.isDispatch ? 'text-primary' : 'text-foreground/85'}`}>
+                            {row.pricing}
+                          </td>
+                          {row.features.map((feature, index) => (
+                            <td key={`${row.tool}-${competitorColumns[index]}`} className="py-4 px-3 text-center align-top">
+                              {feature === 'yes' ? (
+                                <span className={`text-3xl leading-none ${row.isDispatch ? 'text-primary' : 'text-[#23c59a]'}`}>✓</span>
+                              ) : feature === 'partial' ? (
+                                <span className="text-lg font-semibold text-[#d99321]">Partial</span>
+                              ) : (
+                                <span className="text-3xl leading-none text-muted-foreground/55">×</span>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-6 text-sm md:text-base">
+                  <div className="flex items-center gap-2 text-foreground/90">
+                    <span className="text-2xl text-[#23c59a]">✓</span>
+                    <span>Yes</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-foreground/90">
+                    <span className="font-semibold text-[#d99321]">Partial</span>
+                    <span>Partial</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-foreground/90">
+                    <span className="text-2xl text-muted-foreground/55">×</span>
+                    <span>No</span>
+                  </div>
+                  <div className="font-semibold text-muted-foreground">
+                    Gap: nobody else closes the loop from exploit evidence to verified remediation.
+                  </div>
+                </div>
+              </LinesPatternCardBody>
+            </LinesPatternCard>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              {forceCards.filter((card) => !card.fullWidth).map((card) => (
+                <LinesPatternCard key={card.title} className="rounded-[1.5rem] shadow-xl border-white/10">
+                  <LinesPatternCardBody className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-xl md:text-2xl font-bold text-foreground">{card.title}</h3>
+                      <span className={`rounded-full px-4 py-1 text-sm md:text-base font-semibold ${card.levelClassName}`}>
+                        {card.level}
+                      </span>
+                    </div>
+                    <div className="mt-4 h-3 rounded-full bg-white/12">
+                      <div className={`h-3 rounded-full ${card.barClassName} ${card.widthClassName}`} />
+                    </div>
+                    <p className="mt-4 text-lg leading-relaxed text-muted-foreground">{card.text}</p>
+                  </LinesPatternCardBody>
+                </LinesPatternCard>
+              ))}
+            </div>
+
+            {forceCards.filter((card) => card.fullWidth).map((card) => (
+              <LinesPatternCard key={card.title} className="rounded-[1.5rem] shadow-2xl border-white/10">
+                <LinesPatternCardBody className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-2xl md:text-3xl font-bold text-foreground">{card.title}</h3>
+                    <span className={`rounded-full px-4 py-1 text-sm md:text-base font-semibold ${card.levelClassName}`}>
+                      {card.level}
+                    </span>
+                  </div>
+                  <div className="mt-4 h-3 rounded-full bg-white/12">
+                    <div className={`h-3 rounded-full ${card.barClassName} ${card.widthClassName}`} />
+                  </div>
+                  <p className="mt-4 text-xl leading-relaxed text-muted-foreground">
+                    {card.text}
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">Snyk: $25-$40/dev/mo</span>
+                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">Semgrep: freemium OSS</span>
+                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">GitHub Adv. Security: bundled</span>
+                  </div>
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+            ))}
           </div>
         </Section>
 
@@ -879,174 +1301,6 @@ const Index = () => {
                 </LinesPatternCardBody>
               </LinesPatternCard>
             </div>
-          </div>
-        </Section>
-
-        <Section id="market-size" className="bg-transparent">
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-5xl md:text-7xl font-bold text-foreground">Market Size</h1>
-              <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
-                A top-down view of where Dispatch can win first, then expand.
-              </p>
-            </div>
-
-            <div className="grid max-w-7xl mx-auto gap-6 lg:grid-cols-3">
-              {marketCards.map((card, index) => (
-                <motion.div
-                  key={card.title}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: 0.1 * index }}
-                >
-                  <div className={`h-full rounded-[2rem] border bg-card/90 px-8 py-10 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}>
-                    <p className={`text-2xl md:text-3xl font-semibold tracking-[0.12em] uppercase ${card.accentClassName}`}>
-                      {card.title}
-                    </p>
-                    <div className={`mt-6 text-3xl md:text-4xl font-black tracking-tight ${card.accentClassName}`}>
-                      {card.value}
-                    </div>
-                    <p className="mt-6 text-xl md:text-2xl leading-relaxed text-muted-foreground">
-                      {card.description}
-                    </p>
-
-                    <div className="mt-8 border-t border-border/60 pt-6">
-                      <ul className="space-y-5">
-                        {card.bullets.map((bullet) => (
-                          <li key={bullet} className="flex items-start gap-3 text-xl leading-relaxed text-foreground/90">
-                            <span className={`mt-2.5 h-2.5 w-2.5 shrink-0 rounded-full ${card.dotClassName}`} />
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </Section>
-
-        <Section id="competition" className="bg-transparent" contentClassName="max-w-7xl py-6">
-          <div className="space-y-4">
-            <div className="text-center space-y-1">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground">Competitive Landscape</h1>
-              <p className="max-w-5xl mx-auto text-base md:text-lg text-muted-foreground">
-                Dispatch wins by closing the loop from recon to verified remediation inside the developer workflow.
-              </p>
-            </div>
-
-            <LinesPatternCard className="rounded-[1.5rem] shadow-2xl border-primary/25">
-              <LinesPatternCardBody className="p-4 md:p-5">
-                <div className="overflow-x-auto">
-                  <table className="min-w-[1100px] w-full text-left">
-                    <thead>
-                      <tr className="border-b border-border/60 text-sm md:text-base text-muted-foreground">
-                        <th className="pb-3 pr-4 font-semibold">Tool</th>
-                        <th className="pb-3 px-4 font-semibold">Pricing</th>
-                        {competitorColumns.map((column) => (
-                          <th key={column} className="pb-3 px-3 text-center font-semibold">
-                            {column}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {competitorRows.map((row) => (
-                        <tr
-                          key={row.tool}
-                          className={`border-b border-border/50 ${row.isDispatch ? 'bg-primary/18 ring-1 ring-primary/50' : ''}`}
-                        >
-                          <td className="py-4 pr-4 align-top">
-                            <div className={`${row.isDispatch ? 'text-primary' : 'text-foreground'} text-xl font-bold`}>
-                              {row.tool}
-                            </div>
-                            <div className="text-sm md:text-base text-muted-foreground">
-                              {row.description}
-                            </div>
-                          </td>
-                          <td className={`py-4 px-4 align-top text-base md:text-lg font-semibold ${row.isDispatch ? 'text-primary' : 'text-foreground/85'}`}>
-                            {row.pricing}
-                          </td>
-                          {row.features.map((feature, index) => (
-                            <td key={`${row.tool}-${competitorColumns[index]}`} className="py-4 px-3 text-center align-top">
-                              {feature === 'yes' ? (
-                                <span className={`text-3xl leading-none ${row.isDispatch ? 'text-primary' : 'text-[#23c59a]'}`}>✓</span>
-                              ) : feature === 'partial' ? (
-                                <span className="text-lg font-semibold text-[#d99321]">Partial</span>
-                              ) : (
-                                <span className="text-3xl leading-none text-muted-foreground/55">×</span>
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-6 text-sm md:text-base">
-                  <div className="flex items-center gap-2 text-foreground/90">
-                    <span className="text-2xl text-[#23c59a]">✓</span>
-                    <span>Yes</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-foreground/90">
-                    <span className="font-semibold text-[#d99321]">Partial</span>
-                    <span>Partial</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-foreground/90">
-                    <span className="text-2xl text-muted-foreground/55">×</span>
-                    <span>No</span>
-                  </div>
-                  <div className="font-semibold text-muted-foreground">
-                    Gap: nobody else closes the loop from exploit evidence to verified remediation.
-                  </div>
-                </div>
-              </LinesPatternCardBody>
-            </LinesPatternCard>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              {forceCards.filter((card) => !card.fullWidth).map((card) => (
-                <LinesPatternCard key={card.title} className="rounded-[1.5rem] shadow-xl border-white/10">
-                  <LinesPatternCardBody className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-xl md:text-2xl font-bold text-foreground">{card.title}</h3>
-                      <span className={`rounded-full px-4 py-1 text-sm md:text-base font-semibold ${card.levelClassName}`}>
-                        {card.level}
-                      </span>
-                    </div>
-                    <div className="mt-4 h-3 rounded-full bg-white/12">
-                      <div className={`h-3 rounded-full ${card.barClassName} ${card.widthClassName}`} />
-                    </div>
-                    <p className="mt-4 text-lg leading-relaxed text-muted-foreground">{card.text}</p>
-                  </LinesPatternCardBody>
-                </LinesPatternCard>
-              ))}
-            </div>
-
-            {forceCards.filter((card) => card.fullWidth).map((card) => (
-              <LinesPatternCard key={card.title} className="rounded-[1.5rem] shadow-2xl border-white/10">
-                <LinesPatternCardBody className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-2xl md:text-3xl font-bold text-foreground">{card.title}</h3>
-                    <span className={`rounded-full px-4 py-1 text-sm md:text-base font-semibold ${card.levelClassName}`}>
-                      {card.level}
-                    </span>
-                  </div>
-                  <div className="mt-4 h-3 rounded-full bg-white/12">
-                    <div className={`h-3 rounded-full ${card.barClassName} ${card.widthClassName}`} />
-                  </div>
-                  <p className="mt-4 text-xl leading-relaxed text-muted-foreground">
-                    {card.text}
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">Snyk: $25-$40/dev/mo</span>
-                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">Semgrep: freemium OSS</span>
-                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">GitHub Adv. Security: bundled</span>
-                  </div>
-                </LinesPatternCardBody>
-              </LinesPatternCard>
-            ))}
           </div>
         </Section>
 
