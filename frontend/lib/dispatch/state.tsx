@@ -179,6 +179,23 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
 
   const setRunStatusFn = useCallback((status: RunStatus) => setRunStatus(status), []);
 
+  const resetToEmpty = useCallback(() => {
+    setDispatchRunId(null);
+    setRunStatus("idle");
+    setRunName("");
+    setPreRecon(null);
+    setTaskAssignments([]);
+    setFindingReports([]);
+    setFindings([]);
+    setMetrics(emptyMetrics);
+    setGraphData(emptyGraphData);
+    setWorkerDiagnostics({});
+    setSelectedNodeId(null);
+    setSidebarOpenState(false);
+    hasAutoSelectedRef.current = false;
+    setLastUpdated(null);
+  }, []);
+
   const loadDispatchOutput = useCallback((data: DispatchOutput) => {
     setDispatchRunId(data.dispatch_run_id);
     setRunStatus(data.status);
@@ -208,13 +225,15 @@ export function DispatchWorkspaceProvider({ children }: { children: ReactNode })
       if (response.ok) {
         const data: DispatchOutput = await response.json();
         loadDispatchOutput(data);
+      } else {
+        resetToEmpty();
       }
     } catch {
-      console.debug("dispatch-output.json not found");
+      resetToEmpty();
     } finally {
       setIsLoading(false);
     }
-  }, [loadDispatchOutput]);
+  }, [loadDispatchOutput, resetToEmpty]);
 
   useEffect(() => {
     refreshData();
