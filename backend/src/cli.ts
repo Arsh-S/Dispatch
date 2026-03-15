@@ -194,6 +194,14 @@ async function main() {
       timeoutSeconds: timeoutFlag ? parseInt(timeoutFlag, 10) : undefined,
     });
 
+    try {
+      initDatadog();
+      await forwardTestRunToDatadog(report);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[test-suite] Datadog forward failed (continuing): ${msg}`);
+    }
+
     const output = {
       run_id: report.dispatch_run_id,
       status: report.status,
