@@ -11,15 +11,15 @@ import dispatchWordmark from '../../../icons/dispatch-name-logo.png';
 const problemCards = [
   {
     number: '45.4%',
-    text: 'Of discovered vulnerabilities in large enterprises remain unpatched after 12 months, turning remediation backlog into the real security bottleneck.',
+    text: 'Of vulnerabilities remain unpatched after 12 months.',
     citation: '(EdgeScan, 2025).',
     numberClassName: 'text-destructive',
     borderClassName: 'border-destructive/25',
     shadowClassName: 'shadow-[0_30px_80px_rgba(255,79,79,0.08)]',
   },
   {
-    number: '17 hrs',
-    text: 'Per week developers can spend on security work, much of it triaging reports and translating findings into fixes by hand.',
+    number: '17+ hrs',
+    text: 'Per week 72% of developers spend on security work.',
     citation: '(Checkmarx, 2025).',
     numberClassName: 'text-[#7fb0ff]',
     borderClassName: 'border-[#7fb0ff]/25',
@@ -27,7 +27,7 @@ const problemCards = [
   },
   {
     number: '$5K-$100K',
-    text: 'Typical pentests still cost thousands to tens of thousands of dollars before the developer even starts the remediation work.',
+    text: 'Pentests cost before remediation even starts.',
     citation: '(Invicti, 2025).',
     numberClassName: 'text-[#e4b24d]',
     borderClassName: 'border-[#e4b24d]/25',
@@ -35,7 +35,7 @@ const problemCards = [
   },
   {
     number: '$4.44M',
-    text: 'Average global breach cost in 2025, while vulnerability exploitation remained the leading cause of observed cyberattacks.',
+    text: 'Average global breach cost in 2025.',
     citation: '(IBM, 2025; IBM, 2026).',
     numberClassName: 'text-primary',
     borderClassName: 'border-primary/25',
@@ -101,7 +101,7 @@ const workflowSteps = [
 const workflowArtifacts = [
   {
     title: 'Repo Map',
-    text: 'Routes, files, rules, and risk signals so testing starts with context instead of guesswork.',
+    text: 'Routes, files, and risk signals for context-aware testing.',
     citation: '(OWASP Foundation, 2020; Scarfone et al., 2008).',
     accentClassName: 'text-primary',
     borderClassName: 'border-primary/30',
@@ -109,7 +109,7 @@ const workflowArtifacts = [
   },
   {
     title: 'Exploit Evidence',
-    text: 'Live attack output, logs, and proof that the vulnerability actually reproduced.',
+    text: 'Live attack output and proof of reproduction.',
     citation: '(Scarfone et al., 2008; OWASP Foundation, 2025).',
     accentClassName: 'text-secondary',
     borderClassName: 'border-secondary/30',
@@ -117,7 +117,7 @@ const workflowArtifacts = [
   },
   {
     title: 'Auto-Created Issue',
-    text: 'Severity, reproduction steps, logs, and the recommended fix are posted automatically.',
+    text: 'Severity, repro steps, and recommended fix posted automatically.',
     citation: '(OWASP Foundation, 2025; Souppaya et al., 2022).',
     accentClassName: 'text-accent',
     borderClassName: 'border-accent/30',
@@ -125,7 +125,7 @@ const workflowArtifacts = [
   },
   {
     title: 'Fix Pull Request',
-    text: 'Dispatch writes the patch, validates it, and hands the developer a PR to review and merge.',
+    text: 'Patch written and validated. Ready for dev review.',
     citation: '(Souppaya et al., 2022; OWASP Foundation, 2025).',
     accentClassName: 'text-destructive',
     borderClassName: 'border-destructive/30',
@@ -347,10 +347,7 @@ const marketCards = [
 ];
 
 const ganttMetrics = [
-  { label: 'Traditional workflow', value: '18-32 days', valueClassName: 'text-[#f27e73]' },
-  { label: 'With Dispatch', value: '2-4 days', valueClassName: 'text-primary' },
-  { label: 'Time saved', value: '~87%', valueClassName: 'text-[#7fb0ff]' },
-  { label: 'Dev hours freed / week', value: '17 hrs', valueClassName: 'text-foreground' },
+  { label: 'Traditional workflow', value: '4-10 weeks', valueClassName: 'text-[#f27e73]' },
 ];
 
 const ganttDays = Array.from({ length: 22 }, (_, index) => index + 1);
@@ -492,9 +489,11 @@ const MAIN_NAV_ITEMS = [
   { label: 'Demo', id: 'demo' },
   { label: 'Market', id: 'market-size' },
   { label: 'Competition', id: 'competition' },
+  { label: 'Conclusion', id: 'conclusion' },
 ];
 
 const APPENDIX_NAV_ITEMS = [
+  { label: 'Five Forces', id: 'five-forces' },
   { label: 'Summary', id: 'summary' },
   { label: 'Business', id: 'business-model' },
   { label: 'Pre-Recon', id: 'clinical' },
@@ -508,13 +507,14 @@ const SECTION_IDS = [...MAIN_NAV_ITEMS.map((item) => item.id), ...APPENDIX_NAV_I
 const Index = () => {
   const { t } = useLanguage();
   const [activeSection, setActiveSection] = useState('home');
+  const [appendixOpen, setAppendixOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const teamMembers = [
-    { name: 'Arsh Singh', role: 'Computer Science @Cornell', initials: 'A', image: '/arsh.jpeg' },
-    { name: 'Mateo del Rio Lanse', role: 'Electrical & Computer Engineering @Cornell', initials: 'M', image: '/Mateo_Headshot.jpeg' },
-    { name: 'Diya Sheth', role: 'Mechanical Engineering @Cornell', initials: 'D', image: '/Diya_Headshot.jpeg' },
-    { name: 'Jimmy Mulosmani', role: 'Computer Science @Cornell', initials: 'J', image: '/Jimmy_Headshot.jpeg' },
+    { name: 'Arsh Singh', role: 'Computer Science', initials: 'A', image: '/arsh.jpeg' },
+    { name: 'Mateo del Rio Lanse', role: 'Electrical & Computer Engineering', initials: 'M', image: '/Mateo_Headshot.jpeg' },
+    { name: 'Diya Sheth', role: 'Mechanical Engineering', initials: 'D', image: '/Diya_Headshot.jpeg' },
+    { name: 'Jimmy Mulosmani', role: 'Computer Science', initials: 'J', image: '/Jimmy_Headshot.jpeg' },
   ];
 
   useEffect(() => {
@@ -567,30 +567,52 @@ const Index = () => {
       </div>
 
       <div className="fixed bottom-6 right-6 z-[70]">
-        <LinesPatternCard className="w-52 rounded-2xl border border-primary/35 bg-card/95 shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-md">
-          <LinesPatternCardBody className="p-3">
-            <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary">Appendix</p>
-            <div className="mt-2 flex flex-col gap-1.5">
-              {APPENDIX_NAV_ITEMS.map((item) => {
-                const isActive = activeSection === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => scrollToSection(item.id)}
-                    className={`rounded-md px-2 py-1 text-left text-sm transition ${
-                      isActive
-                        ? 'bg-primary/25 text-primary'
-                        : 'text-muted-foreground hover:bg-primary/15 hover:text-foreground'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-          </LinesPatternCardBody>
-        </LinesPatternCard>
+        {appendixOpen ? (
+          <LinesPatternCard className="w-52 rounded-2xl border border-primary/35 bg-card/95 shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-md">
+            <LinesPatternCardBody className="p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary">Appendix</p>
+                <button
+                  type="button"
+                  onClick={() => setAppendixOpen(false)}
+                  className="text-muted-foreground hover:text-foreground transition text-lg leading-none"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="mt-2 flex flex-col gap-1.5">
+                {APPENDIX_NAV_ITEMS.map((item) => {
+                  const isActive = activeSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => scrollToSection(item.id)}
+                      className={`rounded-md px-2 py-1 text-left text-sm transition ${
+                        isActive
+                          ? 'bg-primary/25 text-primary'
+                          : 'text-muted-foreground hover:bg-primary/15 hover:text-foreground'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </LinesPatternCardBody>
+          </LinesPatternCard>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAppendixOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/35 bg-card/95 text-primary shadow-[0_12px_30px_rgba(0,0,0,0.3)] backdrop-blur-md transition hover:bg-primary/15 hover:scale-105"
+            title="Appendix"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div ref={scrollContainerRef} className="snap-y snap-mandatory h-screen overflow-y-scroll scrollbar-hide relative">
@@ -666,8 +688,8 @@ const Index = () => {
           </div>
         </Section>
 
-        <Section id="problem" className="bg-transparent" contentClassName="max-w-[92rem] py-4">
-          <div className="space-y-4">
+        <Section id="problem" className="bg-transparent" contentClassName="max-w-[92rem] py-3">
+          <div className="space-y-3">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -675,17 +697,15 @@ const Index = () => {
               viewport={{ once: false, amount: 0.35 }}
               className="mx-auto max-w-6xl text-center"
             >
-              <p className="text-sm font-semibold tracking-[0.24em] uppercase text-primary">The bottleneck is remediation</p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight leading-[1.05] text-foreground md:text-5xl xl:text-6xl">
-                Every security tool scans your code, finds vulnerabilities, and hands you a report. Then it stops.
+              <h2 className="text-3xl font-black tracking-tight leading-[1.05] text-foreground md:text-5xl xl:text-6xl">
+                Security tools find vulnerabilities. Then they <span className="text-destructive">stop</span>.
               </h2>
-              <p className="mx-auto mt-4 max-w-5xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-                From there, the developer has to read the report, create tickets, write the patch, deploy it, and verify it manually.
-                The real problem in security is not finding vulnerabilities. It is fixing them.
+              <p className="mx-auto mt-3 max-w-5xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+                The real problem is not finding vulnerabilities. It is fixing them.
               </p>
             </motion.div>
 
-            <div className="grid max-w-7xl mx-auto gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid max-w-7xl mx-auto gap-2.5 md:grid-cols-2 xl:grid-cols-4">
               {problemCards.map((card, index) => (
                 <motion.div
                   key={card.number}
@@ -693,15 +713,15 @@ const Index = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.08 * index }}
                   viewport={{ once: false, amount: 0.3 }}
-                  className={`h-full rounded-[1.75rem] border bg-card/90 px-5 py-5 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}
+                  className={`h-full rounded-[1.5rem] border bg-card/90 px-4 py-4 backdrop-blur-md ${card.borderClassName} ${card.shadowClassName}`}
                 >
                   <div className={`text-4xl font-black tracking-tight md:text-5xl ${card.numberClassName}`}>
                     {card.number}
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground md:text-base">
                     {card.text}
                   </p>
-                  <Citation text={card.citation} className="!mt-2" />
+                  <Citation text={card.citation} className="!mt-1.5" />
                 </motion.div>
               ))}
             </div>
@@ -712,171 +732,40 @@ const Index = () => {
               transition={{ duration: 0.55, delay: 0.18 }}
               viewport={{ once: false, amount: 0.25 }}
             >
-              <LinesPatternCard className="max-w-[90rem] mx-auto rounded-[2rem] border-primary/30 shadow-[0_30px_90px_rgba(33,117,78,0.22)]">
-                <LinesPatternCardBody className="p-4 md:p-6">
-                  <div className="grid gap-4 border-b border-border/60 pb-4 md:grid-cols-4">
-                    {ganttMetrics.map((metric) => (
-                      <div key={metric.label}>
-                        <p className="text-sm font-medium text-muted-foreground md:text-base">{metric.label}</p>
-                        <p className={`mt-1 text-3xl font-black tracking-tight md:text-4xl ${metric.valueClassName}`}>
-                          {metric.value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 overflow-x-auto">
-                    <table className="min-w-[1520px] w-full border-separate border-spacing-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-background/30 text-left">
-                      <thead>
-                        <tr className="bg-white/[0.03] text-sm text-muted-foreground">
-                          <th className="w-[360px] min-w-[360px] border-b border-border/40 px-4 py-3 font-semibold">
-                            Phase
-                          </th>
-                          {ganttDays.map((day) => (
-                            <th
-                              key={day}
-                              className="min-w-[52px] border-b border-l border-border/35 px-2 py-3 text-center font-semibold"
-                            >
-                              Day {day}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="bg-white/[0.03]">
-                          <td className="border-b border-border/35 px-4 py-3 text-2xl font-bold text-foreground">
-                            Traditional security workflow
-                          </td>
-                          <td colSpan={ganttDays.length} className="border-b border-border/35" />
-                        </tr>
-                        {traditionalWorkflowRows.map((row) => {
-                          const daysBefore = row.start - 1;
-                          const daysAfter = ganttDays.length - (row.start + row.span - 1);
-
-                          return (
-                            <tr key={row.label} className="border-b border-border/35">
-                              <td className="border-b border-border/35 px-4 py-3 align-middle">
-                                <div className="flex items-center gap-3 text-base md:text-lg">
-                                  <span className={`h-3 w-3 shrink-0 rounded-full ${row.dotClassName}`} />
-                                  <span className="font-medium text-foreground/90">{row.label}</span>
-                                </div>
-                              </td>
-                              {Array.from({ length: daysBefore }).map((_, index) => (
-                                <td
-                                  key={`${row.label}-before-${index}`}
-                                  className="h-14 border-b border-l border-border/35"
-                                />
-                              ))}
-                              <td
-                                colSpan={row.span}
-                                className="h-14 border-b border-l border-border/35 px-1 py-2"
-                              >
-                                <div
-                                  className={`flex h-10 items-center rounded-md text-xs font-semibold text-white ${
-                                    row.barLabel ? 'justify-start px-3' : 'justify-center'
-                                  } ${row.barClassName}`}
-                                >
-                                  {row.barLabel ?? ''}
-                                </div>
-                              </td>
-                              {Array.from({ length: daysAfter }).map((_, index) => (
-                                <td
-                                  key={`${row.label}-after-${index}`}
-                                  className="h-14 border-b border-l border-border/35"
-                                />
-                              ))}
-                            </tr>
-                          );
-                        })}
-
-                        <tr className="bg-primary/10">
-                          <td className="border-b border-border/35 px-4 py-3 text-2xl font-bold text-foreground">
-                            Dispatch automated workflow
-                          </td>
-                          <td colSpan={ganttDays.length} className="border-b border-border/35" />
-                        </tr>
-                        {dispatchWorkflowRows.map((row) => {
-                          const daysBefore = row.start - 1;
-                          const daysAfter = ganttDays.length - (row.start + row.span - 1);
-
-                          return (
-                            <tr key={row.label} className="border-b border-border/35 last:border-b-0">
-                              <td className="border-b border-border/35 px-4 py-3 align-middle">
-                                <div className="flex items-center gap-3 text-base md:text-lg">
-                                  <span className={`h-3 w-3 shrink-0 rounded-full ${row.dotClassName}`} />
-                                  <span className="font-medium text-foreground/90">{row.label}</span>
-                                </div>
-                              </td>
-                              {Array.from({ length: daysBefore }).map((_, index) => (
-                                <td
-                                  key={`${row.label}-before-${index}`}
-                                  className="h-14 border-b border-l border-border/35"
-                                />
-                              ))}
-                              <td
-                                colSpan={row.span}
-                                className="h-14 border-b border-l border-border/35 px-1 py-2"
-                              >
-                                <div
-                                  className={`flex h-10 items-center rounded-md text-xs font-semibold text-white ${
-                                    row.barLabel ? 'justify-start px-3' : 'justify-center'
-                                  } ${row.barClassName}`}
-                                >
-                                  {row.barLabel ?? ''}
-                                </div>
-                              </td>
-                              {Array.from({ length: daysAfter }).map((_, index) => (
-                                <td
-                                  key={`${row.label}-after-${index}`}
-                                  className="h-14 border-b border-l border-border/35"
-                                />
-                              ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap items-center gap-6 text-sm md:text-base">
-                    <div className="flex items-center gap-2 text-foreground/90">
-                      <span className="h-3 w-3 rounded-sm bg-[#c83a36]" />
-                      <span>Manual or blocking step</span>
+              <LinesPatternCard className="max-w-5xl mx-auto rounded-[1.75rem] border-primary/30 shadow-[0_30px_90px_rgba(33,117,78,0.22)]">
+                <LinesPatternCardBody className="p-5 md:p-6">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+                      <p className="text-lg font-semibold text-destructive mb-1">Traditional Workflow</p>
+                      <p className="text-4xl md:text-5xl font-black text-destructive">4-10 weeks</p>
+                      <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+                        RFP to remediation: vendor selection, scoping, manual testing, report generation, triage, ticket creation, then dev fixes.
+                      </p>
+                      <Citation text="(Triaxiom Security, 2025; Invicti, 2025)." className="!mt-2" />
                     </div>
-                    <div className="flex items-center gap-2 text-foreground/90">
-                      <span className="h-3 w-3 rounded-sm bg-[#a6a39c]" />
-                      <span>Waiting or scheduling</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-foreground/90">
-                      <span className="h-3 w-3 rounded-sm bg-[#24b587]" />
-                      <span>Automated by Dispatch</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-foreground/90">
-                      <span className="h-3 w-3 rounded-sm bg-[#2f6fb6]" />
-                      <span>Developer review</span>
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-5">
+                      <p className="text-lg font-semibold text-primary mb-1">With Dispatch</p>
+                      <p className="text-4xl md:text-5xl font-black text-primary">1-3 days</p>
+                      <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+                        Automated recon and parallel testing (hours), instant issue creation, auto-generated fix PR, developer review and merge.
+                      </p>
+                      <Citation text="(Estimate based on automation of manual steps)." className="!mt-2" />
                     </div>
                   </div>
-
-                  <Citation
-                    text={'Illustrative pentest-to-fix timeline based on remediation backlog, pentest delivery, and developer security-work benchmarks (EdgeScan, 2025; Invicti, 2025; Checkmarx, 2025; OWASP Foundation, 2025).'}
-                    className="!mt-3"
-                  />
                 </LinesPatternCardBody>
               </LinesPatternCard>
             </motion.div>
           </div>
         </Section>
 
-        <Section id="how-it-works" className="bg-transparent" contentClassName="max-w-7xl py-10">
-          <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <p className="text-sm font-semibold tracking-[0.24em] uppercase text-primary">Dispatch</p>
-              <h1 className="text-4xl font-bold text-foreground md:text-6xl xl:text-7xl">
-                Dispatch reads the repo, attacks the app, and writes the fix.
+        <Section id="how-it-works" className="bg-transparent" contentClassName="max-w-7xl py-6">
+          <div className="space-y-5">
+            <div className="text-center space-y-3">
+              <h1 className="text-3xl font-bold text-foreground md:text-5xl xl:text-6xl">
+                <span className="text-primary">Dispatch</span> reads the repo, attacks the app, and <span className="text-primary">writes</span> the fix.
               </h1>
-              <p className="max-w-5xl mx-auto text-lg md:text-2xl text-muted-foreground">
-                You give Dispatch your repository. It reads the code like a developer, attacks it like a hacker,
-                creates the ticket automatically, and opens the pull request with the patch already written.
+              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
+                Give Dispatch your repo. It reads the code, attacks the app, opens the issue, and writes the fix PR.
               </p>
             </div>
 
@@ -884,18 +773,18 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="flex flex-wrap items-center justify-center gap-3 max-w-6xl mx-auto"
+              className="flex flex-wrap items-center justify-center gap-2.5 max-w-6xl mx-auto"
             >
               {workflowSteps.map((step, index) => (
-                <div key={step.title} className="flex items-center gap-3">
+                <div key={step.title} className="flex items-center gap-2.5">
                   <LinesPatternCard className={`rounded-lg shadow-lg ${step.borderClassName}`}>
-                    <LinesPatternCardBody className="flex h-16 items-center justify-center px-4 py-3 text-center">
-                      <p className="text-xl font-semibold text-foreground whitespace-nowrap">{step.title}</p>
+                    <LinesPatternCardBody className="flex h-12 items-center justify-center px-3 py-2 text-center">
+                      <p className="text-lg font-semibold text-foreground whitespace-nowrap">{step.title}</p>
                     </LinesPatternCardBody>
                   </LinesPatternCard>
 
                   {index < workflowSteps.length - 1 && (
-                    <div className={`text-2xl font-bold ${step.arrowClassName}`}>→</div>
+                    <div className={`text-xl font-bold ${step.arrowClassName}`}>→</div>
                   )}
                 </div>
               ))}
@@ -906,18 +795,18 @@ const Index = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.15 }}
             >
-              <LinesPatternCard className="rounded-2xl shadow-2xl border-primary/40 max-w-7xl mx-auto">
-                <LinesPatternCardBody className="p-8">
-                  <h3 className="text-3xl font-bold text-foreground mb-8 text-center">What Dispatch produces at each stage</h3>
-                  <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+              <LinesPatternCard className="rounded-xl shadow-2xl border-primary/40 max-w-7xl mx-auto">
+                <LinesPatternCardBody className="p-5">
+                  <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-5 text-center">Artifacts at each stage</h3>
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     {workflowArtifacts.map((artifact) => (
                       <div
                         key={artifact.title}
-                        className={`rounded-2xl border p-6 text-left ${artifact.bgClassName} ${artifact.borderClassName}`}
+                        className={`rounded-xl border p-4 text-left ${artifact.bgClassName} ${artifact.borderClassName}`}
                       >
-                        <p className={`text-2xl font-semibold ${artifact.accentClassName}`}>{artifact.title}</p>
-                        <p className="mt-4 text-lg leading-relaxed text-foreground">{artifact.text}</p>
-                        <Citation text={artifact.citation} />
+                        <p className={`text-xl md:text-2xl font-semibold ${artifact.accentClassName}`}>{artifact.title}</p>
+                        <p className="mt-2 text-sm md:text-base leading-relaxed text-foreground">{artifact.text}</p>
+                        <Citation text={artifact.citation} className="!mt-1.5" />
                       </div>
                     ))}
                   </div>
@@ -925,10 +814,10 @@ const Index = () => {
               </LinesPatternCard>
             </motion.div>
 
-            <LinesPatternCard className="max-w-6xl mx-auto rounded-2xl shadow-2xl border-primary/25">
-              <LinesPatternCardBody className="p-6 text-center">
+            <LinesPatternCard className="max-w-5xl mx-auto rounded-xl shadow-2xl border-primary/25">
+              <LinesPatternCardBody className="p-4 text-center">
                 <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug">
-                  Instead of a security report, the developer gets a PR to review and merge.
+                  Not a PDF report. A pull request.
                 </p>
               </LinesPatternCardBody>
             </LinesPatternCard>
@@ -996,7 +885,7 @@ const Index = () => {
             <div className="text-center space-y-4">
               <h1 className="text-5xl md:text-7xl font-bold text-foreground">Market Size</h1>
               <p className="max-w-5xl mx-auto text-xl md:text-2xl text-muted-foreground">
-                Year 3 starts with $750K-$2.5M from Series A-B teams hitting compliance deadlines, then expands into a $1.5B GitHub-native SaaS segment.
+                Year 3: $750K-$2.5M ARR. Expanding into a $1.5B GitHub-native SaaS segment.
               </p>
             </div>
 
@@ -1039,9 +928,9 @@ const Index = () => {
         <Section id="competition" className="bg-transparent" contentClassName="max-w-7xl py-6">
           <div className="space-y-4">
             <div className="text-center space-y-1">
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground">Competitive Landscape</h1>
-              <p className="max-w-5xl mx-auto text-base md:text-lg text-muted-foreground">
-                Every other tool in this category stops at detection. Dispatch closes the loop from recon to verified remediation inside the developer workflow.
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground">Competitive Landscape</h1>
+              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
+                Others stop at detection. Dispatch closes the loop to verified remediation.
               </p>
             </div>
 
@@ -1113,6 +1002,94 @@ const Index = () => {
                 </div>
               </LinesPatternCardBody>
             </LinesPatternCard>
+          </div>
+        </Section>
+
+        <Section id="conclusion" className="bg-transparent" contentClassName="max-w-7xl py-16 lg:py-20">
+          <div className="space-y-12">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              className="mx-auto max-w-6xl text-center"
+            >
+              <img
+                src={dispatchWordmark}
+                alt="Dispatch"
+                className="mx-auto w-full max-w-[32rem] sm:max-w-[38rem] md:max-w-[44rem] xl:max-w-[52rem] object-contain drop-shadow-[0_28px_50px_rgba(0,0,0,0.3)]"
+              />
+            </motion.div>
+
+            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4 max-w-7xl mx-auto">
+              {teamMembers.map((member, index) => (
+                <motion.div
+                  key={member.name}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 + index * 0.15 }}
+                >
+                  <LinesPatternCard
+                    className="h-[24rem] rounded-[2rem] shadow-2xl"
+                    patternClassName="h-full overflow-hidden rounded-[1.25rem]"
+                    gradientClassName="h-full overflow-hidden rounded-[1.25rem]"
+                  >
+                    <LinesPatternCardBody className="h-full rounded-[1.25rem] bg-gradient-to-br from-primary/10 to-secondary/5 p-0 md:p-0">
+                      <div className="flex h-full flex-col items-center px-5 py-8 text-center sm:px-6">
+                        {member.image ? (
+                          <div className="flex h-36 items-center justify-center">
+                            <div className="h-32 w-32 overflow-hidden rounded-full border border-primary/20 shadow-sm">
+                              <img
+                                src={member.image}
+                                alt={member.name}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex h-36 items-center justify-center">
+                            <div className="flex h-32 w-32 items-center justify-center rounded-full border border-primary/20 bg-background/80 text-3xl font-bold text-primary shadow-sm">
+                              {member.initials}
+                            </div>
+                          </div>
+                        )}
+                        <div className="mt-6 flex min-h-[7.5rem] w-full flex-col items-center">
+                          <p className="text-xl leading-tight text-foreground font-semibold">{member.name}</p>
+                          <p className="mt-3 w-full text-[0.95rem] leading-tight text-muted-foreground">{member.role}</p>
+                          <p className="mt-2 text-sm font-bold tracking-wide text-foreground">
+                            Cornell University
+                          </p>
+                        </div>
+                      </div>
+                    </LinesPatternCardBody>
+                  </LinesPatternCard>
+                </motion.div>
+              ))}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="text-center"
+            >
+              <p className="text-3xl md:text-4xl font-bold text-foreground">
+                Security tools give you a <span className="text-destructive">PDF</span>. Dispatch gives you a <span className="text-primary">pull request</span>.
+              </p>
+              <p className="mt-4 text-xl md:text-2xl text-muted-foreground">
+                Thank you.
+              </p>
+            </motion.div>
+          </div>
+        </Section>
+
+        <Section id="five-forces" className="bg-transparent" contentClassName="max-w-7xl py-6">
+          <div className="space-y-4">
+            <div className="text-center space-y-1">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground">Porter's Five Forces</h1>
+              <p className="max-w-5xl mx-auto text-lg md:text-xl text-muted-foreground">
+                Market dynamics shaping the agentic security space.
+              </p>
+            </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
               {forceCards.filter((card) => !card.fullWidth).map((card) => (
