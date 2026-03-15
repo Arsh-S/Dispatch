@@ -337,13 +337,108 @@ const marketCards = [
   },
 ];
 
+const competitorRows = [
+  {
+    tool: 'Casco',
+    description: 'YC S25 · Agentic pentest',
+    pricing: 'Custom (startup-focused)',
+    features: ['yes', 'yes', 'yes', 'no', 'no', 'partial', 'no', 'yes'],
+  },
+  {
+    tool: 'Aikido',
+    description: 'Unified AppSec + AI pentest',
+    pricing: 'Per app (custom quote)',
+    features: ['partial', 'yes', 'yes', 'partial', 'no', 'yes', 'yes', 'yes'],
+  },
+  {
+    tool: 'XBOW',
+    description: 'Autonomous pentest agent',
+    pricing: 'Custom (early access)',
+    features: ['yes', 'yes', 'yes', 'no', 'no', 'no', 'no', 'partial'],
+  },
+  {
+    tool: 'Escape',
+    description: 'API security / agentic',
+    pricing: 'From €500/mo',
+    features: ['partial', 'yes', 'partial', 'no', 'no', 'yes', 'yes', 'yes'],
+  },
+  {
+    tool: 'Pentest firm',
+    description: 'Manual / human',
+    pricing: '$5K-$100K/yr',
+    features: ['yes', 'no', 'yes', 'no', 'no', 'no', 'no', 'yes'],
+  },
+  {
+    tool: 'Dispatch',
+    description: 'Agentic AppSec',
+    pricing: '$0-$299/mo flat',
+    features: ['yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes', 'yes'],
+    isDispatch: true,
+  },
+];
+
+const competitorColumns = [
+  'Code-aware recon',
+  'Agentic testing',
+  'Exploit validation',
+  'Auto-fix PR',
+  'Verified remediation',
+  'GitHub native',
+  'CI/CD',
+  'Compliance report',
+];
+
+const forceCards = [
+  {
+    title: 'Threat of New Entrants',
+    level: 'Medium-High',
+    levelClassName: 'bg-[#5a4311] text-[#e4b24d]',
+    barClassName: 'bg-[#d28a1d]',
+    widthClassName: 'w-[68%]',
+    text: 'AI tooling costs are falling fast. Moats must come from data network effects and developer workflow stickiness, not the orchestrator pattern alone.',
+  },
+  {
+    title: 'Bargaining Power of Buyers',
+    level: 'Medium',
+    levelClassName: 'bg-[#5a4311] text-[#e4b24d]',
+    barClassName: 'bg-[#d28a1d]',
+    widthClassName: 'w-[56%]',
+    text: 'Developers have many alternatives, but switching cost rises once Dispatch is embedded into CI/CD and GitHub workflows.',
+  },
+  {
+    title: 'Bargaining Power of Suppliers',
+    level: 'Low',
+    levelClassName: 'bg-[#214b18] text-[#7fd14c]',
+    barClassName: 'bg-[#15876d]',
+    widthClassName: 'w-[26%]',
+    text: 'LLM APIs are the main supplier dependency. Multi-model support is straightforward and cloud infrastructure remains commoditized.',
+  },
+  {
+    title: 'Threat of Substitutes',
+    level: 'High',
+    levelClassName: 'bg-[#5e2a25] text-[#f27e73]',
+    barClassName: 'bg-[#be3a35]',
+    widthClassName: 'w-[80%]',
+    text: 'Snyk, Semgrep, GitHub Advanced Security, Checkmarx, Veracode, and manual pentests all compete for the same budget.',
+  },
+  {
+    title: 'Competitive Rivalry',
+    level: 'High',
+    levelClassName: 'bg-[#5e2a25] text-[#f27e73]',
+    barClassName: 'bg-[#be3a35]',
+    widthClassName: 'w-[84%]',
+    text: "Dispatch's agentic remediation loop is differentiated today, but larger AppSec vendors can close feature gaps quickly if customer pull is real.",
+    fullWidth: true,
+  },
+];
+
 const Citation = ({ text, className = '' }: { text: string; className?: string }) => (
   <p className={`mt-4 text-xs leading-relaxed tracking-wide text-muted-foreground/70 ${className}`}>
     {text}
   </p>
 );
 
-const SECTION_IDS = ['home', 'problem', 'clinical', 'solution', 'how-it-works', 'dashboard', 'muscle', 'summary', 'business-model', 'market-size'];
+const SECTION_IDS = ['home', 'problem', 'clinical', 'solution', 'how-it-works', 'dashboard', 'muscle', 'summary', 'business-model', 'market-size', 'competition'];
 
 const Index = () => {
   const { t } = useLanguage();
@@ -351,10 +446,10 @@ const Index = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const teamMembers = [
-    { name: 'Arsh', detail: 'Team Member', initials: 'A', image: '/arsh.jpeg' },
-    { name: 'Mateo', detail: 'Team Member', initials: 'M', image: '/Mateo_Headshot.jpeg' },
-    { name: 'Diya', detail: 'Team Member', initials: 'D', image: '/Diya_Headshot.jpeg' },
-    { name: 'Jimmy', detail: 'Team Member', initials: 'J', image: '/Jimmy_Headshot.jpeg' },
+    { name: 'Arsh Singh', detail: 'Computer Science @Cornell', initials: 'A', image: '/arsh.jpeg' },
+    { name: 'Mateo del Rio Lanse', detail: 'Electrical & Computer Engineering @Cornell', initials: 'M', image: '/Mateo_Headshot.jpeg' },
+    { name: 'Diya Sheth', detail: 'Mechanical Engineering @Cornell', initials: 'D', image: '/Diya_Headshot.jpeg' },
+    { name: 'Jimmy Mulosmani', detail: 'Computer Science @Cornell', initials: 'J', image: '/Jimmy_Headshot.jpeg' },
   ];
 
   useEffect(() => {
@@ -930,6 +1025,129 @@ const Index = () => {
                 </motion.div>
               ))}
             </div>
+          </div>
+        </Section>
+
+        <Section id="competition" className="bg-transparent" contentClassName="max-w-7xl py-6">
+          <div className="space-y-4">
+            <div className="text-center space-y-1">
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground">Competitive Landscape</h1>
+              <p className="max-w-5xl mx-auto text-base md:text-lg text-muted-foreground">
+                Dispatch wins by closing the loop from recon to verified remediation inside the developer workflow.
+              </p>
+            </div>
+
+            <LinesPatternCard className="rounded-[1.5rem] shadow-2xl border-primary/25">
+              <LinesPatternCardBody className="p-4 md:p-5">
+                <div className="overflow-x-auto">
+                  <table className="min-w-[1100px] w-full text-left">
+                    <thead>
+                      <tr className="border-b border-border/60 text-sm md:text-base text-muted-foreground">
+                        <th className="pb-3 pr-4 font-semibold">Tool</th>
+                        <th className="pb-3 px-4 font-semibold">Pricing</th>
+                        {competitorColumns.map((column) => (
+                          <th key={column} className="pb-3 px-3 text-center font-semibold">
+                            {column}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {competitorRows.map((row) => (
+                        <tr
+                          key={row.tool}
+                          className={`border-b border-border/50 ${row.isDispatch ? 'bg-primary/18 ring-1 ring-primary/50' : ''}`}
+                        >
+                          <td className="py-4 pr-4 align-top">
+                            <div className={`${row.isDispatch ? 'text-primary' : 'text-foreground'} text-xl font-bold`}>
+                              {row.tool}
+                            </div>
+                            <div className="text-sm md:text-base text-muted-foreground">
+                              {row.description}
+                            </div>
+                          </td>
+                          <td className={`py-4 px-4 align-top text-base md:text-lg font-semibold ${row.isDispatch ? 'text-primary' : 'text-foreground/85'}`}>
+                            {row.pricing}
+                          </td>
+                          {row.features.map((feature, index) => (
+                            <td key={`${row.tool}-${competitorColumns[index]}`} className="py-4 px-3 text-center align-top">
+                              {feature === 'yes' ? (
+                                <span className={`text-3xl leading-none ${row.isDispatch ? 'text-primary' : 'text-[#23c59a]'}`}>✓</span>
+                              ) : feature === 'partial' ? (
+                                <span className="text-lg font-semibold text-[#d99321]">Partial</span>
+                              ) : (
+                                <span className="text-3xl leading-none text-muted-foreground/55">×</span>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-6 text-sm md:text-base">
+                  <div className="flex items-center gap-2 text-foreground/90">
+                    <span className="text-2xl text-[#23c59a]">✓</span>
+                    <span>Yes</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-foreground/90">
+                    <span className="font-semibold text-[#d99321]">Partial</span>
+                    <span>Partial</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-foreground/90">
+                    <span className="text-2xl text-muted-foreground/55">×</span>
+                    <span>No</span>
+                  </div>
+                  <div className="font-semibold text-muted-foreground">
+                    Gap: nobody else closes the loop from exploit evidence to verified remediation.
+                  </div>
+                </div>
+              </LinesPatternCardBody>
+            </LinesPatternCard>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              {forceCards.filter((card) => !card.fullWidth).map((card) => (
+                <LinesPatternCard key={card.title} className="rounded-[1.5rem] shadow-xl border-white/10">
+                  <LinesPatternCardBody className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-xl md:text-2xl font-bold text-foreground">{card.title}</h3>
+                      <span className={`rounded-full px-4 py-1 text-sm md:text-base font-semibold ${card.levelClassName}`}>
+                        {card.level}
+                      </span>
+                    </div>
+                    <div className="mt-4 h-3 rounded-full bg-white/12">
+                      <div className={`h-3 rounded-full ${card.barClassName} ${card.widthClassName}`} />
+                    </div>
+                    <p className="mt-4 text-lg leading-relaxed text-muted-foreground">{card.text}</p>
+                  </LinesPatternCardBody>
+                </LinesPatternCard>
+              ))}
+            </div>
+
+            {forceCards.filter((card) => card.fullWidth).map((card) => (
+              <LinesPatternCard key={card.title} className="rounded-[1.5rem] shadow-2xl border-white/10">
+                <LinesPatternCardBody className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-2xl md:text-3xl font-bold text-foreground">{card.title}</h3>
+                    <span className={`rounded-full px-4 py-1 text-sm md:text-base font-semibold ${card.levelClassName}`}>
+                      {card.level}
+                    </span>
+                  </div>
+                  <div className="mt-4 h-3 rounded-full bg-white/12">
+                    <div className={`h-3 rounded-full ${card.barClassName} ${card.widthClassName}`} />
+                  </div>
+                  <p className="mt-4 text-xl leading-relaxed text-muted-foreground">
+                    {card.text}
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">Snyk: $25-$40/dev/mo</span>
+                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">Semgrep: freemium OSS</span>
+                    <span className="rounded-full bg-[#1d3658] px-4 py-2 text-base font-semibold text-[#83b3ff]">GitHub Adv. Security: bundled</span>
+                  </div>
+                </LinesPatternCardBody>
+              </LinesPatternCard>
+            ))}
           </div>
         </Section>
       </div>
