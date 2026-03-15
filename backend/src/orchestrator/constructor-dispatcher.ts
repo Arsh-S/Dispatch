@@ -52,12 +52,14 @@ export async function runBlaxelConstructor(
     // Instead: start the process and poll manually with process.wait().
     const procName = `dispatch-${Date.now()}`;
     console.log(`[Blaxel Constructor] Running constructor in sandbox`);
+    const gitAuthorName = process.env.DISPATCH_GIT_AUTHOR_NAME ?? 'Dispatch Agent';
+    const gitAuthorEmail = process.env.DISPATCH_GIT_AUTHOR_EMAIL ?? 'dispatch-agent@dispatch.ai';
     const startedProcess = await sandbox.process.exec({
       name: procName,
       command: [
         `git clone ${cloneUrl} /repo`,
-        'git config --global user.email "dispatch@dispatch.ai"',
-        'git config --global user.name "Dispatch Constructor"',
+        `git config --global user.email "${gitAuthorEmail}"`,
+        `git config --global user.name "${gitAuthorName}"`,
         'npm install --ignore-scripts --prefix /dispatch-backend',
         'npx tsx /dispatch-backend/src/workers/constructor/cli.ts /dispatch/constructor-bootstrap.json',
       ].join(' && '),
@@ -68,6 +70,8 @@ export async function runBlaxelConstructor(
         LINEAR_API_KEY: process.env.LINEAR_API_KEY ?? '',
         ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? '',
         REPO_DIR: '/repo',
+        DISPATCH_GIT_AUTHOR_NAME: gitAuthorName,
+        DISPATCH_GIT_AUTHOR_EMAIL: gitAuthorEmail,
       },
     });
 
