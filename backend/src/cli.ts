@@ -5,6 +5,8 @@ import { createLinearIssuesFromReport } from './linear/issues';
 import { generatePdfReport } from './reporting/pdf';
 import { Finding, CleanEndpoint } from './schemas/finding-report';
 import { runLocalTestRunner } from './test-runner';
+import { initDatadog } from './integrations/datadog/client';
+import { forwardTestRunToDatadog } from './integrations/datadog/test-run-forwarder';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
