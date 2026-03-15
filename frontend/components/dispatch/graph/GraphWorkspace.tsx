@@ -30,6 +30,13 @@ export function GraphWorkspace() {
           resetViewRef={resetViewRef}
         />
         <div className="pointer-events-none absolute inset-0 z-10">
+          <div className="pointer-events-auto absolute left-3 top-3">
+            <div className="rounded-lg border border-border bg-card/90 px-3 py-2 backdrop-blur-sm">
+              <p className="text-[10px] text-muted-foreground">
+                Drag to pan &middot; Scroll to zoom &middot; Click to inspect
+              </p>
+            </div>
+          </div>
           {/* Zoom/pan controls — bottom-right */}
           <div className="pointer-events-auto absolute bottom-3 right-3 flex gap-1">
             <Button
@@ -63,11 +70,11 @@ export function GraphWorkspace() {
 
 function MinimalLegend() {
   const items = [
-    { color: "bg-status-running", label: "Running" },
-    { color: "bg-primary", label: "Success" },
-    { color: "bg-status-error", label: "Failed" },
-    { color: "bg-status-warning", label: "Warning" },
-    { color: "bg-status-idle", label: "Idle" },
+    { color: "#d4a853", label: "Running" },
+    { color: "var(--primary)", label: "Success" },
+    { color: "#ef6461", label: "Failed" },
+    { color: "#e5954a", label: "Warning" },
+    { color: "#6b7280", label: "Idle" },
   ];
 
   return (
@@ -75,14 +82,11 @@ function MinimalLegend() {
       <div className="flex flex-wrap gap-x-3 gap-y-1">
         {items.map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
-            <span className={`size-2 rounded-full ${color}`} />
+            <span className="size-2 rounded-full" style={{ backgroundColor: color }} />
             <span className="text-[10px] text-muted-foreground">{label}</span>
           </div>
         ))}
       </div>
-      <p className="mt-1.5 text-[9px] text-muted-foreground/60">
-        Drag to pan &middot; Scroll to zoom &middot; Click to inspect
-      </p>
     </div>
   );
 }

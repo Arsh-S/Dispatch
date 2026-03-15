@@ -46,7 +46,7 @@ function DispatchWorkspaceInner() {
       <aside className="flex w-[360px] shrink-0 flex-col bg-card/50 border-r border-border">
         <LeftPanel />
       </aside>
-      <main className="relative flex flex-1 min-w-0">
+      <main className="relative flex min-w-0 flex-1 border-r border-border">
         <GraphWorkspace />
       </main>
       <NodeInspectorSidebar />
