@@ -105,38 +105,19 @@ export function WorkerInspector({ assignment, report, diagnostics, healthStatus 
               <Row label="Findings">
                 <span className="font-medium text-foreground">{diagnostics.findings_so_far}</span>
               </Row>
-              <Row label="Lines">
-                <span className="text-foreground/80">
-                  <span className="text-primary">+{diagnostics.lines_added}</span>
-                  {" / "}
-                  <span className="text-status-error">-{diagnostics.lines_removed}</span>
-                </span>
-              </Row>
-              <Row label="Files">
-                <span className="font-medium text-foreground">{diagnostics.unique_files_touched.length}</span>
-              </Row>
             </dl>
-
-            {/* Tool call breakdown */}
-            {Object.keys(diagnostics.tool_calls).length > 0 && (
-              <div className="space-y-1 pt-2 border-t border-border">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Tool Call Breakdown</div>
-                {Object.entries(diagnostics.tool_calls)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([tool, count]) => (
-                    <div key={tool} className="flex items-center justify-between gap-2 text-xs bg-muted/30 rounded px-2 py-1">
-                      <span className="font-mono truncate text-foreground/80">{tool}</span>
-                      <span className="font-medium text-foreground shrink-0">{count}</span>
-                    </div>
-                  ))}
-              </div>
-            )}
-
-            {/* Last action */}
             {diagnostics.last_action && (
               <div className="pt-2 border-t border-border">
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Last Action</div>
-                <p className="text-xs text-foreground/70">{diagnostics.last_action}</p>
+                <p className="text-xs text-foreground/70 leading-relaxed">{diagnostics.last_action}</p>
+              </div>
+            )}
+            {healthStatus === "looping" && (
+              <div className="pt-2 border-t border-red-500/20">
+                <div className="flex items-center gap-1.5 text-xs text-red-400">
+                  <AlertTriangle className="size-3" />
+                  <span className="font-medium">Loop detected — agent may be stuck</span>
+                </div>
               </div>
             )}
           </CardContent>
@@ -172,7 +153,7 @@ export function WorkerInspector({ assignment, report, diagnostics, healthStatus 
                     {assignment.target.line_range && `:${assignment.target.line_range[0]}-${assignment.target.line_range[1]}`}
                   </span>
                 </Row>
-                {assignment.target.parameters.length > 0 && (
+                {(assignment.target.parameters?.length ?? 0) > 0 && (
                   <Row label="Params">
                     <div className="flex gap-1 flex-wrap">
                       {assignment.target.parameters.map((p) => (
@@ -240,19 +221,19 @@ export function WorkerInspector({ assignment, report, diagnostics, healthStatus 
               <Row label="Findings">
                 <span className="flex items-center gap-1">
                   <Bug className="size-3 text-status-error" />
-                  <span className="font-medium text-foreground">{report.findings.length}</span>
+                  <span className="font-medium text-foreground">{report.findings?.length ?? 0}</span>
                 </span>
               </Row>
               <Row label="Clean">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="size-3 text-primary" />
-                  <span className="font-medium text-foreground">{report.clean_endpoints.length}</span>
+                  <span className="font-medium text-foreground">{report.clean_endpoints?.length ?? 0}</span>
                 </span>
               </Row>
             </dl>
 
             {/* Findings summary */}
-            {report.findings.length > 0 && (
+            {(report.findings?.length ?? 0) > 0 && (
               <div className="space-y-1 pt-2 border-t border-border">
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Findings</div>
                 {report.findings.map((f) => (
@@ -265,7 +246,7 @@ export function WorkerInspector({ assignment, report, diagnostics, healthStatus 
             )}
 
             {/* Clean endpoints */}
-            {report.clean_endpoints.length > 0 && (
+            {(report.clean_endpoints?.length ?? 0) > 0 && (
               <div className="space-y-1 pt-2 border-t border-border">
                 <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Clean Endpoints</div>
                 {report.clean_endpoints.map((ep, i) => (
@@ -292,26 +273,23 @@ export function WorkerInspector({ assignment, report, diagnostics, healthStatus 
 }
 
 function HealthBadge({ status }: { status: HealthStatus }) {
-  const styles: Record<HealthStatus, string> = {
-    healthy: "bg-primary/10 text-primary border-primary/20",
-    warning: "bg-amber-400/10 text-amber-400 border-amber-400/20",
-    looping: "bg-red-500/10 text-red-500 border-red-500/20",
-  };
-
+  if (status === "healthy") return null;
+  const cls = status === "looping"
+    ? "bg-red-500/20 text-red-400 border-red-500/30"
+    : "bg-amber-400/20 text-amber-400 border-amber-400/30";
   return (
-    <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${styles[status]}`}>
+    <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded border font-medium ${cls}`}>
       {status}
-    </Badge>
+    </span>
   );
 }
 
 function TraceBar({ value, max }: { value: number; max: number }) {
-  const pct = Math.min((value / max) * 100, 100);
-  const color = pct > 70 ? "bg-red-500" : pct > 40 ? "bg-amber-400" : "bg-primary";
-
+  const pct = Math.min(value / max, 1);
+  const color = pct > 1 ? "bg-red-500" : pct > 0.7 ? "bg-amber-400" : "bg-primary";
   return (
-    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-      <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+    <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+      <div className={`h-full rounded-full ${color}`} style={{ width: `${pct * 100}%` }} />
     </div>
   );
 }

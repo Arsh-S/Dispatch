@@ -67,8 +67,8 @@ export function NodeInspectorSidebar() {
         return <OrchestratorInspector preRecon={preRecon} taskAssignments={taskAssignments} />;
 
       case "worker": {
-        const assignment = (node.meta?.assignment as ReturnType<typeof getAssignmentByWorkerId>) || getAssignmentByWorkerId(node.id);
-        const report = (node.meta?.report as ReturnType<typeof getReportByWorkerId>) || getReportByWorkerId(node.id);
+        const assignment = getAssignmentByWorkerId(node.id) || (node.meta?.assignment as ReturnType<typeof getAssignmentByWorkerId>);
+        const report = getReportByWorkerId(node.id);
         const diagnostics = getDiagnosticsByWorkerId(node.id);
         const healthStatus = getWorkerHealthStatus(node.id);
         return <WorkerInspector assignment={assignment} report={report} diagnostics={diagnostics} healthStatus={healthStatus} />;
