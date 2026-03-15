@@ -87,7 +87,7 @@ export async function runClaudeAgent<TOutput extends ZodTypeAny>(
         [
           '--print',
           '--output-format', 'text',
-          '--max-turns', '25',
+          '--max-turns', '1000',
           '--system-prompt', systemPrompt,
           '-p', fullTaskPrompt,
         ],
