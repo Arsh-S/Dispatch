@@ -4,13 +4,18 @@ import path from 'path';
 import type { MergedReport } from '../orchestrator/collector';
 import type { Finding } from '../schemas/finding-report';
 
+// GitHub logo path
+const GITHUB_LOGO_PATH = path.resolve(__dirname, '../../../icons/github_small_logo.png');
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface PdfReportOptions {
-  githubRepo?: string;       // "owner/repo" — enables file permalink URLs
-  githubRef?: string;        // commit SHA or branch name (default: "main")
+  githubRepo?: string;       // "owner/repo" where issues are created
+  githubRef?: string;        // commit SHA or branch for issue links (default: "main")
+  analyzedRepo?: string;     // "owner/repo" that was analyzed (can differ from githubRepo)
+  analyzedRef?: string;      // commit SHA or branch of analyzed repo (default: "main")
   createdIssues?: Map<string, { number: number; url: string }>; // finding_id → GitHub issue
 }
 
@@ -99,6 +104,53 @@ export function githubFileUrl(
   return `${base}#L${line}`;
 }
 
+/**
+ * Generate a clickable GitHub file link
+ * Handles both the Dispatch repo and any analyzed target repo
+ */
+function generateFileLink(
+  file: string,
+  line: number | undefined,
+  analyzedRepo?: string,
+  analyzedRef?: string,
+): string {
+  const repo = analyzedRepo || 'Arsh-S/Dispatch';
+  const ref = analyzedRef || 'main';
+  const cleanFile = file.startsWith('/') ? file.slice(1) : file;
+  
+  if (!line || line <= 0) {
+    return `https://github.com/${repo}/blob/${ref}/${cleanFile}`;
+  }
+  
+  return `https://github.com/${repo}/blob/${ref}/${cleanFile}#L${line}`;
+}
+
+/**
+ * Draw clickable GitHub logo that links to file on GitHub
+ */
+function drawClickableGitHubLogo(
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  file: string,
+  line: number | undefined,
+  analyzedRepo?: string,
+  analyzedRef?: string,
+  width: number = 20,
+  height: number = 20,
+): void {
+  try {
+    if (fs.existsSync(GITHUB_LOGO_PATH)) {
+      const linkUrl = generateFileLink(file, line, analyzedRepo, analyzedRef);
+      // Add clickable annotation to the logo area
+      doc.link(x, y, width, height, linkUrl);
+      doc.image(GITHUB_LOGO_PATH, x, y, { width, height });
+    }
+  } catch (error) {
+    // Silently fail if logo can't be drawn
+  }
+}
+
 // Page layout constants
 const PAGE_WIDTH = 595.28; // A4 width in points
 const PAGE_HEIGHT = 841.89; // A4 height in points
@@ -152,8 +204,12 @@ export async function generatePdfReport(
     const stream = fs.createWriteStream(outputPath);
     doc.pipe(stream);
 
+    // Extract analyzed repo info - can be different from issue repo!
+    const analyzedRepo = opts.analyzedRepo || 'Arsh-S/Dispatch';
+    const analyzedRef = opts.analyzedRef || 'main';
+
     // Page 1: Executive Summary
-    drawExecutiveSummary(doc, scanResult, opts, fonts);
+    drawExecutiveSummary(doc, scanResult, opts, fonts, analyzedRepo, analyzedRef);
 
     // Critical & High findings — full detail
     const criticalHighFindings = scanResult.findings.filter(
@@ -169,7 +225,7 @@ export async function generatePdfReport(
         if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 280) {
           doc.addPage();
         }
-        drawFindingFull(doc, criticalHighFindings[i], i + 1, opts, fonts);
+        drawFindingFull(doc, criticalHighFindings[i], i + 1, opts, fonts, analyzedRepo, analyzedRef);
       }
     }
 
@@ -190,7 +246,7 @@ export async function generatePdfReport(
         if (doc.y > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT - 100) {
           doc.addPage();
         }
-        drawFindingCondensed(doc, mediumLowFindings[i], i + 1, opts, fonts);
+        drawFindingCondensed(doc, mediumLowFindings[i], i + 1, opts, fonts, analyzedRepo, analyzedRef);
       }
     }
 
@@ -219,7 +275,7 @@ export async function generatePdfReport(
 // Executive Summary
 // ---------------------------------------------------------------------------
 
-function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, options: Partial<PdfReportOptions> = {}, fonts: FontConfig) {
+function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, options: Partial<PdfReportOptions> = {}, fonts: FontConfig, analyzedRepo?: string, analyzedRef?: string) {
   const x = MARGIN;
 
   // Header with teal accent bar
@@ -414,6 +470,11 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
       const locTruncated = locDisplay.length > 32 ? '…' + locDisplay.slice(-30) : locDisplay;
       doc.font(fonts.mono).fontSize(8).fillColor(COLORS.link);
       doc.text(locTruncated, colX, cellY, { lineBreak: false });
+      
+      // Draw clickable GitHub logo next to location
+      const locWidth = doc.widthOfString(locTruncated);
+      drawClickableGitHubLogo(doc, colX + locWidth + 4, cellY - 6, f.location.file, f.location.line, analyzedRepo, analyzedRef, 20, 20);
+      
       colX += colWidths[3];
 
       // Issue
@@ -462,7 +523,7 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
 // Finding — Full Detail (for Critical/High)
 // ---------------------------------------------------------------------------
 
-function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig) {
+function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig, analyzedRepo?: string, analyzedRef?: string) {
   const f = fonts ?? { regular: 'Helvetica', bold: 'Helvetica-Bold', semiBold: 'Helvetica-Bold', mono: 'Courier' };
   const x = MARGIN;
   const sevColors = COLORS.severity[finding.severity.toLowerCase() as keyof typeof COLORS.severity] || COLORS.severity.medium;
@@ -500,6 +561,10 @@ function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: numbe
 
   doc.font(f.mono).fontSize(9).fillColor(COLORS.link);
   doc.text(fileRef, contentX);
+  
+  // Draw clickable GitHub logo next to the file path
+  const fileRefWidth = doc.widthOfString(fileRef);
+  drawClickableGitHubLogo(doc, contentX + fileRefWidth + 8, doc.y - 17, finding.location.file, finding.location.line, analyzedRepo, analyzedRef, 20, 20);
 
   if (finding.location.parameter) {
     doc.font(f.regular).fontSize(9).fillColor(COLORS.textMuted);
@@ -609,7 +674,7 @@ function drawFindingFull(doc: PDFKit.PDFDocument, finding: Finding, index: numbe
 // Finding — Condensed (for Medium/Low)
 // ---------------------------------------------------------------------------
 
-function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig) {
+function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: number, options?: PdfReportOptions, fonts?: FontConfig, analyzedRepo?: string, analyzedRef?: string) {
   const f = fonts ?? { regular: 'Helvetica', bold: 'Helvetica-Bold', semiBold: 'Helvetica-Bold', mono: 'Courier' };
   const x = MARGIN;
   const sevColors = COLORS.severity[finding.severity.toLowerCase() as keyof typeof COLORS.severity] || COLORS.severity.medium;
@@ -641,6 +706,11 @@ function drawFindingCondensed(doc: PDFKit.PDFDocument, finding: Finding, index: 
     : finding.location.file;
   doc.font(f.mono).fontSize(8).fillColor(COLORS.link);
   doc.text(fileRef, contentX);
+  
+  // Draw clickable GitHub logo next to the file path
+  const fileRefWidthCondensed = doc.widthOfString(fileRef);
+  drawClickableGitHubLogo(doc, contentX + fileRefWidthCondensed + 6, doc.y - 14, finding.location.file, finding.location.line, analyzedRepo, analyzedRef, 20, 20);
+  
   doc.moveDown(0.2);
 
   // Metadata
