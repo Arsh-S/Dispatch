@@ -4,7 +4,7 @@ export const TaskAssignmentSchema = z.object({
   dispatch_run_id: z.string(),
   worker_id: z.string(),
   assigned_at: z.string(),
-  timeout_seconds: z.number().default(300),
+  timeout_seconds: z.number().default(600),
   target: z.object({
     file: z.string(),
     line_range: z.tuple([z.number(), z.number()]).optional(),

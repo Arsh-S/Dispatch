@@ -142,7 +142,7 @@ export function createTaskAssignments(
       dispatch_run_id: preRecon.dispatch_run_id,
       worker_id: workerId,
       assigned_at: new Date().toISOString(),
-      timeout_seconds: 300,
+      timeout_seconds: 600,
       target: {
         file: cell.route.handler_file,
         endpoint: endpointPath,

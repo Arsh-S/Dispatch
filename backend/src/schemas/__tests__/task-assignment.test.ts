@@ -58,7 +58,7 @@ describe('TaskAssignmentSchema', () => {
       briefing: 'XSS test',
     };
     const result = TaskAssignmentSchema.parse(minimal);
-    expect(result.timeout_seconds).toBe(300);
+    expect(result.timeout_seconds).toBe(600);
     expect(result.target.parameters).toEqual([]);
     expect(result.context.rules_md).toEqual([]);
     expect(result.app_config.env).toEqual({});
