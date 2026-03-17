@@ -39,6 +39,7 @@
     ]
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@blaxel/core": "^0.2.74",
     "@linear/sdk": "^77.0.0",
     "@octokit/auth-app": "^8.2.0",
