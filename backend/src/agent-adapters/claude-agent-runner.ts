@@ -13,8 +13,19 @@
  */
 
 import { spawn, ChildProcess } from 'child_process';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { z, ZodTypeAny } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+
+/** Claude Code has internal ~30–32s limits (prompt hooks, idle, etc). Override via settings. */
+const CLAUDE_TIMEOUT_SETTINGS = {
+  env: {
+    BASH_DEFAULT_TIMEOUT_MS: '3600000',  // 1 hour
+    BASH_MAX_TIMEOUT_MS: '7200000',      // 2 hours
+  },
+};
 
 export interface ClaudeAgentOptions<TOutput extends ZodTypeAny> {
   /** System-level instructions passed as --system-prompt */
@@ -67,7 +78,7 @@ export async function runClaudeAgent<TOutput extends ZodTypeAny>(
     taskPrompt,
     '',
     '---',
-    'Respond with ONLY a valid JSON object that conforms to this schema. No markdown fences, no explanation.',
+    'After completing your full analysis (do not return early), respond with a valid JSON object that conforms to this schema. No markdown fences, no explanation.',
     'JSON Schema:',
     JSON.stringify(jsonSchema, null, 2),
   ].join('\n');
@@ -75,7 +86,14 @@ export async function runClaudeAgent<TOutput extends ZodTypeAny>(
   const mergedEnv: NodeJS.ProcessEnv = {
     ...process.env,
     ...env,
+    // Override Claude Code internal ~30–32s limits (prompt hooks, bash, etc)
+    BASH_DEFAULT_TIMEOUT_MS: '3600000',
+    BASH_MAX_TIMEOUT_MS: '7200000',
   };
+
+  // Write temp settings file — Claude Code ignores shell env for timeouts, needs settings.json
+  const settingsPath = path.join(os.tmpdir(), `dispatch-claude-settings-${process.pid}-${Date.now()}.json`);
+  fs.writeFileSync(settingsPath, JSON.stringify(CLAUDE_TIMEOUT_SETTINGS));
 
   let rawOutput = '';
   let stderrOutput = '';
@@ -88,6 +106,9 @@ export async function runClaudeAgent<TOutput extends ZodTypeAny>(
           '--print',
           '--output-format', 'text',
           '--max-turns', '1000',
+          '--dangerously-skip-permissions', // Required for headless: no TTY to approve Bash/Read/Edit
+          '--effort', 'high', // Encourage thorough analysis over quick completion
+          '--settings', settingsPath, // Override ~32s internal timeout limits
           '--system-prompt', systemPrompt,
           '-p', fullTaskPrompt,
         ],
@@ -132,6 +153,12 @@ export async function runClaudeAgent<TOutput extends ZodTypeAny>(
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return { success: false, error: message, rawOutput };
+  } finally {
+    try {
+      fs.unlinkSync(settingsPath);
+    } catch {
+      /* ignore cleanup errors */
+    }
   }
 
   // Extract JSON from output — Claude sometimes wraps in markdown fences
