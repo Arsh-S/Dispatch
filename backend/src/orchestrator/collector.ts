@@ -98,8 +98,30 @@ function deduplicateFindings(findings: Finding[]): Finding[] {
   return [...seen.values()];
 }
 
-function generateFindingKey(finding: Finding): string {
-  const raw = `${finding.location.endpoint}:${finding.location.parameter || ''}:${finding.vuln_type}`;
+/**
+ * Content-based dedup key derived from the finding's semantic identity.
+ * Two findings that target the same endpoint+parameter+vuln_type always
+ * produce the same key, regardless of which worker discovered them.
+ */
+export function generateFindingKey(finding: Pick<Finding, 'location' | 'vuln_type'>): string {
+  return contentBasedFindingHash(
+    finding.location.endpoint,
+    finding.location.parameter ?? '',
+    finding.vuln_type,
+  );
+}
+
+/**
+ * SHA-256 truncated hash from the semantic triple (endpoint, parameter, vuln_type).
+ * Shared by the dedup logic and the Claude post-parse adapter so finding_id
+ * values are deterministic and collision-resistant across parallel workers.
+ */
+export function contentBasedFindingHash(
+  endpoint: string,
+  parameter: string | null | undefined,
+  vulnType: string,
+): string {
+  const raw = `${endpoint}:${parameter || ''}:${vulnType}`;
   return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 12);
 }
 

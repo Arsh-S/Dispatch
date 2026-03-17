@@ -38,7 +38,7 @@ export async function runBlaxelConstructor(
     sandbox = await SandboxInstance.createIfNotExists({
       name: sandboxName,
       region: process.env.BL_REGION || 'us-pdx-1',
-      ttl: '30m',
+      ttl: '30m',  // NB - TTL is only 30 min.
     });
 
     // Upload backend (constructor + deps) before running anything

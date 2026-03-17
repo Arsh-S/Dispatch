@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mergeReports, forwardToDatadog, MergedReport } from '../collector';
+import { mergeReports, forwardToDatadog, MergedReport, contentBasedFindingHash, generateFindingKey } from '../collector';
 import { FindingReport, Finding } from '../../schemas/finding-report';
 
 const { mockIsEnabled, mockSendEvent, mockSendMetrics } = vi.hoisted(() => ({
@@ -161,6 +161,27 @@ describe('mergeReports', () => {
     expect(merged.findings.length).toBe(0);
     expect(merged.total_workers).toBe(0);
     expect(merged.dispatch_run_id).toBe('');
+  });
+
+  it('should deduplicate worker-namespaced finding_ids by content key', () => {
+    const hash = contentBasedFindingHash('/api/users', 'id', 'sql-injection');
+    const finding1 = makeFinding({
+      finding_id: `worker-1:finding-sql-injection-${hash}`,
+      exploit_confidence: 'unconfirmed',
+    });
+    const finding2 = makeFinding({
+      finding_id: `worker-2:finding-sql-injection-${hash}`,
+      exploit_confidence: 'confirmed',
+    });
+
+    const reports: FindingReport[] = [
+      makeReport({ worker_id: 'worker-1', findings: [finding1] }),
+      makeReport({ worker_id: 'worker-2', findings: [finding2] }),
+    ];
+
+    const merged = mergeReports(reports);
+    expect(merged.findings.length).toBe(1);
+    expect(merged.findings[0].exploit_confidence).toBe('confirmed');
   });
 
   it('should collect clean endpoints from all reports', () => {
