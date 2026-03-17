@@ -70,7 +70,7 @@ export function createTaskAssignments(
     runtime: 'node',
     install: 'pnpm install',
     start: 'pnpm dev',
-    port: 3000,
+    port: 3344, // Avoid 3000 — frontend dashboard often uses it; scan would kill it
     seed: 'pnpm db:seed',
     env: {} as Record<string, string>,
   };
@@ -86,16 +86,23 @@ export function createTaskAssignments(
     // Config parsing failed, use defaults
   }
 
+  // Override port when DISPATCH_TARGET_PORT is set (avoids killing frontend on 3000)
+  const envPort = process.env.DISPATCH_TARGET_PORT;
+  if (envPort) {
+    const p = parseInt(envPort, 10);
+    if (!Number.isNaN(p)) appConfig = { ...appConfig, port: p };
+  }
+
   // Inject dispatch preload for Node targets so middleware captures logs to Datadog
   if (appConfig.runtime === 'node') {
     const preloadPath =
       process.env.DISPATCH_PRELOAD_PATH ||
       path.resolve(path.join(__dirname, '../../src/middleware/dispatch-preload.js'));
     if (fs.existsSync(preloadPath)) {
-      // Transform start command to use preload (tsx/cjs for TypeScript support)
+      // Use -r tsx/cjs -r preload to run .ts; require().register() is not a function in tsx
       appConfig = {
         ...appConfig,
-        start: `node -r ${preloadPath} -e "require('tsx/cjs').register(); require('./src/app.ts')"`,
+        start: `node -r tsx/cjs -r ${preloadPath} src/app.ts`,
       };
     }
   }
