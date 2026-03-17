@@ -4,7 +4,7 @@
 
 <p align="center"><strong>Security tools give you a PDF. Dispatch gives you a pull request.</strong></p>
 
-<p align="center"><a href="https://dispatch-eosin.vercel.app/">📽️ View slides</a></p>
+<p align="center"><a href="https://dispatch-eosin.vercel.app/">View slides</a></p>
 
 ---
 
