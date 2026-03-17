@@ -4,6 +4,8 @@
 
 <p align="center"><strong>Security tools give you a PDF. Dispatch gives you a pull request.</strong></p>
 
+<p align="center"><a href="https://dispatch-eosin.vercel.app/">📽️ View slides</a></p>
+
 ---
 
 Dispatch is a multi-agent security testing platform. An orchestrator agent reads your codebase, plans attacks, and dispatches worker agents to test your application for vulnerabilities. Findings flow into GitHub Issues and Linear as actionable tickets. Fixer agents then patch the code and open pull requests — closing the loop from discovery to remediation.
