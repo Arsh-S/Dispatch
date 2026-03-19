@@ -6,7 +6,7 @@ import PaperBackground from '@/components/PaperBackground';
 import { LinesPatternCard, LinesPatternCardBody } from '@/components/ui/card-with-lines-pattern';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
-const dispatchWordmark = '/dispatch-name-logo.svg';
+const dispatchWordmark = '/dispatch-name-logo.png';
 
 const problemCards = [
   {
