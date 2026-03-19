@@ -490,6 +490,7 @@ const MAIN_NAV_ITEMS = [
   { label: 'Problem', id: 'problem' },
   { label: 'Dispatch', id: 'how-it-works' },
   { label: 'Demo', id: 'demo' },
+  { label: 'Output', id: 'pdf-output' },
   { label: 'Market', id: 'market-size' },
   { label: 'Competition', id: 'competition' },
   { label: 'Conclusion', id: 'conclusion' },
@@ -619,6 +620,19 @@ const Index = () => {
           </button>
         )}
       </div>
+
+      {activeSection === 'conclusion' && (
+        <div className="fixed bottom-6 left-6 z-[70] flex flex-col items-center gap-2">
+          <div className="rounded-2xl bg-white p-3 shadow-lg">
+            <img
+              src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://github.com/Arsh-S/Dispatch&bgcolor=ffffff&color=000000"
+              alt="GitHub QR Code"
+              className="h-36 w-36"
+            />
+          </div>
+          <p className="text-sm text-muted-foreground font-semibold">GitHub</p>
+        </div>
+      )}
 
       <div ref={scrollContainerRef} className="snap-y snap-mandatory h-screen overflow-y-scroll scrollbar-hide relative">
         <Section id="home" className="bg-transparent" contentClassName="max-w-7xl py-16 lg:py-20">
@@ -822,65 +836,50 @@ const Index = () => {
             <LinesPatternCard className="max-w-5xl mx-auto rounded-xl shadow-2xl border-primary/25">
               <LinesPatternCardBody className="p-4 text-center">
                 <p className="text-2xl md:text-3xl font-semibold text-foreground leading-snug">
-                  Not a PDF report. A pull request.
+                  Not just a <span className="text-destructive">PDF</span>, but also a <span className="text-primary">pull request</span>.
                 </p>
               </LinesPatternCardBody>
             </LinesPatternCard>
           </div>
         </Section>
 
-        <Section id="demo" className="bg-transparent" contentClassName="max-w-7xl py-10">
-          <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-            <LinesPatternCard className="rounded-[2rem] shadow-2xl border-primary/35">
-              <LinesPatternCardBody className="flex h-full min-h-[28rem] flex-col justify-between p-8 md:p-10">
-                <div className="space-y-4">
-                  <p className="text-sm font-semibold tracking-[0.24em] uppercase text-primary">Video Demo</p>
-                  <h1 className="text-4xl font-bold text-foreground md:text-5xl">
-                    Repository in. Pull request out.
-                  </h1>
-                  <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-                    This slide is reserved for the live demo video. It will show Dispatch running end-to-end:
-                    proving the exploit, opening the issue, patching the code, and handing the developer a fix PR.
-                  </p>
-                </div>
+        <Section id="demo" className="bg-transparent" contentClassName="max-w-6xl py-10">
+          <div className="space-y-6">
+            <div className="text-center">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground">
+                <span className="text-primary">Dispatch</span> Video Demo
+              </h1>
+            </div>
+            <div className="rounded-2xl overflow-hidden border border-primary/30 bg-black shadow-[0_30px_90px_rgba(0,0,0,0.4)]">
+              <video
+                className="w-full h-auto"
+                controls
+                playsInline
+                preload="metadata"
+              >
+                <source src="/demo.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+        </Section>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-background/50 px-6 py-8 text-center">
-                  <p className="text-sm font-semibold tracking-[0.2em] uppercase text-muted-foreground">Demo placeholder</p>
-                  <p className="mt-4 text-5xl font-black tracking-tight text-primary md:text-6xl">~90 sec</p>
-                  <p className="mt-3 text-lg text-muted-foreground">
-                    End state: the developer reviews the PR instead of reading a PDF.
-                  </p>
-                </div>
-              </LinesPatternCardBody>
-            </LinesPatternCard>
-
-            <div className="grid gap-4">
-              {demoMoments.map((moment, index) => (
-                <motion.div
-                  key={moment}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, delay: 0.08 * index }}
-                >
-                  <LinesPatternCard className="rounded-[1.5rem] shadow-xl border-white/10 h-full">
-                    <LinesPatternCardBody className="flex h-full items-start gap-4 p-5">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/15 text-lg font-bold text-primary">
-                        {index + 1}
-                      </div>
-                      <p className="pt-1 text-lg leading-relaxed text-foreground/90">{moment}</p>
-                    </LinesPatternCardBody>
-                  </LinesPatternCard>
-                </motion.div>
-              ))}
-
-              <LinesPatternCard className="rounded-[1.5rem] shadow-xl border-secondary/25">
-                <LinesPatternCardBody className="p-5">
-                  <p className="text-xl font-bold text-foreground">What the audience should see</p>
-                  <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-                    A repo gets scanned, exploit evidence is generated, a ticket appears automatically, and the patch shows up as a reviewable pull request.
-                  </p>
-                </LinesPatternCardBody>
-              </LinesPatternCard>
+        <Section id="pdf-output" className="bg-transparent" contentClassName="max-w-6xl py-10">
+          <div className="space-y-6">
+            <div className="text-center">
+              <h1 className="text-4xl md:text-6xl font-bold text-foreground">
+                <span className="text-primary">Dispatch</span> PDF Output
+              </h1>
+              <p className="mt-3 text-lg md:text-xl text-muted-foreground">
+                Auto-generated security report with findings, severity ratings, and remediation guidance.
+              </p>
+            </div>
+            <div className="rounded-2xl overflow-hidden border border-primary/30 bg-white shadow-[0_30px_90px_rgba(0,0,0,0.4)]" style={{ height: '70vh' }}>
+              <iframe
+                src="/dispatch-output.pdf"
+                className="w-full h-full"
+                title="Dispatch PDF Output"
+              />
             </div>
           </div>
         </Section>
@@ -1083,12 +1082,10 @@ const Index = () => {
               className="text-center"
             >
               <p className="text-3xl md:text-4xl font-bold text-foreground">
-                Security tools give you a <span className="text-destructive">PDF</span>. Dispatch gives you a <span className="text-primary">pull request</span>.
-              </p>
-              <p className="mt-4 text-xl md:text-2xl text-muted-foreground">
-                Thank you.
+                Finding vulnerabilities is easy. Fixing them is <span className="text-destructive">hard</span>. <span className="text-primary">We do both</span>.
               </p>
             </motion.div>
+
           </div>
         </Section>
 

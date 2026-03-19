@@ -284,6 +284,8 @@ async function main() {
   const options: PdfReportOptions = {
     githubRepo: 'dispatch-security/sample-app',
     githubRef: 'main',
+    analyzedRepo: 'dispatch-security/sample-app',
+    analyzedRef: 'main',
     createdIssues: new Map([
       ['finding-sqli-001', { number: 1, url: 'https://github.com/dispatch-security/sample-app/issues/1' }],
       ['finding-xss-001', { number: 2, url: 'https://github.com/dispatch-security/sample-app/issues/2' }],

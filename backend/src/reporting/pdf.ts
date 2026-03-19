@@ -336,7 +336,7 @@ function drawExecutiveSummary(doc: PDFKit.PDFDocument, report: MergedReport, opt
   doc.text('RISK SCORE', x + 20, cardY + 16, { lineBreak: false });
 
   doc.font(fonts.bold).fontSize(48).fillColor(riskColors.text);
-  doc.text(riskScore.toFixed(1), x + 20, cardY + 36, { lineBreak: false });
+  doc.text(riskScore.toFixed(1), x + 12, cardY + 26, { lineBreak: false });
 
   doc.font(fonts.semiBold).fontSize(11).fillColor(riskColors.text);
   doc.text(riskLevel.toUpperCase(), x + 110, cardY + 58, { lineBreak: false });
