@@ -560,14 +560,6 @@ const Index = () => {
     <div className="relative min-h-screen">
       <PaperBackground />
 
-      <div className="fixed left-8 top-8 z-50">
-        <img
-          src={dispatchWordmark}
-          alt="Dispatch logo"
-          className="h-10 w-auto object-contain shadow-[0_18px_40px_rgba(0,0,0,0.28)] md:h-12"
-        />
-      </div>
-
       <div className="fixed top-8 left-1/2 z-50 -translate-x-1/2">
         <PillBase activeSection={activeSection} navItems={MAIN_NAV_ITEMS} onSectionClick={scrollToSection} />
       </div>
