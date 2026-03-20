@@ -638,7 +638,7 @@ const Index = () => {
               <img
                 src={dispatchWordmark}
                 alt={t('home.title')}
-                className="mx-auto w-full max-w-[19rem] sm:max-w-[22rem] md:max-w-[26rem] xl:max-w-[32rem] object-contain drop-shadow-[0_28px_50px_rgba(0,0,0,0.3)]"
+                className="mx-auto w-full max-w-[23rem] sm:max-w-[26rem] md:max-w-[30rem] xl:max-w-[36rem] object-contain drop-shadow-[0_28px_50px_rgba(0,0,0,0.3)]"
               />
             </motion.div>
 
@@ -1017,7 +1017,7 @@ const Index = () => {
               <img
                 src={dispatchWordmark}
                 alt="Dispatch"
-                className="mx-auto w-full max-w-[19rem] sm:max-w-[22rem] md:max-w-[26rem] xl:max-w-[32rem] object-contain drop-shadow-[0_28px_50px_rgba(0,0,0,0.3)]"
+                className="mx-auto w-full max-w-[23rem] sm:max-w-[26rem] md:max-w-[30rem] xl:max-w-[36rem] object-contain drop-shadow-[0_28px_50px_rgba(0,0,0,0.3)]"
               />
             </motion.div>
 
